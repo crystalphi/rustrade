@@ -20,7 +20,7 @@ impl Exchange {
     pub fn new() -> Result<Exchange> {
         Ok(Exchange {
             api_key: env::var("API_KEY")?,
-            secret_key: env::var("SECRETKEY")?,
+            secret_key: env::var("SECRET_KEY")?,
         })
     }
 
