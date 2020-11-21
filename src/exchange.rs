@@ -8,24 +8,26 @@ use crate::{
     utils::{kline_to_candle, kline_to_data_item},
 };
 
+use anyhow::Result;
+
 pub struct BinanceWrapper {
     api_key: String,
     secret_key: String,
 }
 
 impl BinanceWrapper {
-    pub fn new() -> BinanceWrapper {
-        BinanceWrapper {
-            api_key: env::var("API_KEY").unwrap(),
-            secret_key: env::var("SECRET_KEY").unwrap(),
-        }
+    pub fn new() -> Result<BinanceWrapper> {
+        Ok(BinanceWrapper {
+            api_key: env::var("API_KEY")?,
+            secret_key: env::var("SECRETKEY")?,
+        })
     }
 
-    fn futures_market(&self) -> FuturesMarket {
+    pub fn futures_market(&self) -> FuturesMarket {
         Binance::new(Some(self.api_key.clone()), Some(self.secret_key.clone()))
     }
 
-    fn candles(&self, symbol: &str, minutes: u32) -> Vec<Candle> {
+    pub fn candles(&self, symbol: &str, minutes: u32, start_time: Option<String>) -> Vec<Candle> {
         let mut result = Vec::new();
 
         let market = self.futures_market();
