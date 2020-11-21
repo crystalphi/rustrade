@@ -1,4 +1,4 @@
-use crate::{model::candle::Candle, utils::str_to_date_time};
+use crate::{model::candle::Candle, utils::str_to_datetime};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
@@ -27,7 +27,7 @@ impl Repository {
             .bind(symbol)
             .fetch_one(&self.pool);
         let result: (Option<String>,) = async_std::task::block_on(future).unwrap();
-        result.0.map(|dt| str_to_date_time(&dt))
+        result.0.map(|dt| str_to_datetime(&dt))
     }
 
     pub fn candle_by_id(&self, id: Decimal) -> Option<Candle> {

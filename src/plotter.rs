@@ -5,7 +5,7 @@ use plotters::prelude::*;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
 
-use crate::{model::candle::Candle, utils::str_to_date_time};
+use crate::{model::candle::Candle, utils::str_to_datetime};
 
 pub fn plot(symbol: &str, data: &[Candle]) -> Result<(), Box<dyn std::error::Error>> {
     //let data = get_data();
@@ -18,8 +18,8 @@ pub fn plot(symbol: &str, data: &[Candle]) -> Result<(), Box<dyn std::error::Err
     let min_price = min_price.to_f32().unwrap();
     let max_price = max_price.to_f32().unwrap();
 
-    let from_date = str_to_date_time(&data[0].close_time) - Duration::minutes(15); /* +  */
-    let to_date = str_to_date_time(&data[data.len() - 1].close_time) + Duration::minutes(15); /* */
+    let from_date = str_to_datetime(&data[0].close_time) - Duration::minutes(15); /* +  */
+    let to_date = str_to_datetime(&data[data.len() - 1].close_time) + Duration::minutes(15); /* */
 
     let mut chart_candles = ChartBuilder::on(&root)
         .x_label_area_size(80)
@@ -34,7 +34,7 @@ pub fn plot(symbol: &str, data: &[Candle]) -> Result<(), Box<dyn std::error::Err
 
     let series = data.iter().map(|x| {
         CandleStick::new(
-            str_to_date_time(&x.close_time),
+            str_to_datetime(&x.close_time),
             x.open.to_f32().unwrap(),
             x.high.to_f32().unwrap(),
             x.low.to_f32().unwrap(),
