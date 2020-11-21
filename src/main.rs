@@ -1,12 +1,18 @@
+pub mod exchange;
 pub mod model;
 pub mod repository;
-
+pub mod utils;
 use ifmt::iprintln;
 use repository::Repository;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().unwrap();
+
+    let mut i: Decimal = 1u32.into();
+    i += dec!(1);
 
     let repo = Repository::new()?;
 

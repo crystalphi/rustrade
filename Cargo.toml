@@ -9,8 +9,14 @@ version = "0.1.0"
 [dependencies]
 anyhow = "1.0"
 async-std = {version = "1.7.0", features = ["attributes"]}
+binance = "0.11.0"
+chrono = "0.4.19"
+colored = "2.0.0"
 dotenv = "0.15.0"
 futures = "0.3"
 ifmt = "0.3.2"
-rust_decimal = "1.8.1"
+plotters = "0.3.0"
+rust_decimal = {version = "1.8.1"}
+rust_decimal_macros = "1.8.1"
 sqlx = {version = "0.4.1", features = ["runtime-async-std-native-tls", "postgres", "macros", "decimal"]}
+ta = "0.4.0"
