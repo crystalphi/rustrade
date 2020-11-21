@@ -1,5 +1,6 @@
-use crate::model::candle::Candle;
+use crate::{model::candle::Candle, utils::str_to_date_time};
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::env;
@@ -21,12 +22,12 @@ impl Repository {
         result.0.unwrap_or_default()
     }
 
-    pub fn last_close_time(&self, symbol: &str) -> Option<String> {
+    pub fn last_close_time(&self, symbol: &str) -> Option<DateTime<Utc>> {
         let future = sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1")
             .bind(symbol)
             .fetch_one(&self.pool);
         let result: (Option<String>,) = async_std::task::block_on(future).unwrap();
-        result.0
+        result.0.map(|dt| str_to_date_time(&dt))
     }
 
     pub fn candle_by_id(&self, id: Decimal) -> Option<Candle> {
@@ -35,7 +36,7 @@ impl Repository {
         async_std::task::block_on(future).ok()
     }
 
-    pub fn add_candle(pool: &PgPool, candle: Candle) -> anyhow::Result<Decimal> {
+    pub fn add_candle(&self, candle: &Candle) -> anyhow::Result<Decimal> {
         let future = sqlx::query!(
             r#"
         INSERT INTO candle ( 
@@ -63,7 +64,7 @@ impl Repository {
             candle.close,
             candle.volume
         )
-        .fetch_one(pool);
+        .fetch_one(&self.pool);
         let rec = async_std::task::block_on(future).unwrap();
 
         Ok(rec.id)

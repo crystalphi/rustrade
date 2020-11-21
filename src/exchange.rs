@@ -1,6 +1,7 @@
 use std::env;
 
 use binance::{api::Binance, futures::market::FuturesMarket};
+use chrono::{DateTime, Utc};
 use ifmt::iprintln;
 
 use crate::{
@@ -27,7 +28,12 @@ impl Exchange {
         Binance::new(Some(self.api_key.clone()), Some(self.secret_key.clone()))
     }
 
-    pub fn candles(&self, symbol: &str, minutes: u32, start_time: Option<String>) -> Vec<Candle> {
+    pub fn candles(
+        &self,
+        symbol: &str,
+        minutes: u32,
+        start_time: Option<DateTime<Utc>>,
+    ) -> Vec<Candle> {
         let mut result = Vec::new();
 
         let market = self.futures_market();
