@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use binance::model::KlineSummary;
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use ta::DataItem;
 
@@ -61,12 +61,106 @@ pub fn str_to_datetime(string: &str) -> DateTime<Utc> {
     Utc.datetime_from_str(string, "%Y-%m-%d %H:%M:%S").unwrap()
 }
 
-#[test]
-fn timestamp_to_str_test() {
-    let dtu = Utc.ymd(1979, 1, 13).and_hms(11, 30, 0);
-    let dts = "1979-01-13 11:30:00";
-    assert_eq!(datetime_to_str(&dtu), dts);
-    assert_eq!(str_to_datetime(&dts), dtu);
-    let dtm = datetime_to_timestamp(&dtu);
-    assert_eq!(timestamp_to_str(&dtm), dts);
+/// If candles are sorted ok
+pub fn candles_sorted_ok(candles: &[&Candle]) -> bool {
+    let sort_ok = candles
+        .iter()
+        .map(Some)
+        .fold((true, None::<&&Candle>), |previous, current| {
+            let result = if let Some(previous_c) = previous.1 {
+                if let Some(current_c) = current {
+                    previous.0 && (current_c.open_time > previous_c.open_time)
+                } else {
+                    previous.0
+                }
+            } else {
+                previous.0
+            };
+            (result, current)
+        });
+    sort_ok.0
+}
+
+/// If candles are sorted ok
+pub fn candles_spaced_ok(candles: &[&Candle], duration: &Duration) -> bool {
+    let sort_ok = candles
+        .iter()
+        .map(Some)
+        .fold((true, None::<&&Candle>), |previous, current| {
+            let result = if let Some(previous_c) = previous.1 {
+                if let Some(current_c) = current {
+                    let previous_d = str_to_datetime(&previous_c.open_time);
+                    let current_d = str_to_datetime(&current_c.open_time);
+                    previous.0 && (current_d - previous_d == *duration)
+                } else {
+                    previous.0
+                }
+            } else {
+                previous.0
+            };
+            (result, current)
+        });
+    sort_ok.0
+}
+
+#[cfg(test)]
+pub mod tests {
+
+    use chrono::Duration;
+    use rust_decimal_macros::dec;
+
+    use super::*;
+
+    #[test]
+    fn timestamp_to_str_test() {
+        let dtu = Utc.ymd(1979, 1, 13).and_hms(11, 30, 0);
+        let dts = "1979-01-13 11:30:00";
+        assert_eq!(datetime_to_str(&dtu), dts);
+        assert_eq!(str_to_datetime(&dts), dtu);
+        let dtm = datetime_to_timestamp(&dtu);
+        assert_eq!(timestamp_to_str(&dtm), dts);
+    }
+
+    #[test]
+    fn candles_sorted_ok_test() {
+        let c1 = Candle {
+            id: dec!(0),
+            open_time: "2020-01-12 12:00:00".into(),
+            close_time: "2020-01-12 12:14:59".into(),
+            symbol: "BTCUSDT".into(),
+            minutes: dec!(15),
+            open: dec!(100.0),
+            high: dec!(100.0),
+            low: dec!(100.0),
+            close: dec!(100.0),
+            volume: dec!(100.0),
+        };
+        let c2 = Candle {
+            id: dec!(0),
+            open_time: "2020-01-12 12:15:00".into(),
+            close_time: "2020-01-12 12:29:59".into(),
+            symbol: "BTCUSDT".into(),
+            minutes: dec!(15),
+            open: dec!(100.0),
+            high: dec!(100.0),
+            low: dec!(100.0),
+            close: dec!(100.0),
+            volume: dec!(100.0),
+        };
+        let d1 = str_to_datetime(&c1.open_time);
+        let d2 = str_to_datetime(&c2.open_time);
+
+        let d15m = Duration::minutes(15);
+        assert_eq!(d2 - d1, d15m);
+
+        assert_eq!(candles_sorted_ok(&[&c1, &c2]), true);
+        assert_eq!(candles_sorted_ok(&[&c2, &c1]), false);
+        assert_eq!(candles_sorted_ok(&[&c1, &c1]), false);
+        assert_eq!(candles_sorted_ok(&[&c2, &c2]), false);
+
+        assert_eq!(candles_spaced_ok(&[&c1, &c2], &d15m), true);
+        assert_eq!(candles_spaced_ok(&[&c2, &c1], &d15m), false);
+        assert_eq!(candles_spaced_ok(&[&c1, &c1], &d15m), false);
+        assert_eq!(candles_spaced_ok(&[&c2, &c2], &d15m), false);
+    }
 }
