@@ -4,6 +4,7 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::{DateTime, Utc};
+use ifmt::iprintln;
 use rust_decimal::Decimal;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::env;
@@ -42,9 +43,11 @@ impl Repository {
     pub fn candles_by_time(
         &self,
         symbol: &str,
+        minutes: &u32,
         start_time: &DateTime<Utc>,
         end_time: &DateTime<Utc>,
     ) -> Option<Vec<Candle>> {
+        let minutes = Decimal::from(*minutes);
         let start_time = datetime_to_str(start_time);
         let end_time = datetime_to_str(end_time);
 
@@ -53,12 +56,33 @@ impl Repository {
             Candle,
             r#"
                 SELECT * FROM candle 
-                WHERE symbol = $1 AND (open_time BETWEEN $2 AND $3 OR close_time BETWEEN $2 AND $3)
+                WHERE symbol = $1 AND minutes = $2 AND (open_time BETWEEN $3 AND $4 OR close_time BETWEEN $3 AND $4)
                 ORDER BY open_time
             "#,
             symbol,
+            minutes,
             start_time,
             end_time
+        )
+        .fetch_all(&self.pool);
+        async_std::task::block_on(future).ok()
+    }
+
+    pub fn last_candles(&self, symbol: &str, minutes: &u32, limit: &i64) -> Option<Vec<Candle>> {
+        let minutes = Decimal::from(*minutes);
+
+        #[allow(clippy::suspicious_else_formatting)]
+        let future = sqlx::query_as!(
+            Candle,
+            r#"
+                SELECT * FROM candle 
+                WHERE symbol = $1 AND minutes = $2
+                ORDER BY open_time DESC
+                FETCH FIRST $3 ROWS ONLY
+            "#,
+            symbol,
+            minutes,
+            limit
         )
         .fetch_all(&self.pool);
         async_std::task::block_on(future).ok()
@@ -99,8 +123,18 @@ impl Repository {
     }
 
     pub fn delete_candle(&self, id: &Decimal) {
-        let future = sqlx::query!("DELETE FROM candle WHERE id = $1", id).fetch_one(&self.pool);
+        let future = sqlx::query!("DELETE FROM candle WHERE id = $1", id).execute(&self.pool);
         async_std::task::block_on(future).unwrap();
+    }
+
+    pub fn list_candles(&self, symbol: &str, minutes: &u32, limit: &i64) {
+        let candles = self
+            .last_candles(symbol, minutes, limit)
+            .unwrap_or_default();
+        iprintln!("Listing candles limit {limit}:");
+        for candle in candles.iter() {
+            iprintln!("{candle}");
+        }
     }
 }
 
@@ -120,7 +154,7 @@ pub mod tests {
         let start_time = end_time - Duration::days(30);
         let repo = Repository::new().unwrap();
         let candles = repo
-            .candles_by_time("BTCUSDT", &start_time, &end_time)
+            .candles_by_time("BTCUSDT", &15, &start_time, &end_time)
             .unwrap_or_default();
 
         println!("Found candles:");

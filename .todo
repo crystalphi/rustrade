@@ -1,2 +1,5 @@
 ✔ Function to convert timestamp to Date @done(20-11-21 09:17)
-☐ Consist candle intervals
+✔ Consist candle intervals @done(20-11-21 15:26)
+✔ Auto delete inconsists @done(20-11-21 17:45)
+✔ Auto insert from last @done(20-11-21 17:45)
+☐ Delete last candle from repo before reinsert

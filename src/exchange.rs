@@ -43,7 +43,7 @@ impl Exchange {
         match market.get_klines(
             symbol.to_string(),
             iformat! {"{minutes}m"},
-            60,
+            1000,
             start_time,
             None,
         ) {

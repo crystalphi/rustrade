@@ -1,3 +1,4 @@
+use ifmt::iwrite;
 use rust_decimal::Decimal;
 use std::fmt::Display;
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -16,6 +17,10 @@ pub struct Candle {
 
 impl Display for Candle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        let end = self.close_time[11..19].to_string();
+        iwrite!(
+            f,
+            "{self.symbol} [{self.minutes} {self.open_time} {end}] {self.close}"
+        )
     }
 }
