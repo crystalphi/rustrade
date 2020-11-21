@@ -25,8 +25,8 @@ pub fn fdec(value: f64) -> Decimal {
 
 // Convert binance Kline to app Candle
 pub fn kline_to_candle(summary: &KlineSummary, symbol: &str, minutes: u32, id: &Decimal) -> Candle {
-    let open_time_fmt = timestamp_to_str(&summary.open_time);
-    let close_time_fmt = timestamp_to_str(&summary.close_time);
+    let open_time_fmt = timestamp_to_str(&(summary.open_time as u64));
+    let close_time_fmt = timestamp_to_str(&(summary.close_time as u64));
 
     Candle {
         id: *id,
@@ -43,14 +43,14 @@ pub fn kline_to_candle(summary: &KlineSummary, symbol: &str, minutes: u32, id: &
 }
 
 /// Convert numeric date to String iso formatted
-pub fn timestamp_to_str(timestamp: &i64) -> String {
-    let naive = NaiveDateTime::from_timestamp(timestamp / 1000, 0);
+pub fn timestamp_to_str(timestamp: &u64) -> String {
+    let naive = NaiveDateTime::from_timestamp((timestamp / 1000) as i64, 0);
     let date_time: DateTime<Utc> = DateTime::from_utc(naive, Utc);
     date_time.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
-pub fn datetime_to_timestamp(date_time: &DateTime<Utc>) -> i64 {
-    date_time.timestamp_millis()
+pub fn datetime_to_timestamp(date_time: &DateTime<Utc>) -> u64 {
+    date_time.timestamp_millis() as u64
 }
 
 pub fn datetime_to_str(date_time: &DateTime<Utc>) -> String {

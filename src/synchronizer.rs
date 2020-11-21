@@ -26,7 +26,7 @@ impl Synchronizer {
 
         let mut candles =
             self.exchange
-                .candles(symbol, 15, Some(*last_close_time + Duration::minutes(15)));
+                .candles(symbol, &15, &Some(*last_close_time + Duration::minutes(15)));
 
         let mut last_id = self.repo.last_id();
 
