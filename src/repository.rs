@@ -21,12 +21,12 @@ impl Repository {
         result.0.unwrap_or_default()
     }
 
-    pub fn last_close_time(&self, symbol: &str) -> String {
+    pub fn last_close_time(&self, symbol: &str) -> Option<String> {
         let future = sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1")
             .bind(symbol)
             .fetch_one(&self.pool);
         let result: (Option<String>,) = async_std::task::block_on(future).unwrap();
-        result.0.unwrap_or_default()
+        result.0
     }
 
     pub fn candle_by_id(&self, id: Decimal) -> Option<Candle> {

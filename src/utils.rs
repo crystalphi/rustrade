@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use binance::model::KlineSummary;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use ta::DataItem;
 
@@ -47,4 +47,12 @@ pub fn fmt_timestamp(timestamp: i64) -> String {
     let naive = NaiveDateTime::from_timestamp(timestamp / 1000, 0);
     let date_time: DateTime<Utc> = DateTime::from_utc(naive, Utc);
     date_time.format("%Y-%m-%d %H:%M:%S").to_string()
+}
+
+pub fn date_time_to_str(date_time: DateTime<Utc>) -> String {
+    date_time.format("%Y-%m-%d %H:%M:%S").to_string()
+}
+
+pub fn str_to_date_time(string: &str) -> DateTime<Utc> {
+    Utc.datetime_from_str(string, "%Y-%m-%d %H:%M:%S").unwrap()
 }

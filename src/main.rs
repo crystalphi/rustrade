@@ -1,6 +1,8 @@
 pub mod exchange;
 pub mod model;
+pub mod plotter;
 pub mod repository;
+pub mod synchronizer;
 pub mod utils;
 use ifmt::iprintln;
 use repository::Repository;

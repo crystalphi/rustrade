@@ -10,14 +10,14 @@ use crate::{
 
 use anyhow::Result;
 
-pub struct BinanceWrapper {
+pub struct Exchange {
     api_key: String,
     secret_key: String,
 }
 
-impl BinanceWrapper {
-    pub fn new() -> Result<BinanceWrapper> {
-        Ok(BinanceWrapper {
+impl Exchange {
+    pub fn new() -> Result<Exchange> {
+        Ok(Exchange {
             api_key: env::var("API_KEY")?,
             secret_key: env::var("SECRETKEY")?,
         })
