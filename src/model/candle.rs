@@ -1,6 +1,6 @@
 use rust_decimal::Decimal;
 use std::fmt::Display;
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Candle {
     pub open_time: String,
     pub close_time: String,

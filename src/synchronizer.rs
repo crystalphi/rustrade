@@ -1,7 +1,8 @@
 use chrono::{Duration, Utc};
+use ifmt::iprintln;
 use rust_decimal_macros::dec;
 
-use crate::{exchange::Exchange, repository::Repository};
+use crate::{exchange::Exchange, repository::Repository, utils::inconsistent_candles};
 
 pub struct Synchronizer {
     repo: Repository,
@@ -30,6 +31,7 @@ impl Synchronizer {
 
         let mut last_id = self.repo.last_id();
 
+        // Assign id to new candles
         candles.iter_mut().for_each(|c| {
             c.id = {
                 last_id += d1;
@@ -37,10 +39,29 @@ impl Synchronizer {
             }
         });
 
+        // Insert candles on repository
         candles.iter().for_each(|c| {
             self.repo.add_candle(c).unwrap();
         });
+    }
 
-        last_id += d1;
+    pub fn delete_inconsist(&self) {
+        let end_time = Utc::now();
+        let start_time = end_time - Duration::days(90);
+        let repo = Repository::new().unwrap();
+        let candles = repo
+            .candles_by_time("BTCUSDT", &start_time, &end_time)
+            .unwrap_or_default();
+
+        iprintln!("Found candles: {candles.len()}");
+
+        let candles_ref: Vec<_> = candles.iter().collect();
+
+        println!("Inconsist candles:");
+        let inconsist = inconsistent_candles(candles_ref.as_slice(), &Duration::minutes(15));
+        for candle in inconsist.iter() {
+            iprintln!("{candle}");
+            self.repo.delete_candle(&candle.id);
+        }
     }
 }

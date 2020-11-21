@@ -48,11 +48,17 @@ impl Repository {
         let start_time = datetime_to_str(start_time);
         let end_time = datetime_to_str(end_time);
 
-        #[allow(clippy::suspicious_else_formatting)] 
+        #[allow(clippy::suspicious_else_formatting)]
         let future = sqlx::query_as!(
             Candle,
-            "SELECT * FROM candle WHERE symbol = $1 AND (open_time BETWEEN $2 AND $3 OR close_time BETWEEN $2 AND $3)",
-            symbol, start_time, end_time 
+            r#"
+                SELECT * FROM candle 
+                WHERE symbol = $1 AND (open_time BETWEEN $2 AND $3 OR close_time BETWEEN $2 AND $3)
+                ORDER BY open_time
+            "#,
+            symbol,
+            start_time,
+            end_time
         )
         .fetch_all(&self.pool);
         async_std::task::block_on(future).ok()
@@ -61,20 +67,20 @@ impl Repository {
     pub fn add_candle(&self, candle: &Candle) -> anyhow::Result<Decimal> {
         let future = sqlx::query!(
             r#"
-        INSERT INTO candle ( 
-            id,
-            symbol,
-            minutes,
-            open_time,
-            close_time,
-            open,
-            high,
-            low,
-            close,
-            volume )
-        VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 )
-        RETURNING id
-        "#,
+                INSERT INTO candle ( 
+                    id,
+                    symbol,
+                    minutes,
+                    open_time,
+                    close_time,
+                    open,
+                    high,
+                    low,
+                    close,
+                    volume )
+                VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 )
+                RETURNING id
+            "#,
             candle.id,
             candle.symbol,
             candle.minutes,
@@ -91,12 +97,19 @@ impl Repository {
 
         Ok(rec.id)
     }
+
+    pub fn delete_candle(&self, id: &Decimal) {
+        let future = sqlx::query!("DELETE FROM candle WHERE id = $1", id).fetch_one(&self.pool);
+        async_std::task::block_on(future).unwrap();
+    }
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 pub mod tests {
     use chrono::Duration;
     use ifmt::iprintln;
+
+    use crate::utils::inconsistent_candles;
 
     use super::*;
 
@@ -104,14 +117,23 @@ pub mod tests {
     fn candles_test() {
         dotenv::dotenv().unwrap();
         let end_time = Utc::now();
-        let start_time = end_time - Duration::days(1);
+        let start_time = end_time - Duration::days(30);
         let repo = Repository::new().unwrap();
-        let candles = repo.candles_by_time("BTCUSDT", &start_time, &end_time).unwrap_or_default();
+        let candles = repo
+            .candles_by_time("BTCUSDT", &start_time, &end_time)
+            .unwrap_or_default();
+
         println!("Found candles:");
-        for candle in candles {
+        for candle in candles.iter() {
             iprintln!("{candle}");
         }
 
-    }
+        let candles_ref: Vec<_> = candles.iter().collect();
 
+        println!("Inconsist candles:");
+        let inconsist = inconsistent_candles(candles_ref.as_slice(), &Duration::minutes(15));
+        for candle in inconsist.iter() {
+            iprintln!("{candle}");
+        }
+    }
 }

@@ -81,35 +81,31 @@ pub fn candles_sorted_ok(candles: &[&Candle]) -> bool {
     sort_ok.0
 }
 
-/// If candles are sorted ok
-pub fn candles_spaced_ok(candles: &[&Candle], duration: &Duration) -> bool {
-    let sort_ok = candles
+/// Returns inconsistent candles
+pub fn inconsistent_candles(candles: &[&Candle], duration: &Duration) -> Vec<Candle> {
+    candles
         .iter()
         .map(Some)
-        .fold((true, None::<&&Candle>), |previous, current| {
-            let result = if let Some(previous_c) = previous.1 {
+        .fold((Vec::new(), None::<&&Candle>), |mut previous, current| {
+            if let Some(previous_c) = previous.1 {
                 if let Some(current_c) = current {
                     let previous_d = str_to_datetime(&previous_c.open_time);
                     let current_d = str_to_datetime(&current_c.open_time);
-                    previous.0 && (current_d - previous_d == *duration)
-                } else {
-                    previous.0
+                    if current_d - previous_d != *duration {
+                        previous.0.push((*current_c).clone());
+                    }
                 }
-            } else {
-                previous.0
             };
-            (result, current)
-        });
-    sort_ok.0
+            (previous.0, current)
+        })
+        .0
 }
 
 #[cfg(test)]
 pub mod tests {
-
+    use super::*;
     use chrono::Duration;
     use rust_decimal_macros::dec;
-
-    use super::*;
 
     #[test]
     fn timestamp_to_str_test() {
@@ -147,6 +143,7 @@ pub mod tests {
             close: dec!(100.0),
             volume: dec!(100.0),
         };
+
         let d1 = str_to_datetime(&c1.open_time);
         let d2 = str_to_datetime(&c2.open_time);
 
@@ -158,9 +155,37 @@ pub mod tests {
         assert_eq!(candles_sorted_ok(&[&c1, &c1]), false);
         assert_eq!(candles_sorted_ok(&[&c2, &c2]), false);
 
-        assert_eq!(candles_spaced_ok(&[&c1, &c2], &d15m), true);
-        assert_eq!(candles_spaced_ok(&[&c2, &c1], &d15m), false);
-        assert_eq!(candles_spaced_ok(&[&c1, &c1], &d15m), false);
-        assert_eq!(candles_spaced_ok(&[&c2, &c2], &d15m), false);
+        assert_eq!(inconsistent_candles(&[&c1, &c2], &d15m).len(), 0);
+        assert_eq!(inconsistent_candles(&[&c2, &c1], &d15m).len(), 1);
+        assert_eq!(inconsistent_candles(&[&c1, &c1], &d15m).len(), 1);
+        assert_eq!(inconsistent_candles(&[&c2, &c2], &d15m).len(), 1);
+
+        let c3 = Candle {
+            id: dec!(0),
+            open_time: "2020-11-16 01:25:00".into(),
+            close_time: "2020-11-16 01:29:59".into(),
+            symbol: "BTCUSDT".into(),
+            minutes: dec!(15),
+            open: dec!(100.0),
+            high: dec!(100.0),
+            low: dec!(100.0),
+            close: dec!(100.0),
+            volume: dec!(100.0),
+        };
+
+        let c4 = Candle {
+            id: dec!(0),
+            open_time: "2020-11-20 11:15:00".into(),
+            close_time: "2020-11-20 11:29:59".into(),
+            symbol: "BTCUSDT".into(),
+            minutes: dec!(15),
+            open: dec!(100.0),
+            high: dec!(100.0),
+            low: dec!(100.0),
+            close: dec!(100.0),
+            volume: dec!(100.0),
+        };
+
+        assert_eq!(inconsistent_candles(&[&c3, &c4], &d15m).len(), 1);
     }
 }
