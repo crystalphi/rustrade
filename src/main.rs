@@ -1,3 +1,4 @@
+pub mod analyzer;
 pub mod exchange;
 pub mod model;
 pub mod plotter;
@@ -5,6 +6,7 @@ pub mod repository;
 pub mod synchronizer;
 pub mod utils;
 // use clap::App;
+use analyzer::Analyzer;
 use clap::App;
 use exchange::Exchange;
 use repository::Repository;
@@ -19,6 +21,7 @@ async fn main() -> anyhow::Result<()> {
         .subcommand(App::new("check").about("check insconsist"))
         .subcommand(App::new("fix").about("fix insconsist"))
         .subcommand(App::new("list").about("list last"))
+        .subcommand(App::new("analyzer").about("analyzer"))
         .get_matches();
 
     dotenv::dotenv().unwrap();
@@ -42,6 +45,15 @@ async fn main() -> anyhow::Result<()> {
 
     if let Some(_list) = matches.subcommand_matches("list") {
         repo.list_candles("BTCUSDT", &15, &10);
+    }
+
+    if let Some(_analyzer) = matches.subcommand_matches("analyzer") {
+        let candles = repo.candles_default("BTCUSDT", &15);
+
+        let candles_ref: Vec<_> = candles.iter().collect();
+        let analyzer = Analyzer::new(candles_ref.as_slice());
+        let tacs = analyzer.run();
+        plotter::plot("BTCUSDT", &15, &tacs).unwrap();
     }
 
     //assert_e!(row.0, 150);

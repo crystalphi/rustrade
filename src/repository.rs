@@ -3,11 +3,11 @@ use crate::{
     utils::{datetime_to_str, str_to_datetime},
 };
 use anyhow::Result;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use ifmt::iprintln;
 use rust_decimal::Decimal;
 use sqlx::{postgres::PgPoolOptions, PgPool};
-use std::env;
+use std::{env, time::Instant};
 pub struct Repository {
     pool: PgPool,
 }
@@ -38,6 +38,21 @@ impl Repository {
         let future =
             sqlx::query_as!(Candle, "SELECT * FROM candle WHERE id = $1", id).fetch_one(&self.pool);
         async_std::task::block_on(future).ok()
+    }
+
+    pub fn candles_default(&self, symbol: &str, minutes: &u32) -> Vec<Candle> {
+        let end_time = Utc::now();
+        let start_time = end_time - Duration::days(90);
+
+        let repo = Repository::new().unwrap();
+
+        let start = Instant::now();
+        let candles = repo
+            .candles_by_time(symbol, minutes, &start_time, &end_time)
+            .unwrap_or_default();
+        iprintln!("Read repository: {start.elapsed():?}");
+        self.candles_by_time(symbol, minutes, &start_time, &end_time)
+            .unwrap_or_default()
     }
 
     pub fn candles_by_time(

@@ -1,25 +1,30 @@
-//use bigdecimal::ToPrimitive;
 use chrono::Duration;
 use ifmt::iformat;
 use plotters::prelude::*;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
 
-use crate::{model::candle::Candle, utils::str_to_datetime};
+use crate::{analyzer::Technical, utils::str_to_datetime};
 
-pub fn plot(symbol: &str, data: &[Candle]) -> Result<(), Box<dyn std::error::Error>> {
+pub fn plot(
+    symbol: &str,
+    minutes: &u32,
+    data: &[Technical],
+) -> Result<(), Box<dyn std::error::Error>> {
     //let data = get_data();
-    let root = BitMapBackend::new("plotters-doc-data/stock.png", (1024, 768)).into_drawing_area();
+    let root = BitMapBackend::new("out/stock.png", (1024, 768)).into_drawing_area();
     root.fill(&WHITE)?;
 
-    let max_price = data.iter().fold(dec!(0), |acc, x| acc.max(x.high));
-    let min_price = data.iter().fold(max_price, |acc, x| acc.min(x.low));
+    let max_price = data.iter().fold(dec!(0), |acc, x| acc.max(x.candle.high));
+    let min_price = data.iter().fold(max_price, |acc, x| acc.min(x.candle.low));
 
     let min_price = min_price.to_f32().unwrap();
     let max_price = max_price.to_f32().unwrap();
 
-    let from_date = str_to_datetime(&data[0].close_time) - Duration::minutes(15); /* +  */
-    let to_date = str_to_datetime(&data[data.len() - 1].close_time) + Duration::minutes(15); /* */
+    let from_date =
+        str_to_datetime(&data[0].candle.close_time) - Duration::minutes(*minutes as i64); /* +  */
+    let to_date = str_to_datetime(&data[data.len() - 1].candle.close_time)
+        + Duration::minutes(*minutes as i64); /* */
 
     let mut chart_candles = ChartBuilder::on(&root)
         .x_label_area_size(80)
@@ -34,11 +39,11 @@ pub fn plot(symbol: &str, data: &[Candle]) -> Result<(), Box<dyn std::error::Err
 
     let series = data.iter().map(|x| {
         CandleStick::new(
-            str_to_datetime(&x.close_time),
-            x.open.to_f32().unwrap(),
-            x.high.to_f32().unwrap(),
-            x.low.to_f32().unwrap(),
-            x.close.to_f32().unwrap(),
+            str_to_datetime(&x.candle.close_time),
+            x.candle.open.to_f32().unwrap(),
+            x.candle.high.to_f32().unwrap(),
+            x.candle.low.to_f32().unwrap(),
+            x.candle.close.to_f32().unwrap(),
             &GREEN,
             &RED,
             12,

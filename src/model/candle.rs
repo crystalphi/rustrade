@@ -17,10 +17,10 @@ pub struct Candle {
 
 impl Display for Candle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let end = self.close_time[11..19].to_string();
+        let close_time = self.close_time[11..19].to_string();
         iwrite!(
             f,
-            "{self.symbol} [{self.minutes} {self.open_time} {end}] {self.close}"
+            "{self.symbol} [{self.minutes} {self.open_time} {close_time}] {self.close}"
         )
     }
 }
