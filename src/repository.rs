@@ -1,4 +1,7 @@
-use crate::{model::candle::Candle, utils::str_to_datetime};
+use crate::{
+    model::candle::Candle,
+    utils::{datetime_to_str, str_to_datetime},
+};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
@@ -36,6 +39,25 @@ impl Repository {
         async_std::task::block_on(future).ok()
     }
 
+    pub fn candles_by_time(
+        &self,
+        symbol: &str,
+        start_time: &DateTime<Utc>,
+        end_time: &DateTime<Utc>,
+    ) -> Option<Vec<Candle>> {
+        let start_time = datetime_to_str(start_time);
+        let end_time = datetime_to_str(end_time);
+
+        #[allow(clippy::suspicious_else_formatting)] 
+        let future = sqlx::query_as!(
+            Candle,
+            "SELECT * FROM candle WHERE symbol = $1 AND (open_time BETWEEN $2 AND $3 OR close_time BETWEEN $2 AND $3)",
+            symbol, start_time, end_time 
+        )
+        .fetch_all(&self.pool);
+        async_std::task::block_on(future).ok()
+    }
+
     pub fn add_candle(&self, candle: &Candle) -> anyhow::Result<Decimal> {
         let future = sqlx::query!(
             r#"
@@ -69,4 +91,27 @@ impl Repository {
 
         Ok(rec.id)
     }
+}
+
+#[cfg(test)] 
+pub mod tests {
+    use chrono::Duration;
+    use ifmt::iprintln;
+
+    use super::*;
+
+    #[test]
+    fn candles_test() {
+        dotenv::dotenv().unwrap();
+        let end_time = Utc::now();
+        let start_time = end_time - Duration::days(1);
+        let repo = Repository::new().unwrap();
+        let candles = repo.candles_by_time("BTCUSDT", &start_time, &end_time).unwrap_or_default();
+        println!("Found candles:");
+        for candle in candles {
+            iprintln!("{candle}");
+        }
+
+    }
+
 }
