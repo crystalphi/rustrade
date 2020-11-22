@@ -6,12 +6,12 @@ use plotters::prelude::*;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
 
-use crate::{analyzer::Technical, utils::str_to_datetime};
+use crate::{analyzers::macd_tac::MacdCandle, utils::str_to_datetime};
 
 pub fn plot_tecals(
     symbol: &str,
     minutes: &u32,
-    technicals: &[Technical],
+    technicals: &[MacdCandle],
 ) -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
 

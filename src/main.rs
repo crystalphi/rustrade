@@ -1,4 +1,4 @@
-pub mod analyzer;
+pub mod analyzers;
 pub mod exchange;
 pub mod model;
 pub mod plotter;
@@ -6,7 +6,7 @@ pub mod repository;
 pub mod synchronizer;
 pub mod utils;
 // use clap::App;
-use analyzer::Analyzer;
+use analyzers::macd_tac::MacdTac;
 use clap::App;
 use exchange::Exchange;
 use repository::Repository;
@@ -51,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
         let candles = repo.candles_default("BTCUSDT", &15);
 
         let candles_ref: Vec<_> = candles.iter().collect();
-        let analyzer = Analyzer::new(candles_ref.as_slice());
+        let analyzer = MacdTac::new(candles_ref.as_slice());
         let tacs = analyzer.run();
         plotter::plot_tecals("BTCUSDT", &15, &tacs).unwrap();
     }
