@@ -99,36 +99,59 @@ impl<'a> PivotTac<'a> {
                 result.push(Pivot::new(PivotType::High, &pivot.close_time, &pivot.high));
             }
         }
-        remove_noise_pivots(&mut result);
+        normalize_pivots(&mut result);
         result
     }
 }
 
-fn remove_noise_pivots<'a>(pivots: &mut Vec<Pivot<'a>>) {
+fn normalize_pivots<'a>(pivots: &mut Vec<Pivot<'a>>) {
     if pivots.is_empty() {
         return;
     }
+
     let mut delete = HashSet::new();
     let mut reverse = pivots.clone();
     reverse.reverse();
+
     let mut pivots_iter = reverse.iter();
+
     let mut previous = pivots_iter.next().unwrap();
     loop {
         match pivots_iter.next() {
             None => break,
             Some(current) => {
+                iprint!("pivots {current:?}");
                 if current.type_p == previous.type_p {
                     if current.type_p == PivotType::Low {
-                        delete.insert(current.max(previous));
+                        delete.insert(max_price(previous, current));
                     } else {
-                        delete.insert(current.min(previous));
+                        delete.insert(min_price(previous, current));
                     }
+                    iprint!(" *");
                 }
+                iprintln!("");
                 previous = current;
             }
         }
     }
+
     pivots.retain(|p| delete.get(p).is_none());
+}
+
+fn max_price<'a>(previous: &'a Pivot, current: &'a Pivot) -> &'a Pivot<'a> {
+    if previous.price > current.price {
+        previous
+    } else {
+        current
+    }
+}
+
+fn min_price<'a>(previous: &'a Pivot, current: &'a Pivot) -> &'a Pivot<'a> {
+    if previous.price < current.price {
+        previous
+    } else {
+        current
+    }
 }
 
 #[cfg(test)]
