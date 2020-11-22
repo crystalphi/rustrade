@@ -1,4 +1,52 @@
+use std::{cmp::Ordering, collections::HashSet};
+
+use ifmt::{iprint, iprintln};
+use rust_decimal::Decimal;
+
 use crate::model::candle::Candle;
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash)]
+pub enum PivotType {
+    Low,
+    High,
+}
+
+impl std::fmt::Display for PivotType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if *self == PivotType::Low {
+            "Low"
+        } else {
+            "High"
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Pivot<'a> {
+    pub close_time: &'a str,
+    pub price: &'a Decimal,
+    pub type_p: PivotType,
+}
+
+impl<'a> Pivot<'a> {
+    pub fn new(type_p: PivotType, close_time: &'a str, price: &'a Decimal) -> Self {
+        Self {
+            close_time,
+            type_p,
+            price,
+        }
+    }
+}
+impl<'a> PartialOrd for Pivot<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.close_time.cmp(other.close_time))
+    }
+}
+
+impl<'a> Ord for Pivot<'a> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.close_time.cmp(&other.close_time)
+    }
+}
 
 pub struct PivotTac<'a> {
     candles: &'a [&'a Candle],
@@ -9,51 +57,78 @@ impl<'a> PivotTac<'a> {
         PivotTac { candles }
     }
 
-    pub fn pivots(&self) -> (Vec<&'a Candle>, Vec<&'a Candle>) {
+    pub fn pivots(&self) -> Vec<Pivot<'a>> {
         //     0..7    8..15
         // 012345678901234
         //        X0123456
 
-        let mut result_min = Vec::new();
-        let mut result_max = Vec::new();
+        let mut result = Vec::new();
 
         for i in 0..self.candles.len() - 15 {
             let pivot = self.candles[i + 7];
 
             let l_min = self.candles[i..i + 7]
                 .iter()
-                .map(|c| c.close)
+                .map(|c| c.low)
                 .min()
-                .unwrap_or(pivot.close);
+                .unwrap_or(pivot.low);
 
             let l_max = self.candles[i..i + 7]
                 .iter()
-                .map(|c| c.close)
+                .map(|c| c.high)
                 .max()
-                .unwrap_or(pivot.close);
+                .unwrap_or(pivot.high);
 
             let r_min = self.candles[i + 8..i + 15]
                 .iter()
-                .map(|c| c.close)
+                .map(|c| c.low)
                 .min()
-                .unwrap_or(pivot.close);
+                .unwrap_or(pivot.low);
 
             let r_max = self.candles[i + 8..i + 15]
                 .iter()
-                .map(|c| c.close)
+                .map(|c| c.high)
                 .max()
-                .unwrap_or(pivot.close);
+                .unwrap_or(pivot.high);
 
-            if pivot.close < l_min && pivot.close < r_min {
-                result_min.push(pivot);
+            if pivot.low < l_min && pivot.low < r_min {
+                result.push(Pivot::new(PivotType::Low, &pivot.close_time, &pivot.low));
             }
 
-            if pivot.close > l_max && pivot.close > r_max {
-                result_max.push(pivot);
+            if pivot.high > l_max && pivot.high > r_max {
+                result.push(Pivot::new(PivotType::High, &pivot.close_time, &pivot.high));
             }
         }
-        (result_min, result_max)
+        remove_noise_pivots(&mut result);
+        result
     }
+}
+
+fn remove_noise_pivots<'a>(pivots: &mut Vec<Pivot<'a>>) {
+    if pivots.is_empty() {
+        return;
+    }
+    let mut delete = HashSet::new();
+    let mut reverse = pivots.clone();
+    reverse.reverse();
+    let mut pivots_iter = reverse.iter();
+    let mut previous = pivots_iter.next().unwrap();
+    loop {
+        match pivots_iter.next() {
+            None => break,
+            Some(current) => {
+                if current.type_p == previous.type_p {
+                    if current.type_p == PivotType::Low {
+                        delete.insert(current.max(previous));
+                    } else {
+                        delete.insert(current.min(previous));
+                    }
+                }
+                previous = current;
+            }
+        }
+    }
+    pivots.retain(|p| delete.get(p).is_none());
 }
 
 #[cfg(test)]
@@ -84,8 +159,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(102.0),
+            low: dec!(102.0),
             close: dec!(102.0),
             volume: dec!(100.0),
         };
@@ -97,8 +172,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(103.0),
+            low: dec!(103.0),
             close: dec!(103.0),
             volume: dec!(100.0),
         };
@@ -110,8 +185,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(104.0),
+            low: dec!(104.0),
             close: dec!(104.0),
             volume: dec!(100.0),
         };
@@ -123,8 +198,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(105.0),
+            low: dec!(105.0),
             close: dec!(105.0),
             volume: dec!(100.0),
         };
@@ -136,8 +211,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(106.0),
+            low: dec!(106.0),
             close: dec!(106.0),
             volume: dec!(100.0),
         };
@@ -149,8 +224,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(107.0),
+            low: dec!(107.0),
             close: dec!(107.0),
             volume: dec!(100.0),
         };
@@ -162,8 +237,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(108.0),
+            low: dec!(108.0),
             close: dec!(108.0),
             volume: dec!(100.0),
         };
@@ -175,8 +250,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(107.0),
+            low: dec!(107.0),
             close: dec!(107.0),
             volume: dec!(100.0),
         };
@@ -188,8 +263,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(106.0),
+            low: dec!(106.0),
             close: dec!(106.0),
             volume: dec!(100.0),
         };
@@ -201,8 +276,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(105.0),
+            low: dec!(105.0),
             close: dec!(105.0),
             volume: dec!(100.0),
         };
@@ -214,8 +289,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(104.0),
+            low: dec!(104.0),
             close: dec!(104.0),
             volume: dec!(100.0),
         };
@@ -227,8 +302,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(103.0),
+            low: dec!(103.0),
             close: dec!(103.0),
             volume: dec!(100.0),
         };
@@ -240,8 +315,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(102.0),
+            low: dec!(102.0),
             close: dec!(102.0),
             volume: dec!(100.0),
         };
@@ -253,8 +328,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(101.0),
+            low: dec!(101.0),
             close: dec!(101.0),
             volume: dec!(100.0),
         };
@@ -279,8 +354,8 @@ pub mod tests {
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
+            high: dec!(99.0),
+            low: dec!(99.0),
             close: dec!(99.0),
             volume: dec!(100.0),
         };
@@ -292,16 +367,11 @@ pub mod tests {
 
         let pivot_tac = PivotTac::new(&candles);
 
-        let (pivots_min, pivots_max) = pivot_tac.pivots();
+        let pivots = pivot_tac.pivots();
 
-        iprintln!("{pivots_min.len()}");
-        for pivot in pivots_min.iter() {
-            iprintln!("{pivot}");
-        }
-
-        iprintln!("{pivots_max.len()}");
-        for pivot in pivots_max.iter() {
-            iprintln!("{pivot}");
+        iprintln!("{pivots.len()}");
+        for pivot in pivots.iter() {
+            iprintln!("{pivot:?}");
         }
     }
 }

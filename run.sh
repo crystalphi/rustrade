@@ -1,3 +1,3 @@
 #!/bin/bash
-cargo build
-target/debug/rustrade $1
+cargo build --release
+target/release/rustrade $1

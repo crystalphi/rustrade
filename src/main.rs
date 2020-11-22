@@ -6,7 +6,7 @@ pub mod repository;
 pub mod synchronizer;
 pub mod utils;
 // use clap::App;
-use analyzers::macd_tac::MacdTac;
+use analyzers::{macd_tac::MacdTac, pivots::PivotTac};
 use clap::App;
 use exchange::Exchange;
 use repository::Repository;
@@ -53,7 +53,10 @@ async fn main() -> anyhow::Result<()> {
         let candles_ref: Vec<_> = candles.iter().collect();
         let analyzer = MacdTac::new(candles_ref.as_slice());
         let tacs = analyzer.run();
-        plotter::plot_tecals("BTCUSDT", &15, &tacs).unwrap();
+
+        let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
+
+        plotter::plot_tecals("BTCUSDT", &15, &tacs, &pivots).unwrap();
     }
 
     //assert_e!(row.0, 150);
