@@ -53,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
         let candles_ref: Vec<_> = candles.iter().collect();
         let analyzer = Analyzer::new(candles_ref.as_slice());
         let tacs = analyzer.run();
-        plotter::plot("BTCUSDT", &15, &tacs).unwrap();
+        plotter::plot_tecals("BTCUSDT", &15, &tacs).unwrap();
     }
 
     //assert_e!(row.0, 150);

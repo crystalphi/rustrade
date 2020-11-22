@@ -8,18 +8,21 @@ use ta::{indicators::ExponentialMovingAverage as Ema, Next};
 
 pub struct Technical<'a> {
     pub candle: &'a Candle,
+    // The MACD series proper
+    pub macd: f64,
+    // The "signal" or "average" series
     pub fast: f64,
-    pub slow: f64,
-    pub signal: f64,
+    // The "divergence" series which is the difference between the two
+    pub divergence: f64,
 }
 
 impl<'a> Technical<'a> {
     fn new(candle: &'a Candle, macd: (f64, f64, f64)) -> Self {
         Technical {
             candle,
-            fast: macd.0,
-            slow: macd.1,
-            signal: macd.2,
+            macd: macd.0,
+            fast: macd.1,
+            divergence: macd.2,
         }
     }
 }
