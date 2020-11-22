@@ -26,10 +26,13 @@ impl Repository {
         result.0.unwrap_or_default()
     }
 
-    pub fn last_close_time(&self, symbol: &str) -> Option<DateTime<Utc>> {
-        let future = sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1")
-            .bind(symbol)
-            .fetch_one(&self.pool);
+    pub fn last_close_time(&self, symbol: &str, minutes: &u32) -> Option<DateTime<Utc>> {
+        let minutes = Decimal::from(*minutes);
+        let future =
+            sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1 AND minutes = $2")
+                .bind(symbol)
+                .bind(minutes)
+                .fetch_one(&self.pool);
         let result: (Option<String>,) = async_std::task::block_on(future).unwrap();
         result.0.map(|dt| str_to_datetime(&dt))
     }
@@ -134,6 +137,20 @@ impl Repository {
 
     pub fn delete_candle(&self, id: &Decimal) {
         let future = sqlx::query!("DELETE FROM candle WHERE id = $1", id).execute(&self.pool);
+        async_std::task::block_on(future).unwrap();
+    }
+
+    pub fn delete_last_candle(&self, symbol: &str, minutes: &u32) {
+        let minutes = Decimal::from(*minutes);
+        let future = sqlx::query!(
+            r#"DELETE FROM candle WHERE id = 
+            (SELECT id FROM candle WHERE symbol = $1 AND minutes = $2 
+                ORDER BY close_time DESC FETCH FIRST 1 ROWS ONLY
+            )"#,
+            symbol,
+            minutes
+        )
+        .execute(&self.pool);
         async_std::task::block_on(future).unwrap();
     }
 

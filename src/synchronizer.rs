@@ -28,7 +28,9 @@ impl<'a> Synchronizer<'a> {
 
     pub fn synchronize(&self) {
         loop {
-            let mut last_close_time = self.repo.last_close_time(&self.symbol);
+            self.repo.delete_last_candle(&self.symbol, &self.minutes);
+
+            let mut last_close_time = self.repo.last_close_time(&self.symbol, &self.minutes);
 
             // If not found last candle then assume last 180 days
             let last_close_time =
