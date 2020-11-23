@@ -30,7 +30,7 @@ pub fn plot_tecals(
         str_to_datetime(&macd_tacs[0].candle.close_time) - Duration::minutes(*minutes as i64);
 
     let to_date = str_to_datetime(&macd_tacs[macd_tacs.len() - 1].candle.close_time)
-        + Duration::minutes(*minutes as i64); /* */
+        + Duration::minutes(*minutes as i64);
 
     {
         upper.fill(&WHITE)?;
@@ -55,6 +55,7 @@ pub fn plot_tecals(
 
         chart_context
             .configure_mesh()
+            .x_labels(12)
             .light_line_style(&WHITE)
             .draw()?;
 

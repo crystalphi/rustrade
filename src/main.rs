@@ -22,6 +22,7 @@ async fn main() -> anyhow::Result<()> {
         .subcommand(App::new("fix").about("fix insconsist"))
         .subcommand(App::new("list").about("list last"))
         .subcommand(App::new("analyzer").about("analyzer"))
+        .subcommand(App::new("stream").about("stream"))
         .get_matches();
 
     dotenv::dotenv().unwrap();
@@ -59,8 +60,18 @@ async fn main() -> anyhow::Result<()> {
         plotter::plot_tecals("BTCUSDT", &15, &tacs, &pivots).unwrap();
     }
 
+    if let Some(_stream) = matches.subcommand_matches("stream") {
+        read_stream();
+    }
+
     //assert_e!(row.0, 150);
     // https://github.com/launchbadge/sqlx/blob/master/examples/postgres/todos/src/main.rs
 
     Ok(())
+}
+
+fn read_stream() {
+    let mut line = String::new();
+    std::io::stdin().read_line(&mut line).unwrap();
+    println!("{}", line);
 }

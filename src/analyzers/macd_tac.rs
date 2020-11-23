@@ -2,8 +2,7 @@ use crate::model::candle::Candle;
 use ifmt::iprintln;
 use rust_decimal::prelude::ToPrimitive;
 use std::time::Instant;
-use ta::indicators::MovingAverageConvergenceDivergence as Macd;
-use ta::{indicators::ExponentialMovingAverage as Ema, Next};
+use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
 pub struct MacdCandle<'a> {
     pub candle: &'a Candle,
@@ -37,7 +36,6 @@ impl<'a> MacdTac<'a> {
 
     pub fn run(&self) -> Vec<MacdCandle> {
         let start = Instant::now();
-        let mut ema_9 = Ema::new(9).unwrap();
         let mut technicals = Vec::new();
         let mut macd = Macd::new(34, 72, 17).unwrap();
         for candle in self.candles.iter() {

@@ -44,13 +44,14 @@ impl Repository {
     }
 
     pub fn candles_default(&self, symbol: &str, minutes: &u32) -> Vec<Candle> {
+        let start = Instant::now();
         let end_time = Utc::now();
         let start_time = end_time - Duration::days(14);
-
-        let start = Instant::now();
+        let result = self
+            .candles_by_time(symbol, minutes, &start_time, &end_time)
+            .unwrap_or_default();
         iprintln!("Read repository: {start.elapsed():?}");
-        self.candles_by_time(symbol, minutes, &start_time, &end_time)
-            .unwrap_or_default()
+        result
     }
 
     pub fn candles_by_time(

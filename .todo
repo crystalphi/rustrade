@@ -28,3 +28,20 @@ Pivots
 
 ema 72 = laranja
 ema 17 = roxo
+
+===========
+
+allowed: {
+    minutes: [1,5,15],
+    symbol: ["BTCUSDT", "IOTUSDT],
+    tacs: [{name: mcad, indicators: [ "signal", "diff" ] }]    
+    period: { start: "2020-10", end: "2020-10" },
+},
+
+selected: {
+    tacs: [{name: mcad, indicators: [ "signal", "diff" ] }],
+    minutes: 15,
+    symbol: "BTCUSDT",
+    period: { start: "2020-10", end: "2020-10" },
+}
+
