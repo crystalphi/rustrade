@@ -8,7 +8,7 @@ use rust_decimal_macros::dec;
 
 use crate::{
     analyzers::macd_tac::MacdCandle, analyzers::pivots::Pivot, analyzers::pivots::PivotType,
-    model::candle::Candle, utils::str_to_datetime,
+    utils::str_to_datetime,
 };
 
 pub fn plot_tecals(

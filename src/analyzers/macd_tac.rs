@@ -4,6 +4,22 @@ use rust_decimal::prelude::ToPrimitive;
 use std::time::Instant;
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
+use super::{indicator::Indicator, serie::Serie};
+
+pub struct MacdInd<'a> {
+    series: Vec<Serie<'a>>,
+}
+
+impl<'a> Indicator<'a> for MacdInd<'a> {
+    fn name(&self) -> String {
+        "MACD".into()
+    }
+
+    fn series(&'a self) -> &'a Vec<super::serie::Serie<'a>> {
+        &self.series
+    }
+}
+
 pub struct MacdCandle<'a> {
     pub candle: &'a Candle,
     // The MACD series proper

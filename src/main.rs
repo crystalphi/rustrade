@@ -1,9 +1,9 @@
 pub mod analyzers;
 pub mod exchange;
 pub mod model;
-pub mod plotter;
 pub mod repository;
 pub mod synchronizer;
+pub mod tac_plotters;
 pub mod utils;
 // use clap::App;
 use analyzers::{macd_tac::MacdTac, pivots::PivotTac};
@@ -11,6 +11,7 @@ use clap::App;
 use exchange::Exchange;
 use repository::Repository;
 use synchronizer::Synchronizer;
+use tac_plotters::plotter::plot_tecals;
 
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,7 +22,7 @@ async fn main() -> anyhow::Result<()> {
         .subcommand(App::new("check").about("check insconsist"))
         .subcommand(App::new("fix").about("fix insconsist"))
         .subcommand(App::new("list").about("list last"))
-        .subcommand(App::new("analyzer").about("analyzer"))
+        .subcommand(App::new("plot").about("plot"))
         .subcommand(App::new("stream").about("stream"))
         .get_matches();
 
@@ -48,7 +49,7 @@ async fn main() -> anyhow::Result<()> {
         repo.list_candles("BTCUSDT", &15, &10);
     }
 
-    if let Some(_analyzer) = matches.subcommand_matches("analyzer") {
+    if let Some(_plot) = matches.subcommand_matches("plot") {
         let candles = repo.candles_default("BTCUSDT", &15);
 
         let candles_ref: Vec<_> = candles.iter().collect();
@@ -57,7 +58,7 @@ async fn main() -> anyhow::Result<()> {
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
 
-        plotter::plot_tecals("BTCUSDT", &15, &tacs, &pivots).unwrap();
+        plot_tecals("BTCUSDT", &15, &tacs, &pivots).unwrap();
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {
