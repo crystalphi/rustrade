@@ -1,31 +1,15 @@
-use crate::model::candle::Candle;
+use crate::technicals::indicator::Indicator;
+use crate::{model::candle::Candle, technicals::technical::Technical};
 use ifmt::iprintln;
 use rust_decimal::prelude::ToPrimitive;
 use std::time::Instant;
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
-
-use super::{indicator::Indicator, serie::Serie};
-
-pub struct MacdInd<'a> {
-    series: Vec<Serie<'a>>,
-}
-
-impl<'a> Indicator<'a> for MacdInd<'a> {
-    fn name(&self) -> String {
-        "MACD".into()
-    }
-
-    fn series(&'a self) -> &'a Vec<super::serie::Serie<'a>> {
-        &self.series
-    }
-}
-
 pub struct MacdCandle<'a> {
     pub candle: &'a Candle,
     // The MACD series proper
     pub macd: f64,
     // The "signal" or "average" series
-    pub fast: f64,
+    pub signal: f64,
     // The "divergence" series which is the difference between the two
     pub divergence: f64,
 }
@@ -35,7 +19,7 @@ impl<'a> MacdCandle<'a> {
         MacdCandle {
             candle,
             macd: macd.0,
-            fast: macd.1,
+            signal: macd.1,
             divergence: macd.2,
         }
     }
@@ -43,11 +27,21 @@ impl<'a> MacdCandle<'a> {
 
 pub struct MacdTac<'a> {
     candles: &'a [&'a Candle],
+    indicators: Vec<Box<dyn Indicator<'a>>>,
+}
+
+impl<'a> Technical<'a> for MacdTac<'a> {
+    fn indicators(&'a self) -> &'a Vec<Box<dyn Indicator<'a>>> {
+        &self.indicators
+    }
 }
 
 impl<'a> MacdTac<'a> {
     pub fn new(candles: &'a [&'a Candle]) -> Self {
-        MacdTac { candles }
+        MacdTac {
+            candles,
+            indicators: vec![],
+        }
     }
 
     pub fn run(&self) -> Vec<MacdCandle> {
@@ -56,7 +50,10 @@ impl<'a> MacdTac<'a> {
         let mut macd = Macd::new(34, 72, 17).unwrap();
         for candle in self.candles.iter() {
             let close = candle.close.to_f64().unwrap();
-            let ta = MacdCandle::new(candle, macd.next(close).into());
+
+            let macd_result = macd.next(close).into();
+
+            let ta = MacdCandle::new(candle, macd_result);
             technicals.push(ta);
         }
         iprintln!("Technicals {technicals.len()}: {start.elapsed():?}");

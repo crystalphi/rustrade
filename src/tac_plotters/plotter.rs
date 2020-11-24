@@ -7,7 +7,10 @@ use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
 
 use crate::{
-    analyzers::macd_tac::MacdCandle, analyzers::pivots::Pivot, analyzers::pivots::PivotType,
+    technicals::{
+        macd::macd_tac::MacdCandle,
+        pivots::{Pivot, PivotType},
+    },
     utils::str_to_datetime,
 };
 

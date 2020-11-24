@@ -16,10 +16,12 @@ colored = "2.0.0"
 dotenv = "0.15.0"
 futures = "0.3"
 ifmt = "0.3.2"
-plotters = {Version = "0.3.0"}
+plotters = {version = "0.3.0"}
 # plotters = {Version = "0.3.0", default_features = false, features = ["datetime", "candlestick", "point_series", "line_series", "ttf", "bitmap_encoder"]}
 # plotters-bitmap = {version = "0.3.0", default-features = true, features = ["image_encoder"]}
 rust_decimal = {version = "1.8.1"}
 rust_decimal_macros = "1.8.1"
+serde = {version = "1.0.117", features = ["derive"]}
+serde_json = "1.0"
 sqlx = {version = "0.4.1", features = ["runtime-async-std-native-tls", "postgres", "macros", "decimal"]}
 ta = "0.4.0"

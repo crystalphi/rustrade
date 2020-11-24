@@ -1,17 +1,19 @@
 pub mod analyzers;
+pub mod config;
 pub mod exchange;
 pub mod model;
 pub mod repository;
 pub mod synchronizer;
 pub mod tac_plotters;
+pub mod technicals;
 pub mod utils;
 // use clap::App;
-use analyzers::{macd_tac::MacdTac, pivots::PivotTac};
 use clap::App;
 use exchange::Exchange;
 use repository::Repository;
 use synchronizer::Synchronizer;
 use tac_plotters::plotter::plot_tecals;
+use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac};
 
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {

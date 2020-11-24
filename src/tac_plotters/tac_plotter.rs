@@ -1,13 +1,14 @@
-use crate::analyzers::{indicator::Indicator, technical::Technical};
 use plotters::prelude::*;
 use plotters::{
     coord::Shift,
     prelude::{BitMapBackend, DrawingArea},
 };
 
-pub fn indicator_plotter<'a, T: Indicator<'a>>(
-    indicator: T,
-    root: &DrawingArea<BitMapBackend, Shift>,
-) {
+use crate::technicals::indicator::Indicator;
+
+pub fn indicator_plotter<'a, T>(indicator: T, root: &DrawingArea<BitMapBackend, Shift>)
+where
+    T: Indicator<'a>,
+{
     //
 }
