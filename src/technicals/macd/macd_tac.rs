@@ -4,60 +4,45 @@ use ifmt::iprintln;
 use rust_decimal::prelude::ToPrimitive;
 use std::time::Instant;
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
-pub struct MacdCandle<'a> {
-    pub candle: &'a Candle,
-    // The MACD series proper
-    pub macd: f64,
-    // The "signal" or "average" series
-    pub signal: f64,
-    // The "divergence" series which is the difference between the two
-    pub divergence: f64,
-}
-
-impl<'a> MacdCandle<'a> {
-    pub fn new(candle: &'a Candle, macd: (f64, f64, f64)) -> Self {
-        MacdCandle {
-            candle,
-            macd: macd.0,
-            signal: macd.1,
-            divergence: macd.2,
-        }
-    }
-}
 
 pub struct MacdTac<'a> {
     candles: &'a [&'a Candle],
-    indicators: Vec<Box<dyn Indicator<'a>>>,
+    indicators: Vec<Indicator<'a>>,
 }
 
 impl<'a> Technical<'a> for MacdTac<'a> {
-    fn indicators(&'a self) -> &'a Vec<Box<dyn Indicator<'a>>> {
+    fn indicators(&'a self) -> &'a Vec<Indicator<'a>> {
         &self.indicators
     }
 }
 
 impl<'a> MacdTac<'a> {
     pub fn new(candles: &'a [&'a Candle]) -> Self {
-        MacdTac {
+        let mut r = MacdTac {
             candles,
             indicators: vec![],
-        }
+        };
+        r.run();
+        r
     }
 
-    pub fn run(&self) -> Vec<MacdCandle> {
+    fn run(&self) {
         let start = Instant::now();
-        let mut technicals = Vec::new();
+
+        let mut macd_id = Indicator::new("macd");
+        let mut signal = Indicator::new("signal");
+        let mut divergence = Indicator::new("divergence");
+
         let mut macd = Macd::new(34, 72, 17).unwrap();
         for candle in self.candles.iter() {
             let close = candle.close.to_f64().unwrap();
 
-            let macd_result = macd.next(close).into();
-
-            let ta = MacdCandle::new(candle, macd_result);
-            technicals.push(ta);
+            let macd_result: (f64, f64, f64) = macd.next(close).into();
+            macd_id.push_serie(&candle.close_time, macd_result.0);
+            signal.push_serie(&candle.close_time, macd_result.1);
+            divergence.push_serie(&candle.close_time, macd_result.2);
         }
-        iprintln!("Technicals {technicals.len()}: {start.elapsed():?}");
-        technicals
+        iprintln!("Technicals {self.candles.len()}: {start.elapsed():?}");
     }
 }
 

@@ -1,23 +1,69 @@
-use std::time::Instant;
-
-use chrono::Duration;
+use chrono::{DateTime, Duration, Utc};
 use ifmt::{iformat, iprintln};
-use plotters::prelude::*;
+use plotters::{coord::Shift, prelude::*};
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
+use std::path::Path;
+use std::time::Instant;
 
 use crate::{
-    technicals::{
-        macd::macd_tac::MacdCandle,
-        pivots::{Pivot, PivotType},
-    },
+    model::candle::Candle,
+    technicals::pivots::{Pivot, PivotType},
     utils::str_to_datetime,
 };
 
-pub fn plot_tecals(
+pub trait PlotterIndicator {
+    fn plot(
+        &self,
+        from_date: &DateTime<Utc>,
+        to_date: &DateTime<Utc>,
+        minutes: &i64,
+        upper: &DrawingArea<BitMapBackend, Shift>,
+        lower: &DrawingArea<BitMapBackend, Shift>,
+    );
+}
+
+pub struct Plotter {
+    plotters_ind: Vec<Box<dyn PlotterIndicator>>,
+}
+
+impl Plotter {
+    pub fn add_plotter_indicator(&mut self, plotter_ind: Box<dyn PlotterIndicator>) {
+        self.plotters_ind.push(plotter_ind);
+    }
+
+    pub fn plot<P: AsRef<Path>>(
+        &self,
+        from_date: &DateTime<Utc>,
+        to_date: &DateTime<Utc>,
+        minutes: &i64,
+        image_path: P,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let (upper, lower) = {
+            let root = BitMapBackend::new(&image_path, (1920, 1080)).into_drawing_area();
+            root.split_vertically((80).percent())
+        };
+        for plotter_ind in self.plotters_ind {
+            plotter_ind.plot(from_date, to_date, minutes, &upper, &lower);
+        }
+        Ok(())
+    }
+}
+
+pub fn date_time_range_from_candles(
+    candles: &[&Candle],
+    minutes: &i64,
+) -> (DateTime<Utc>, DateTime<Utc>) {
+    let from_date = str_to_datetime(&candles[0].close_time) - Duration::minutes(*minutes as i64);
+    let to_date = str_to_datetime(&candles[candles.len() - 1].close_time)
+        + Duration::minutes(*minutes as i64);
+    (from_date, to_date)
+}
+
+pub fn plot_candles(
     symbol: &str,
     minutes: &u32,
-    macd_tacs: &[MacdCandle],
+    candles: &[&Candle],
     pivots: &[Pivot],
 ) -> Result<(), Box<dyn std::error::Error>> {
     let red = RGBColor(164, 16, 64);
@@ -29,21 +75,16 @@ pub fn plot_tecals(
         let root = BitMapBackend::new("out/stock.png", (1920, 1080)).into_drawing_area();
         root.split_vertically((80).percent())
     };
-    let from_date =
-        str_to_datetime(&macd_tacs[0].candle.close_time) - Duration::minutes(*minutes as i64);
+    let from_date = str_to_datetime(&candles[0].close_time) - Duration::minutes(*minutes as i64);
 
-    let to_date = str_to_datetime(&macd_tacs[macd_tacs.len() - 1].candle.close_time)
+    let to_date = str_to_datetime(&candles[candles.len() - 1].close_time)
         + Duration::minutes(*minutes as i64);
 
     {
         upper.fill(&WHITE)?;
 
-        let max_price = macd_tacs
-            .iter()
-            .fold(dec!(0), |acc, x| acc.max(x.candle.high));
-        let min_price = macd_tacs
-            .iter()
-            .fold(max_price, |acc, x| acc.min(x.candle.low));
+        let max_price = candles.iter().fold(dec!(0), |acc, x| acc.max(x.high));
+        let min_price = candles.iter().fold(max_price, |acc, x| acc.min(x.low));
 
         let min_price = min_price.to_f32().unwrap();
         let max_price = max_price.to_f32().unwrap();
@@ -62,13 +103,13 @@ pub fn plot_tecals(
             .light_line_style(&WHITE)
             .draw()?;
 
-        let candle_series = macd_tacs.iter().map(|x| {
+        let candle_series = candles.iter().map(|x| {
             CandleStick::new(
-                str_to_datetime(&x.candle.close_time),
-                x.candle.open.to_f32().unwrap(),
-                x.candle.high.to_f32().unwrap(),
-                x.candle.low.to_f32().unwrap(),
-                x.candle.close.to_f32().unwrap(),
+                str_to_datetime(&x.close_time),
+                x.open.to_f32().unwrap(),
+                x.high.to_f32().unwrap(),
+                x.low.to_f32().unwrap(),
+                x.close.to_f32().unwrap(),
                 &green,
                 &red,
                 2,
@@ -109,8 +150,8 @@ pub fn plot_tecals(
     {
         lower.fill(&WHITE)?;
 
-        let max_macd = macd_tacs.iter().fold(0f64, |acc, t| acc.max(t.macd));
-        let min_macd = macd_tacs.iter().fold(max_macd, |acc, t| acc.min(t.macd));
+        let max_macd = candles.iter().fold(0f64, |acc, t| acc.max(t.macd));
+        let min_macd = candles.iter().fold(max_macd, |acc, t| acc.min(t.macd));
         let min_macd = min_macd.to_f32().unwrap();
         let max_macd = max_macd.to_f32().unwrap();
 
@@ -130,7 +171,7 @@ pub fn plot_tecals(
             .draw()?;
 
         let macd_fast_series = LineSeries::new(
-            macd_tacs
+            candles
                 .iter()
                 .map(|t| (str_to_datetime(&t.candle.close_time), t.macd as f32)),
             &BLACK,
@@ -138,7 +179,7 @@ pub fn plot_tecals(
 
         cart_context.draw_series(macd_fast_series)?;
     }
-    iprintln!("Plotting {macd_tacs.len()} pivots {pivots.len()} : {start.elapsed():?}");
+    //iprintln!("Plotting {macd_tacs.len()} pivots {pivots.len()} : {start.elapsed():?}");
 
     Ok(())
 }

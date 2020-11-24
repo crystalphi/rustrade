@@ -6,9 +6,10 @@ use plotters::{
 
 use crate::technicals::indicator::Indicator;
 
-pub fn indicator_plotter<'a, T>(indicator: T, root: &DrawingArea<BitMapBackend, Shift>)
-where
-    T: Indicator<'a>,
-{
+pub fn indicator_plotter<'a, T>(
+    indicator: Indicator,
+    upper: &DrawingArea<BitMapBackend, Shift>,
+    lower: &DrawingArea<BitMapBackend, Shift>,
+) {
     //
 }

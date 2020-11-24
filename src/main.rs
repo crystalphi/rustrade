@@ -12,7 +12,7 @@ use clap::App;
 use exchange::Exchange;
 use repository::Repository;
 use synchronizer::Synchronizer;
-use tac_plotters::plotter::plot_tecals;
+use tac_plotters::plotter::plot_candles;
 use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac};
 
 #[async_std::main]
@@ -55,12 +55,11 @@ async fn main() -> anyhow::Result<()> {
         let candles = repo.candles_default("BTCUSDT", &15);
 
         let candles_ref: Vec<_> = candles.iter().collect();
-        let analyzer = MacdTac::new(candles_ref.as_slice());
-        let tacs = analyzer.run();
+        let macd_tac = MacdTac::new(candles_ref.as_slice());
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
 
-        plot_tecals("BTCUSDT", &15, &tacs, &pivots).unwrap();
+        plot_candles("BTCUSDT", &15, &tacs, &pivots).unwrap();
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {
