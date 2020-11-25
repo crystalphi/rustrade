@@ -1,6 +1,7 @@
 use std::{cmp::Ordering, collections::HashSet};
 
-use ifmt::{iprint, iprintln};
+use ifmt::{iformat, iprint, iprintln};
+use log::debug;
 use rust_decimal::Decimal;
 
 use crate::model::candle::Candle;
@@ -120,16 +121,15 @@ fn normalize_pivots<'a>(pivots: &mut Vec<Pivot<'a>>) {
         match pivots_iter.next() {
             None => break,
             Some(current) => {
-                iprint!("pivots {current:?}");
+                debug!("{}", iformat!("pivots {current:?}"));
                 if current.type_p == previous.type_p {
                     if current.type_p == PivotType::Low {
                         delete.insert(max_price(previous, current));
                     } else {
                         delete.insert(min_price(previous, current));
                     }
-                    iprint!(" *");
+                    debug!(" *");
                 }
-                iprintln!("");
                 previous = current;
             }
         }

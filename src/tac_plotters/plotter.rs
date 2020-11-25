@@ -121,7 +121,7 @@ pub fn plot_candles<'a>(
     plotter.add_plotter_upper_ind(&candle_plotter);
     plotter.add_plotter_upper_ind(&pivot_plotter);
 
-    plotter.plot(symbol, minutes, "out/stock.pnj")?;
+    plotter.plot(symbol, minutes, "out/stock.png")?;
 
     Ok(())
 }

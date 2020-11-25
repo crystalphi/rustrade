@@ -19,6 +19,7 @@ ifmt = "0.3.2"
 plotters = {version = "0.3.0"}
 # plotters = {Version = "0.3.0", default_features = false, features = ["datetime", "candlestick", "point_series", "line_series", "ttf", "bitmap_encoder"]}
 # plotters-bitmap = {version = "0.3.0", default-features = true, features = ["image_encoder"]}
+log = "0.4.11"
 plotters-bitmap = "0.3.0"
 rust_decimal = {version = "1.8.1"}
 rust_decimal_macros = "1.8.1"

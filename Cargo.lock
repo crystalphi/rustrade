@@ -2056,6 +2056,7 @@ dependencies = [
  "dotenv",
  "futures",
  "ifmt",
+ "log",
  "plotters",
  "plotters-bitmap",
  "rust_decimal",

@@ -8,8 +8,11 @@ pub mod tac_plotters;
 pub mod technicals;
 pub mod utils;
 // use clap::App;
+use std::time::Instant;
+
 use clap::App;
 use exchange::Exchange;
+use ifmt::iprintln;
 use repository::Repository;
 use synchronizer::Synchronizer;
 use tac_plotters::plotter::plot_candles;
@@ -52,15 +55,22 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if let Some(_plot) = matches.subcommand_matches("plot") {
+        let start = Instant::now();
         let candles = repo.candles_default("BTCUSDT", &15);
 
+        iprintln!("Loading {start.elapsed():?}");
+        let start = Instant::now();
+
         let candles_ref: Vec<_> = candles.iter().collect();
-        
+
         let macd_tac = MacdTac::new(candles_ref.as_slice());
+        let macd_ind = macd_tac.macd;
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
 
         plot_candles("BTCUSDT", &15, &candles_ref, &pivots).unwrap();
+
+        iprintln!("Plotting {start.elapsed():?}");
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {
