@@ -1,51 +1,84 @@
-use chrono::{DateTime, Duration, Utc};
-use ifmt::{iformat, iprintln};
-use plotters::{coord::Shift, prelude::*};
-use rust_decimal::prelude::ToPrimitive;
-use rust_decimal_macros::dec;
-use std::path::Path;
-use std::time::Instant;
-
 use crate::{
     model::candle::Candle,
     technicals::pivots::{Pivot, PivotType},
     utils::str_to_datetime,
 };
+use chrono::{DateTime, Duration, Utc};
+use ifmt::{iformat, iprintln};
+use plotters::prelude::*;
+use rust_decimal::{prelude::ToPrimitive, Decimal};
+use rust_decimal_macros::dec;
+use std::path::Path;
+use std::time::Instant;
 
-pub trait PlotterIndicator {
-    fn plot(
-        &self,
-        from_date: &DateTime<Utc>,
-        to_date: &DateTime<Utc>,
-        minutes: &i64,
-        upper: &DrawingArea<BitMapBackend, Shift>,
-        lower: &DrawingArea<BitMapBackend, Shift>,
-    );
+use super::indicator_plotter::{IndicatorPlotter, PlotterIndicatorUpper};
+
+pub struct Plotter<'a> {
+    candles: &'a [&'a Candle],
+    plotters_ind: Vec<Box<dyn IndicatorPlotter>>,
+    plotters_ind_upper: Vec<Box<dyn PlotterIndicatorUpper>>,
 }
 
-pub struct Plotter {
-    plotters_ind: Vec<Box<dyn PlotterIndicator>>,
-}
+impl<'a> Plotter<'a> {
+    pub fn new(candles: &'a [&'a Candle]) -> Self {
+        Plotter {
+            candles,
+            plotters_ind: vec![],
+            plotters_ind_upper: vec![],
+        }
+    }
 
-impl Plotter {
-    pub fn add_plotter_indicator(&mut self, plotter_ind: Box<dyn PlotterIndicator>) {
+    pub fn add_plotter_ind(&mut self, plotter_ind: Box<dyn IndicatorPlotter>) {
         self.plotters_ind.push(plotter_ind);
+    }
+
+    pub fn add_plotter_upper_ind(&mut self, plotter_ind: Box<dyn PlotterIndicatorUpper>) {
+        self.plotters_ind_upper.push(plotter_ind);
     }
 
     pub fn plot<P: AsRef<Path>>(
         &self,
-        from_date: &DateTime<Utc>,
-        to_date: &DateTime<Utc>,
+        symbol: &str,
         minutes: &i64,
         image_path: P,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        let (min_price, max_price) = prices_range_from_candles(&self.candles);
+        let (from_date, to_date) = date_time_range_from_candles(&self.candles, minutes);
+
         let (upper, lower) = {
             let root = BitMapBackend::new(&image_path, (1920, 1080)).into_drawing_area();
             root.split_vertically((80).percent())
         };
-        for plotter_ind in self.plotters_ind {
-            plotter_ind.plot(from_date, to_date, minutes, &upper, &lower);
+        upper.fill(&WHITE)?;
+
+        let min_price = min_price.to_f32().unwrap();
+        let max_price = max_price.to_f32().unwrap();
+
+        let mut chart_context = ChartBuilder::on(&upper)
+            .set_label_area_size(LabelAreaPosition::Left, 30)
+            .set_label_area_size(LabelAreaPosition::Right, 80)
+            .y_label_area_size(80)
+            .x_label_area_size(30)
+            .caption(iformat!("{symbol} price"), ("sans-serif", 20.0).into_font())
+            .build_cartesian_2d(from_date..to_date, min_price..max_price)?;
+
+        chart_context
+            .configure_mesh()
+            .x_labels(12)
+            .light_line_style(&WHITE)
+            .draw()?;
+
+
+        for plotter_upper_ind in self.plotters_ind_upper {
+            plotter_upper_ind.plot(&chart_context);
         }
+ 
+        lower.fill(&WHITE)?;
+    
+        for plotter_ind in self.plotters_ind {
+            plotter_ind.plot(symbol, minutes, &from_date, &to_date, &upper, &lower);
+        }
+
         Ok(())
     }
 }
@@ -58,6 +91,12 @@ pub fn date_time_range_from_candles(
     let to_date = str_to_datetime(&candles[candles.len() - 1].close_time)
         + Duration::minutes(*minutes as i64);
     (from_date, to_date)
+}
+
+pub fn prices_range_from_candles(candles: &[&Candle]) -> (Decimal, Decimal) {
+    let max_price = candles.iter().fold(dec!(0), |acc, x| acc.max(x.high));
+    let min_price = candles.iter().fold(max_price, |acc, x| acc.min(x.low));
+    (min_price, max_price)
 }
 
 pub fn plot_candles(

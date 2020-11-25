@@ -59,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
 
-        plot_candles("BTCUSDT", &15, &tacs, &pivots).unwrap();
+        plot_candles("BTCUSDT", &15, &candles_ref, &pivots).unwrap();
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {

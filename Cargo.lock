@@ -2057,6 +2057,7 @@ dependencies = [
  "futures",
  "ifmt",
  "plotters",
+ "plotters-bitmap",
  "rust_decimal",
  "rust_decimal_macros",
  "serde",
