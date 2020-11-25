@@ -20,11 +20,11 @@ impl<'a> MacdPlotter<'a> {
 impl<'a> IndicatorPlotter for MacdPlotter<'a> {
     fn plot(
         &self,
-        symbol: &str,
-        minutes: &i64,
+        _symbol: &str,
+        _minutes: &i64,
         from_date: &chrono::DateTime<chrono::Utc>,
         to_date: &chrono::DateTime<chrono::Utc>,
-        upper: &plotters::prelude::DrawingArea<
+        _upper: &plotters::prelude::DrawingArea<
             plotters_bitmap::BitMapBackend<plotters_bitmap::bitmap_pixel::RGBPixel>,
             plotters::coord::Shift,
         >,

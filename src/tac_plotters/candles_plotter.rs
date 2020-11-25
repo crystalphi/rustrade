@@ -3,7 +3,6 @@ use chrono::{DateTime, Utc};
 use plotters::{coord::types::RangedCoordf32, prelude::*};
 use plotters_bitmap::bitmap_pixel::RGBPixel;
 use rust_decimal::prelude::ToPrimitive;
-use rust_decimal_macros::dec;
 
 use crate::{model::candle::Candle, utils::str_to_datetime};
 
@@ -22,19 +21,13 @@ impl<'a> CandlePlotter<'a> {
 impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
     fn plot(
         &self,
-        chart_context: &ChartContext<
+        chart_context: &mut ChartContext<
             BitMapBackend<RGBPixel>,
             Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>,
         >,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let red = RGBColor(164, 16, 64);
         let green = RGBColor(16, 196, 64);
-
-        let max_price = self.candles.iter().fold(dec!(0), |acc, x| acc.max(x.high));
-        let min_price = self.candles.iter().fold(max_price, |acc, x| acc.min(x.low));
-
-        let min_price = min_price.to_f32().unwrap();
-        let max_price = max_price.to_f32().unwrap();
 
         chart_context
             .configure_mesh()

@@ -1,5 +1,3 @@
-use crate::technicals::{indicator::Indicator, serie::Serie};
-
 // pub struct MacdInd<'a> {
 //     series: Vec<Serie<'a>>,
 // }

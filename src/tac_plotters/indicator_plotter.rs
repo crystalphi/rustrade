@@ -20,7 +20,7 @@ pub trait IndicatorPlotter {
 pub trait PlotterIndicatorContext {
     fn plot(
         &self,
-        chart_context: &ChartContext<
+        chart_context: &mut ChartContext<
             BitMapBackend<RGBPixel>,
             Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>,
         >,

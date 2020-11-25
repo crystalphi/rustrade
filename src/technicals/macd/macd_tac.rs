@@ -20,7 +20,7 @@ impl<'a> Technical<'a> for MacdTac<'a> {
 
 impl<'a> MacdTac<'a> {
     pub fn new(candles: &'a [&'a Candle]) -> Self {
-        let mut r = MacdTac {
+        let r = MacdTac {
             candles,
             macd: Indicator::new("macd"),
             signal: Indicator::new("signal"),

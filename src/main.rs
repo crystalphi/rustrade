@@ -55,6 +55,7 @@ async fn main() -> anyhow::Result<()> {
         let candles = repo.candles_default("BTCUSDT", &15);
 
         let candles_ref: Vec<_> = candles.iter().collect();
+        
         let macd_tac = MacdTac::new(candles_ref.as_slice());
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();

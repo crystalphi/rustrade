@@ -13,9 +13,9 @@ use super::{
 
 pub struct Plotter<'a> {
     candles: &'a [&'a Candle],
-    plotters_ind: Vec<Box<dyn IndicatorPlotter>>,
-    plotters_ind_upper: Vec<Box<&'a dyn PlotterIndicatorContext>>,
-    plotters_ind_lower: Vec<Box<&'a dyn PlotterIndicatorContext>>,
+    plotters_ind: Vec<&'a dyn IndicatorPlotter>,
+    plotters_ind_upper: Vec<&'a dyn PlotterIndicatorContext>,
+    plotters_ind_lower: Vec<&'a dyn PlotterIndicatorContext>,
 }
 
 impl<'a> Plotter<'a> {
@@ -28,15 +28,15 @@ impl<'a> Plotter<'a> {
         }
     }
 
-    pub fn add_plotter_ind(&mut self, plotter_ind: Box<dyn IndicatorPlotter>) {
+    pub fn add_plotter_ind(&mut self, plotter_ind: &'a dyn IndicatorPlotter) {
         self.plotters_ind.push(plotter_ind);
     }
 
-    pub fn add_plotter_upper_ind(&mut self, plotter_ind: Box<&'a dyn PlotterIndicatorContext>) {
+    pub fn add_plotter_upper_ind(&mut self, plotter_ind: &'a dyn PlotterIndicatorContext) {
         self.plotters_ind_upper.push(plotter_ind);
     }
 
-    pub fn add_plotter_lower_ind(&mut self, plotter_ind: Box<&'a dyn PlotterIndicatorContext>) {
+    pub fn add_plotter_lower_ind(&mut self, plotter_ind: &'a dyn PlotterIndicatorContext) {
         self.plotters_ind_lower.push(plotter_ind);
     }
 
@@ -73,17 +73,17 @@ impl<'a> Plotter<'a> {
             .draw()?;
 
         for plotter_upper_ind in self.plotters_ind_upper.iter() {
-            plotter_upper_ind.plot(&chart_context);
+            plotter_upper_ind.plot(&mut chart_context)?;
         }
 
         lower.fill(&WHITE)?;
 
         for plotter_lower_ind in self.plotters_ind_lower.iter() {
-            plotter_lower_ind.plot(&chart_context);
+            plotter_lower_ind.plot(&mut chart_context)?;
         }
 
         for plotter_ind in self.plotters_ind.iter() {
-            plotter_ind.plot(symbol, minutes, &from_date, &to_date, &upper, &lower);
+            plotter_ind.plot(symbol, minutes, &from_date, &to_date, &upper, &lower)?;
         }
 
         Ok(())
@@ -118,8 +118,8 @@ pub fn plot_candles<'a>(
 
     let pivot_plotter = PivotPlotter::new(pivots);
 
-    plotter.add_plotter_upper_ind(Box::new(&candle_plotter));
-    plotter.add_plotter_upper_ind(Box::new(&pivot_plotter));
+    plotter.add_plotter_upper_ind(&candle_plotter);
+    plotter.add_plotter_upper_ind(&pivot_plotter);
 
     plotter.plot(symbol, minutes, "out/stock.pnj")?;
 

@@ -6,7 +6,7 @@ use ifmt::{iformat, iprintln};
 
 use crate::{
     model::candle::Candle,
-    utils::{datetime_to_timestamp, kline_to_candle, kline_to_data_item},
+    utils::{datetime_to_timestamp, kline_to_candle},
 };
 
 use anyhow::Result;
@@ -50,23 +50,9 @@ impl Exchange {
             Ok(answer) => match answer {
                 binance::model::KlineSummaries::AllKlineSummaries(summaries) => {
                     for summary in summaries {
-                        let dt = kline_to_data_item(&summary);
-
-                        // let ema_val = ema_9.next(&dt);
-
-                        // 17,34,72
-                        // let mut macd = Macd::new(3, 6, 4).unwrap();
-                        // macd.next(&dt);
-
                         let candle = kline_to_candle(&summary, &symbol, 15u32, &0u32.into());
-
                         iprintln!("{candle.open_time}");
                         result.push(candle);
-                        //iprintln!("{open_time_fmt}: close {summary.close} vol {summary.volume} : {ema} = {ema_val:2.2}");
-
-                        // repository.insert_candle(candle);
-
-                        // current_id += bd1();
                     }
                 }
             },

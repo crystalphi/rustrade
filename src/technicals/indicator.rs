@@ -1,5 +1,3 @@
-use rust_decimal::Decimal;
-
 use super::serie::Serie;
 
 pub struct Indicator<'a> {
