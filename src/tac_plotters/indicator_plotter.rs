@@ -17,7 +17,7 @@ pub trait IndicatorPlotter {
     ) -> Result<(), Box<dyn std::error::Error>>;
 }
 
-pub trait PlotterIndicatorUpper {
+pub trait PlotterIndicatorContext {
     fn plot(
         &self,
         chart_context: &ChartContext<

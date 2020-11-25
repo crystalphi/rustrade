@@ -7,12 +7,14 @@ use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
 pub struct MacdTac<'a> {
     candles: &'a [&'a Candle],
-    indicators: Vec<Indicator<'a>>,
+    pub macd: Indicator<'a>,
+    pub signal: Indicator<'a>,
+    pub divergence: Indicator<'a>,
 }
 
 impl<'a> Technical<'a> for MacdTac<'a> {
-    fn indicators(&'a self) -> &'a Vec<Indicator<'a>> {
-        &self.indicators
+    fn indicators(&'a self) -> Vec<&'a Indicator<'a>> {
+        vec![&self.macd, &self.signal, &self.divergence]
     }
 }
 
@@ -20,7 +22,9 @@ impl<'a> MacdTac<'a> {
     pub fn new(candles: &'a [&'a Candle]) -> Self {
         let mut r = MacdTac {
             candles,
-            indicators: vec![],
+            macd: Indicator::new("macd"),
+            signal: Indicator::new("signal"),
+            divergence: Indicator::new("divergence"),
         };
         r.run();
         r

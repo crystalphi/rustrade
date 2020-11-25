@@ -1,8 +1,23 @@
+use plotters::{
+    prelude::{ChartBuilder, LabelAreaPosition, LineSeries},
+    style::{BLACK, WHITE},
+};
+
+use crate::{technicals::macd::macd_tac::MacdTac, utils::str_to_datetime};
+
 use super::indicator_plotter::IndicatorPlotter;
 
-pub struct MacdPlotter {}
+pub struct MacdPlotter<'a> {
+    macd_tac: &'a MacdTac<'a>,
+}
 
-impl IndicatorPlotter for MacdPlotter {
+impl<'a> MacdPlotter<'a> {
+    pub fn new(macd_tac: &'a MacdTac<'a>) -> Self {
+        MacdPlotter { macd_tac }
+    }
+}
+
+impl<'a> IndicatorPlotter for MacdPlotter<'a> {
     fn plot(
         &self,
         symbol: &str,
@@ -18,12 +33,24 @@ impl IndicatorPlotter for MacdPlotter {
             plotters::coord::Shift,
         >,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let max_macd = candles.iter().fold(0f64, |acc, t| acc.max(t.macd));
-        let min_macd = candles.iter().fold(max_macd, |acc, t| acc.min(t.macd));
-        let min_macd = min_macd.to_f32().unwrap();
-        let max_macd = max_macd.to_f32().unwrap();
+        let max_macd = self
+            .macd_tac
+            .macd
+            .series
+            .iter()
+            .fold(0f64, |acc, t| acc.max(t.value));
 
-        iprintln!("min_macd: {min_macd} max_macd: {max_macd}");
+        let min_macd = self
+            .macd_tac
+            .macd
+            .series
+            .iter()
+            .fold(max_macd, |acc, t| acc.min(t.value));
+
+        // let min_macd = min_macd.to_f32().unwrap();
+        // let max_macd = max_macd.to_f32().unwrap();
+
+        // iprintln!("min_macd: {min_macd} max_macd: {max_macd}");
 
         let mut cart_context = ChartBuilder::on(&lower)
             .set_label_area_size(LabelAreaPosition::Left, 30)
@@ -31,7 +58,7 @@ impl IndicatorPlotter for MacdPlotter {
             .y_label_area_size(80)
             .x_label_area_size(30)
             //   .caption(iformat!("{symbol} price"), ("sans-serif", 50.0).into_font())
-            .build_cartesian_2d(from_date..to_date, min_macd..max_macd)?;
+            .build_cartesian_2d(*from_date..*to_date, min_macd..max_macd)?;
 
         cart_context
             .configure_mesh()
@@ -39,9 +66,11 @@ impl IndicatorPlotter for MacdPlotter {
             .draw()?;
 
         let macd_fast_series = LineSeries::new(
-            candles
+            self.macd_tac
+                .macd
+                .series
                 .iter()
-                .map(|t| (str_to_datetime(&t.candle.close_time), t.macd as f32)),
+                .map(|t| (str_to_datetime(&t.date_time), t.value)),
             &BLACK,
         );
 

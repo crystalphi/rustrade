@@ -7,7 +7,7 @@ use rust_decimal_macros::dec;
 
 use crate::{model::candle::Candle, utils::str_to_datetime};
 
-use super::indicator_plotter::PlotterIndicatorUpper;
+use super::indicator_plotter::PlotterIndicatorContext;
 
 pub struct CandlePlotter<'a> {
     candles: &'a [&'a Candle],
@@ -19,7 +19,7 @@ impl<'a> CandlePlotter<'a> {
     }
 }
 
-impl<'a> PlotterIndicatorUpper for CandlePlotter<'a> {
+impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
     fn plot(
         &self,
         chart_context: &ChartContext<

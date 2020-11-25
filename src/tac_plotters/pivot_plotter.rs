@@ -13,13 +13,19 @@ use crate::{
     utils::str_to_datetime,
 };
 
-use super::indicator_plotter::PlotterIndicatorUpper;
+use super::indicator_plotter::PlotterIndicatorContext;
 
 pub struct PivotPlotter<'a> {
     pivots: &'a [Pivot<'a>],
 }
 
-impl<'a> PlotterIndicatorUpper for PivotPlotter<'a> {
+impl<'a> PivotPlotter<'a> {
+    pub fn new(pivots: &'a [Pivot<'a>]) -> Self {
+        PivotPlotter { pivots }
+    }
+}
+
+impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
     fn plot(
         &self,
         chart_context: &ChartContext<
