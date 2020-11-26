@@ -64,11 +64,10 @@ async fn main() -> anyhow::Result<()> {
         let candles_ref: Vec<_> = candles.iter().collect();
 
         let macd_tac = MacdTac::new(candles_ref.as_slice());
-        let macd_ind = macd_tac.macd;
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
 
-        plot_candles("BTCUSDT", &15, &candles_ref, &pivots).unwrap();
+        plot_candles("BTCUSDT", &15, &candles_ref, &pivots, &macd_tac).unwrap();
 
         iprintln!("Plotting {start.elapsed():?}");
     }

@@ -1,4 +1,8 @@
-use crate::{model::candle::Candle, technicals::pivots::Pivot, utils::str_to_datetime};
+use crate::{
+    model::candle::Candle,
+    technicals::{indicator::Indicator, macd::macd_tac::MacdTac, pivots::Pivot},
+    utils::str_to_datetime,
+};
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
 use plotters::prelude::*;
@@ -8,7 +12,8 @@ use std::path::Path;
 
 use super::{
     candles_plotter::CandlePlotter, indicator_plotter::IndicatorPlotter,
-    indicator_plotter::PlotterIndicatorContext, pivot_plotter::PivotPlotter,
+    indicator_plotter::PlotterIndicatorContext, macd_plotter::MacdPlotter,
+    pivot_plotter::PivotPlotter,
 };
 
 pub struct Plotter<'a> {
@@ -111,17 +116,28 @@ pub fn plot_candles<'a>(
     minutes: &i64,
     candles: &'a [&'a Candle],
     pivots: &'a [Pivot],
+    macd_tac: &'a MacdTac,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    println!("1...");
+
     let mut plotter = Plotter::new(candles);
 
+    println!("2...");
     let candle_plotter = CandlePlotter::new(candles);
 
     let pivot_plotter = PivotPlotter::new(pivots);
 
+    println!("3...");
+    let macd_plotter = MacdPlotter::new(macd_tac);
+    println!("4...");
+
     plotter.add_plotter_upper_ind(&candle_plotter);
     plotter.add_plotter_upper_ind(&pivot_plotter);
+    plotter.add_plotter_ind(&macd_plotter);
 
+    println!("5...");
     plotter.plot(symbol, minutes, "out/stock.png")?;
+    println!("6...");
 
     Ok(())
 }
