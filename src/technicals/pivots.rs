@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::HashSet};
 
-use ifmt::{iformat, iprint, iprintln};
+use ifmt::iformat;
 use log::debug;
 use rust_decimal::Decimal;
 
@@ -13,11 +13,7 @@ pub enum PivotType {
 
 impl std::fmt::Display for PivotType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if *self == PivotType::Low {
-            "Low"
-        } else {
-            "High"
-        })
+        f.write_str(if *self == PivotType::Low { "Low" } else { "High" })
     }
 }
 
@@ -68,11 +64,7 @@ impl<'a> PivotTac<'a> {
         for i in 0..self.candles.len() - 15 {
             let pivot = self.candles[i + 7];
 
-            let l_min = self.candles[i..i + 7]
-                .iter()
-                .map(|c| c.low)
-                .min()
-                .unwrap_or(pivot.low);
+            let l_min = self.candles[i..i + 7].iter().map(|c| c.low).min().unwrap_or(pivot.low);
 
             let l_max = self.candles[i..i + 7]
                 .iter()
@@ -384,8 +376,7 @@ pub mod tests {
         };
 
         let candles = [
-            &c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16,
-            &c17,
+            &c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16, &c17,
         ];
 
         let pivot_tac = PivotTac::new(&candles);

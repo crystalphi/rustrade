@@ -1,12 +1,14 @@
+use crate::{technicals::macd::macd_tac::MacdTac, utils::str_to_datetime};
+use chrono::{DateTime, Utc};
 use plotters::{
+    coord::Shift,
     prelude::{ChartBuilder, LabelAreaPosition, LineSeries},
     style::{BLACK, WHITE},
 };
 
-use crate::{technicals::macd::macd_tac::MacdTac, utils::str_to_datetime};
-
 use super::indicator_plotter::IndicatorPlotter;
-
+use plotters::prelude::*;
+use plotters_bitmap::{self, bitmap_pixel::RGBPixel};
 pub struct MacdPlotter<'a> {
     macd_tac: &'a MacdTac<'a>,
 }
@@ -22,23 +24,12 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
         &self,
         _symbol: &str,
         _minutes: &i64,
-        from_date: &chrono::DateTime<chrono::Utc>,
-        to_date: &chrono::DateTime<chrono::Utc>,
-        _upper: &plotters::prelude::DrawingArea<
-            plotters_bitmap::BitMapBackend<plotters_bitmap::bitmap_pixel::RGBPixel>,
-            plotters::coord::Shift,
-        >,
-        lower: &plotters::prelude::DrawingArea<
-            plotters_bitmap::BitMapBackend<plotters_bitmap::bitmap_pixel::RGBPixel>,
-            plotters::coord::Shift,
-        >,
+        from_date: &DateTime<Utc>,
+        to_date: &DateTime<Utc>,
+        _upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
+        lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let max_macd = self
-            .macd_tac
-            .macd
-            .series
-            .iter()
-            .fold(0f64, |acc, t| acc.max(t.value));
+        let max_macd = self.macd_tac.macd.series.iter().fold(0f64, |acc, t| acc.max(t.value));
 
         let min_macd = self
             .macd_tac
@@ -47,12 +38,11 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
             .iter()
             .fold(max_macd, |acc, t| acc.min(t.value));
 
-        // let min_macd = min_macd.to_f32().unwrap();
-        // let max_macd = max_macd.to_f32().unwrap();
+        if min_macd == 0. && max_macd == 0. {
+            return Err("Valores estão zerado!".into());
+        }
 
-        // iprintln!("min_macd: {min_macd} max_macd: {max_macd}");
-
-        let mut cart_context = ChartBuilder::on(&lower)
+        let mut cart_context_lower = ChartBuilder::on(&lower)
             .set_label_area_size(LabelAreaPosition::Left, 30)
             .set_label_area_size(LabelAreaPosition::Right, 80)
             .y_label_area_size(80)
@@ -60,10 +50,7 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
             //   .caption(iformat!("{symbol} price"), ("sans-serif", 50.0).into_font())
             .build_cartesian_2d(*from_date..*to_date, min_macd..max_macd)?;
 
-        cart_context
-            .configure_mesh()
-            .light_line_style(&WHITE)
-            .draw()?;
+        cart_context_lower.configure_mesh().light_line_style(&WHITE).draw()?;
 
         let macd_fast_series = LineSeries::new(
             self.macd_tac
@@ -74,7 +61,7 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
             &BLACK,
         );
 
-        cart_context.draw_series(macd_fast_series)?;
+        cart_context_lower.draw_series(macd_fast_series)?;
 
         Ok(())
     }

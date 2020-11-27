@@ -6,7 +6,6 @@ use std::time::Instant;
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
 pub struct MacdTac<'a> {
-    candles: &'a [&'a Candle],
     pub macd: Indicator<'a>,
     pub signal: Indicator<'a>,
     pub divergence: Indicator<'a>,
@@ -20,33 +19,24 @@ impl<'a> Technical<'a> for MacdTac<'a> {
 
 impl<'a> MacdTac<'a> {
     pub fn new(candles: &'a [&'a Candle]) -> Self {
-        let r = MacdTac {
-            candles,
+        let start = Instant::now();
+        let mut mac_tac = MacdTac {
             macd: Indicator::new("macd"),
             signal: Indicator::new("signal"),
             divergence: Indicator::new("divergence"),
         };
-        r.run();
-        r
-    }
-
-    fn run(&self) {
-        let start = Instant::now();
-
-        let mut macd_id = Indicator::new("macd");
-        let mut signal = Indicator::new("signal");
-        let mut divergence = Indicator::new("divergence");
 
         let mut macd = Macd::new(34, 72, 17).unwrap();
-        for candle in self.candles.iter() {
+        for candle in candles.iter() {
             let close = candle.close.to_f64().unwrap();
 
             let macd_result: (f64, f64, f64) = macd.next(close).into();
-            macd_id.push_serie(&candle.close_time, macd_result.0);
-            signal.push_serie(&candle.close_time, macd_result.1);
-            divergence.push_serie(&candle.close_time, macd_result.2);
+            mac_tac.macd.push_serie(&candle.close_time, macd_result.0);
+            mac_tac.signal.push_serie(&candle.close_time, macd_result.1);
+            mac_tac.divergence.push_serie(&candle.close_time, macd_result.2);
         }
-        iprintln!("Technicals {self.candles.len()}: {start.elapsed():?}");
+        iprintln!("Technicals {candles.len()}: {start.elapsed():?}");
+        mac_tac
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::{
     model::candle::Candle,
-    technicals::{indicator::Indicator, macd::macd_tac::MacdTac, pivots::Pivot},
+    technicals::{macd::macd_tac::MacdTac, pivots::Pivot},
     utils::str_to_datetime,
 };
 use chrono::{DateTime, Duration, Utc};
@@ -11,9 +11,8 @@ use rust_decimal_macros::dec;
 use std::path::Path;
 
 use super::{
-    candles_plotter::CandlePlotter, indicator_plotter::IndicatorPlotter,
-    indicator_plotter::PlotterIndicatorContext, macd_plotter::MacdPlotter,
-    pivot_plotter::PivotPlotter,
+    candles_plotter::CandlePlotter, indicator_plotter::IndicatorPlotter, indicator_plotter::PlotterIndicatorContext,
+    macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter,
 };
 
 pub struct Plotter<'a> {
@@ -63,7 +62,7 @@ impl<'a> Plotter<'a> {
         let min_price = min_price.to_f32().unwrap();
         let max_price = max_price.to_f32().unwrap();
 
-        let mut chart_context = ChartBuilder::on(&upper)
+        let mut chart_context_upper = ChartBuilder::on(&upper)
             .set_label_area_size(LabelAreaPosition::Left, 30)
             .set_label_area_size(LabelAreaPosition::Right, 80)
             .y_label_area_size(80)
@@ -71,37 +70,33 @@ impl<'a> Plotter<'a> {
             .caption(iformat!("{symbol} price"), ("sans-serif", 20.0).into_font())
             .build_cartesian_2d(from_date..to_date, min_price..max_price)?;
 
-        chart_context
+        chart_context_upper
             .configure_mesh()
             .x_labels(12)
             .light_line_style(&WHITE)
             .draw()?;
 
         for plotter_upper_ind in self.plotters_ind_upper.iter() {
-            plotter_upper_ind.plot(&mut chart_context)?;
+            plotter_upper_ind.plot(&mut chart_context_upper)?;
         }
 
         lower.fill(&WHITE)?;
-
-        for plotter_lower_ind in self.plotters_ind_lower.iter() {
-            plotter_lower_ind.plot(&mut chart_context)?;
-        }
 
         for plotter_ind in self.plotters_ind.iter() {
             plotter_ind.plot(symbol, minutes, &from_date, &to_date, &upper, &lower)?;
         }
 
+        // for plotters_ind_upper_ind in self.plotters_ind_lower.iter() {
+        //     plotters_ind_upper_ind.plot(&mut chart_context_lower)?;
+        // }
+
         Ok(())
     }
 }
 
-pub fn date_time_range_from_candles(
-    candles: &[&Candle],
-    minutes: &i64,
-) -> (DateTime<Utc>, DateTime<Utc>) {
+pub fn date_time_range_from_candles(candles: &[&Candle], minutes: &i64) -> (DateTime<Utc>, DateTime<Utc>) {
     let from_date = str_to_datetime(&candles[0].close_time) - Duration::minutes(*minutes as i64);
-    let to_date = str_to_datetime(&candles[candles.len() - 1].close_time)
-        + Duration::minutes(*minutes as i64);
+    let to_date = str_to_datetime(&candles[candles.len() - 1].close_time) + Duration::minutes(*minutes as i64);
     (from_date, to_date)
 }
 
@@ -118,26 +113,16 @@ pub fn plot_candles<'a>(
     pivots: &'a [Pivot],
     macd_tac: &'a MacdTac,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("1...");
-
     let mut plotter = Plotter::new(candles);
-
-    println!("2...");
     let candle_plotter = CandlePlotter::new(candles);
-
     let pivot_plotter = PivotPlotter::new(pivots);
-
-    println!("3...");
     let macd_plotter = MacdPlotter::new(macd_tac);
-    println!("4...");
 
     plotter.add_plotter_upper_ind(&candle_plotter);
     plotter.add_plotter_upper_ind(&pivot_plotter);
     plotter.add_plotter_ind(&macd_plotter);
 
-    println!("5...");
     plotter.plot(symbol, minutes, "out/stock.png")?;
-    println!("6...");
 
     Ok(())
 }

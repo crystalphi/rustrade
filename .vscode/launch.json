@@ -19,7 +19,9 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": [
+                "plot"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {
