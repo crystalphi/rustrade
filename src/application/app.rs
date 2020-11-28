@@ -1,16 +1,24 @@
 use crate::{
     config::{candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection},
+    exchange,
+    exchange::Exchange,
+    repository::Repository,
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
 };
+use anyhow::Result;
 
-pub struct App {
+use super::{candles_provider::CandlesProvider, plot_selection::plot_from_selection};
+
+pub struct Application<'a> {
     definition: ConfigDefinition,
     selection: Selection,
+    candles_provider: CandlesProvider<'a>,
 }
 
-impl App {
-    pub fn new() -> Self {
-        App {
+impl<'a> Application<'a> {
+    pub fn new(repo: &'a Repository, exchange: &'a Exchange) -> Self {
+        Application {
+            candles_provider: CandlesProvider::new(repo, exchange),
             selection: Selection {
                 tacs: vec![MacdTac::definition()],
                 candles_selection: CandlesSelection::new(
@@ -41,7 +49,7 @@ impl App {
     fn read_line() -> String {
         let mut line = String::new();
         std::io::stdin().read_line(&mut line).unwrap();
-        line
+        line.trim_end_matches('\n').to_string()
     }
 
     pub fn run_stream(&mut self) {
@@ -54,24 +62,27 @@ impl App {
             let mut line = Self::read_line();
 
             if line == TERMINATE {
+                println!("Terminated!");
                 break;
             }
             if line == GET_DEFINITION {
                 println!("{}", self.definition.to_json());
+                continue;
             }
             if line == GET_SELECTION {
                 println!("{}", self.selection.to_json());
+                continue;
             }
             if line == SET_SELECTION {
                 line = Self::read_line();
                 self.set_selection(Selection::from_json(&line));
-            }
-        }
-    }
-}
 
-impl Default for App {
-    fn default() -> Self {
-        Self::new()
+                let candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
+
+                plot_from_selection(&self.selection, candles.as_slice());
+                continue;
+            }
+            println!("Unknown command {}", line);
+        }
     }
 }

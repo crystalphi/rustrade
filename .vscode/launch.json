@@ -20,7 +20,7 @@
                 }
             },
             "args": [
-                "plot"
+                "stream"
             ],
             "cwd": "${workspaceFolder}"
         },

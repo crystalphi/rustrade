@@ -1,3 +1,3 @@
 pub mod app;
-pub mod candles_retriever;
+pub mod candles_provider;
 pub mod plot_selection;

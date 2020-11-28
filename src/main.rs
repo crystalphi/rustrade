@@ -1,6 +1,5 @@
 pub mod analyzers;
 pub mod application;
-pub mod candles_provider;
 pub mod config;
 pub mod exchange;
 pub mod model;
@@ -12,6 +11,7 @@ pub mod utils;
 // use clap::App;
 use std::time::Instant;
 
+use application::app::Application;
 use clap::App;
 use config::symbol_minutes::SymbolMinutes;
 use exchange::Exchange;
@@ -36,8 +36,10 @@ async fn main() -> anyhow::Result<()> {
 
     dotenv::dotenv().unwrap();
 
-    let exchange = Exchange::new()?;
-    let repo = Repository::new()?;
+    let exchange: Exchange = Exchange::new().unwrap();
+
+    let repo: Repository = Repository::new().unwrap();
+
     let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
     let synchronizer = Synchronizer::new(&symbol_minutes, &repo, &exchange);
 
@@ -77,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {
-        read_stream();
+        read_stream(Application::new(&repo, &exchange));
     }
 
     //assert_e!(row.0, 150);
@@ -86,8 +88,9 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn read_stream() {
-    let mut line = String::new();
-    std::io::stdin().read_line(&mut line).unwrap();
-    println!("{}", line);
+fn read_stream(mut app: Application) {
+    app.run_stream();
+    // let mut line = String::new();
+    // std::io::stdin().read_line(&mut line).unwrap();
+    // println!("{}", line);
 }

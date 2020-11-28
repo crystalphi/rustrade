@@ -3,7 +3,7 @@ use crate::{
     technicals::macd::macd_tac::MacdTac, technicals::pivots::PivotTac,
 };
 
-pub fn plot_from_selection(selection: &Selection, candles: &[&Candle], image_name: &str) {
+pub fn plot_from_selection(selection: &Selection, candles: &[&Candle]) {
     //let candles_ref: Vec<_> = candles.iter().collect();
 
     let macd_tac = MacdTac::new(candles);
@@ -15,7 +15,7 @@ pub fn plot_from_selection(selection: &Selection, candles: &[&Candle], image_nam
         &candles,
         &pivots,
         &macd_tac,
-        &image_name,
+        &selection.image_name,
     )
     .unwrap();
 }
