@@ -4,7 +4,9 @@ use ifmt::iformat;
 use log::debug;
 use rust_decimal::Decimal;
 
-use crate::model::candle::Candle;
+use crate::{config::definition::TacDefinition, model::candle::Candle};
+
+use super::{indicator::Indicator, technical::Technical};
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash)]
 pub enum PivotType {
     Low,
@@ -33,6 +35,7 @@ impl<'a> Pivot<'a> {
         }
     }
 }
+
 impl<'a> PartialOrd for Pivot<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.close_time.cmp(other.close_time))
@@ -47,6 +50,16 @@ impl<'a> Ord for Pivot<'a> {
 
 pub struct PivotTac<'a> {
     candles: &'a [&'a Candle],
+}
+
+impl<'a> Technical for PivotTac<'a> {
+    // fn indicators(&'a self) -> Vec<&'a Indicator<'a>> {
+    //     todo!()
+    // }
+
+    fn definition() -> TacDefinition {
+        TacDefinition::new("pivots", &["pivots"])
+    }
 }
 
 impl<'a> PivotTac<'a> {

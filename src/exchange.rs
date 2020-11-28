@@ -28,25 +28,14 @@ impl Exchange {
         Binance::new(Some(self.api_key.clone()), Some(self.secret_key.clone()))
     }
 
-    pub fn candles(
-        &self,
-        symbol: &str,
-        minutes: &u32,
-        start_time: &Option<DateTime<Utc>>,
-    ) -> Vec<Candle> {
+    pub fn candles(&self, symbol: &str, minutes: &u32, start_time: &Option<DateTime<Utc>>) -> Vec<Candle> {
         let mut result = Vec::new();
 
         let start_time = start_time.map(|d| datetime_to_timestamp(&d));
 
         let market = self.futures_market();
 
-        match market.get_klines(
-            symbol.to_string(),
-            iformat! {"{minutes}m"},
-            1000,
-            start_time,
-            None,
-        ) {
+        match market.get_klines(symbol.to_string(), iformat! {"{minutes}m"}, 1000, start_time, None) {
             Ok(answer) => match answer {
                 binance::model::KlineSummaries::AllKlineSummaries(summaries) => {
                     for summary in summaries {

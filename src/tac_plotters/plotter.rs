@@ -47,7 +47,7 @@ impl<'a> Plotter<'a> {
     pub fn plot<P: AsRef<Path>>(
         &self,
         symbol: &str,
-        minutes: &i64,
+        minutes: &u32,
         image_path: P,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let (min_price, max_price) = prices_range_from_candles(&self.candles);
@@ -83,7 +83,7 @@ impl<'a> Plotter<'a> {
         lower.fill(&WHITE)?;
 
         for plotter_ind in self.plotters_ind.iter() {
-            plotter_ind.plot(symbol, minutes, &from_date, &to_date, &upper, &lower)?;
+            plotter_ind.plot(symbol, &minutes, &from_date, &to_date, &upper, &lower)?;
         }
 
         // for plotters_ind_upper_ind in self.plotters_ind_lower.iter() {
@@ -94,7 +94,7 @@ impl<'a> Plotter<'a> {
     }
 }
 
-pub fn date_time_range_from_candles(candles: &[&Candle], minutes: &i64) -> (DateTime<Utc>, DateTime<Utc>) {
+pub fn date_time_range_from_candles(candles: &[&Candle], minutes: &u32) -> (DateTime<Utc>, DateTime<Utc>) {
     let from_date = str_to_datetime(&candles[0].close_time) - Duration::minutes(*minutes as i64);
     let to_date = str_to_datetime(&candles[candles.len() - 1].close_time) + Duration::minutes(*minutes as i64);
     (from_date, to_date)
@@ -108,10 +108,11 @@ pub fn prices_range_from_candles(candles: &[&Candle]) -> (Decimal, Decimal) {
 
 pub fn plot_candles<'a>(
     symbol: &str,
-    minutes: &i64,
+    minutes: &u32,
     candles: &'a [&'a Candle],
     pivots: &'a [Pivot],
     macd_tac: &'a MacdTac,
+    image_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut plotter = Plotter::new(candles);
     let candle_plotter = CandlePlotter::new(candles);
@@ -122,7 +123,7 @@ pub fn plot_candles<'a>(
     plotter.add_plotter_upper_ind(&pivot_plotter);
     plotter.add_plotter_ind(&macd_plotter);
 
-    plotter.plot(symbol, minutes, "out/stock.png")?;
+    plotter.plot(symbol, minutes, image_name)?;
 
     Ok(())
 }

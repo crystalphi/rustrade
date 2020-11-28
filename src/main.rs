@@ -1,4 +1,5 @@
 pub mod analyzers;
+pub mod application;
 pub mod config;
 pub mod exchange;
 pub mod model;
@@ -67,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
 
-        plot_candles("BTCUSDT", &15, &candles_ref, &pivots, &macd_tac).unwrap();
+        plot_candles("BTCUSDT", &15, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
 
         iprintln!("Plotting {start.elapsed():?}");
     }

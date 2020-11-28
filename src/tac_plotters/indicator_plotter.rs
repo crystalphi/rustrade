@@ -9,7 +9,7 @@ pub trait IndicatorPlotter {
     fn plot(
         &self,
         symbol: &str,
-        minutes: &i64,
+        minutes: &u32,
         from_date: &DateTime<Utc>,
         to_date: &DateTime<Utc>,
         upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,

@@ -1,4 +1,4 @@
-use crate::technicals::indicator::Indicator;
+use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
 use crate::{model::candle::Candle, technicals::technical::Technical};
 use ifmt::iprintln;
 use rust_decimal::prelude::ToPrimitive;
@@ -11,9 +11,14 @@ pub struct MacdTac<'a> {
     pub divergence: Indicator<'a>,
 }
 
-impl<'a> Technical<'a> for MacdTac<'a> {
-    fn indicators(&'a self) -> Vec<&'a Indicator<'a>> {
-        vec![&self.macd, &self.signal, &self.divergence]
+impl<'a> Technical for MacdTac<'a> {
+    // fn indicators(&'a self) -> Vec<&'a Indicator<'a>> {
+    //     vec![&self.macd, &self.signal, &self.divergence]
+    // }
+
+    fn definition() -> crate::config::definition::TacDefinition {
+        let mut indicators = vec!["macd", "signal", "divergence"];
+        TacDefinition::new("macd", &indicators)
     }
 }
 

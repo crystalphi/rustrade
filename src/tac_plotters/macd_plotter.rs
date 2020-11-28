@@ -23,7 +23,7 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
     fn plot(
         &self,
         _symbol: &str,
-        _minutes: &i64,
+        _minutes: &u32,
         from_date: &DateTime<Utc>,
         to_date: &DateTime<Utc>,
         _upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
