@@ -1,8 +1,5 @@
 use crate::{
-    config::{
-        candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection,
-        symbol_minutes::SymbolMinutes,
-    },
+    config::{candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection},
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
 };
 
@@ -19,8 +16,8 @@ impl App {
                 candles_selection: CandlesSelection::new(
                     "BTCUSDT",
                     &15u32,
-                    &"2020-10-01 00:00:00",
-                    &"2020-11-30 00:00:00",
+                    Some(&"2020-10-01 00:00:00"),
+                    Some(&"2020-11-30 00:00:00"),
                 ),
 
                 image_name: "out/stock.png".to_string(),

@@ -2,30 +2,35 @@ use std::collections::HashMap;
 
 use crate::{
     candles_provider::candles_exchange::CandlesExchange,
-    candles_provider::{
-        candles_buffer::CandlesBuffer, candles_provider::CandlesProviderTrait, candles_repo::CandlesRepo,
-        candles_resolver::CandlesResolver,
-    },
+    candles_provider::{candles_buffer::CandlesBuffer, candles_repo::CandlesRepo, candles_resolver::CandlesResolver},
     config::selection::Selection,
     config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes},
     exchange::Exchange,
     model::candle::Candle,
     repository::Repository,
-    utils::{datetime_to_str, str_to_datetime},
+    utils::str_to_datetime,
 };
 use anyhow::Result;
-use futures::future::Select;
+use chrono::{Duration, Utc};
 
 pub fn candles_selection(exchange: Exchange, repo: Repository, selection: Selection) -> Result<Vec<Candle>> {
     let exchange = Exchange::new()?;
     let repo = Repository::new()?;
 
+    let start_time = &selection
+        .candles_selection
+        .start_time
+        .map(|s| str_to_datetime(&s))
+        .unwrap_or_else(|| Utc::now() - Duration::days(180));
+
+    let end_time = &selection
+        .candles_selection
+        .end_time
+        .map(|s| str_to_datetime(&s))
+        .unwrap_or_else(|| Utc::now());
+
     let candles = repo
-        .candles_by_time(
-            &selection.candles_selection.symbol_minutes,
-            &str_to_datetime(&selection.candles_selection.start_time),
-            &str_to_datetime(&selection.candles_selection.end_time),
-        )
+        .candles_by_time(&selection.candles_selection.symbol_minutes, start_time, end_time)
         .unwrap_or_default();
 
     Ok(candles)

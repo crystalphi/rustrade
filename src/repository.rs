@@ -30,8 +30,8 @@ impl Repository {
     pub fn last_close_time(&self, symbol_minutes: &SymbolMinutes) -> Option<DateTime<Utc>> {
         let minutes = Decimal::from(symbol_minutes.minutes);
         let future = sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1 AND minutes = $2")
-            .bind(symbol_minutes.symbol)
-            .bind(symbol_minutes.minutes)
+            .bind(&symbol_minutes.symbol)
+            .bind(&symbol_minutes.minutes)
             .fetch_one(&self.pool);
         let result: (Option<String>,) = async_std::task::block_on(future).unwrap();
         result.0.map(|dt| str_to_datetime(&dt))
