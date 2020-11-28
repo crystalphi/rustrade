@@ -1,5 +1,9 @@
 use crate::{
-    config::selection::Selection, exchange::Exchange, model::candle::Candle, repository::Repository,
+    config::selection::Selection,
+    exchange::Exchange,
+    model::candle::Candle,
+    provider::{device_buffer::DeviceBuff, device_exch::DeviceExch, device_repo::DeviceRepo, Provider},
+    repository::Repository,
     utils::str_to_datetime,
 };
 use anyhow::Result;
@@ -9,14 +13,24 @@ pub struct CandlesProvider<'a> {
     exchange: &'a Exchange,
     repo: &'a Repository,
     candles: Vec<Candle>,
+    current_start_time: Option<String>,
+    current_end_time: Option<String>,
+    provider_exchange: Provider<'a>,
 }
 
 impl<'a> CandlesProvider<'a> {
-    pub fn new(repo: &'a Repository, exchange: &'a Exchange) -> Self {
+    pub fn new(repo: &'a Repository, exch: &'a Exchange) -> Self {
+        let provider_exch = Provider::new(Box::new(DeviceExch::new(exch)), None);
+        let provider_repo = Provider::new(Box::new(DeviceRepo::new(repo)), Some(Box::new(provider_exch)));
+        let provider_buff = Provider::new(Box::new(DeviceBuff::new()), Some(Box::new(provider_repo)));
+
         Self {
-            exchange,
+            provider_exchange: provider_buff,
+            exchange: exch,
             repo,
             candles: Vec::new(),
+            current_start_time: None,
+            current_end_time: None,
         }
     }
 

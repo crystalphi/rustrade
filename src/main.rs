@@ -3,6 +3,7 @@ pub mod application;
 pub mod config;
 pub mod exchange;
 pub mod model;
+pub mod provider;
 pub mod repository;
 pub mod synchronizer;
 pub mod tac_plotters;
