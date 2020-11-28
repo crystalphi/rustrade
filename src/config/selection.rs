@@ -1,14 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use super::definition::TacDefinition;
+use super::{candles_selection::CandlesSelection, definition::TacDefinition};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Selection {
     pub tacs: Vec<TacDefinition>, //[{name: mcad, indicators: [ "signal", "diff" ] }]
-    pub minutes: u32,             //15,
-    pub symbol: String,           //"BTCUSDT",
-    pub period_start: String,     //"2020-10",
-    pub period_end: String,       //"2020-10" },
+    pub candles_selection: CandlesSelection,
     pub image_name: String,
 }
 

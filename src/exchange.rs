@@ -5,6 +5,7 @@ use chrono::{DateTime, Utc};
 use ifmt::{iformat, iprintln};
 
 use crate::{
+    config::symbol_minutes::SymbolMinutes,
     model::candle::Candle,
     utils::{datetime_to_timestamp, kline_to_candle},
 };
@@ -30,8 +31,7 @@ impl Exchange {
 
     pub fn candles(
         &self,
-        symbol: &str,
-        minutes: &u32,
+        symbol_minutes: &SymbolMinutes,
         start_time: &Option<DateTime<Utc>>,
         end_time: &Option<DateTime<Utc>>,
     ) -> Vec<Candle> {
@@ -42,11 +42,18 @@ impl Exchange {
 
         let market = self.futures_market();
 
-        match market.get_klines(symbol.to_string(), iformat! {"{minutes}m"}, 1000, start_time, end_time) {
+        match market.get_klines(
+            symbol_minutes.symbol.to_string(),
+            iformat! {"{symbol_minutes.minutes}m"},
+            1000,
+            start_time,
+            end_time,
+        ) {
             Ok(answer) => match answer {
                 binance::model::KlineSummaries::AllKlineSummaries(summaries) => {
                     for summary in summaries {
-                        let candle = kline_to_candle(&summary, &symbol, 15u32, &0u32.into());
+                        let candle =
+                            kline_to_candle(&summary, &symbol_minutes.symbol, symbol_minutes.minutes, &0u32.into());
                         iprintln!("{candle.open_time}");
                         result.push(candle);
                     }
@@ -69,7 +76,8 @@ mod tests {
         dotenv::dotenv().unwrap();
         let exchange = Exchange::new().unwrap();
         let start = Utc::now() - Duration::minutes(15);
-        let candles = exchange.candles("BTCUSDT", &15, &Some(start), &None);
+        let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+        let candles = exchange.candles(&symbol_minutes, &Some(start), &None);
         for candle in candles {
             iprintln!("{candle}");
         }

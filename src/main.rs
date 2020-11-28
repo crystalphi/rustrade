@@ -13,6 +13,7 @@ pub mod utils;
 use std::time::Instant;
 
 use clap::App;
+use config::symbol_minutes::SymbolMinutes;
 use exchange::Exchange;
 use ifmt::iprintln;
 use repository::Repository;
@@ -37,8 +38,8 @@ async fn main() -> anyhow::Result<()> {
 
     let exchange = Exchange::new()?;
     let repo = Repository::new()?;
-
-    let synchronizer = Synchronizer::new("BTCUSDT", &15, &repo, &exchange);
+    let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+    let synchronizer = Synchronizer::new(&symbol_minutes, &repo, &exchange);
 
     if let Some(_sync) = matches.subcommand_matches("sync") {
         synchronizer.synchronize();
@@ -58,7 +59,8 @@ async fn main() -> anyhow::Result<()> {
 
     if let Some(_plot) = matches.subcommand_matches("plot") {
         let start = Instant::now();
-        let candles = repo.candles_default("BTCUSDT", &15);
+        let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+        let candles = repo.candles_default(&symbol_minutes);
 
         iprintln!("Loading {start.elapsed():?}");
         let start = Instant::now();
@@ -68,8 +70,8 @@ async fn main() -> anyhow::Result<()> {
         let macd_tac = MacdTac::new(candles_ref.as_slice());
 
         let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
-
-        plot_candles("BTCUSDT", &15, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
+        let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+        plot_candles(&symbol_minutes, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
 
         iprintln!("Plotting {start.elapsed():?}");
     }

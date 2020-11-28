@@ -1,4 +1,5 @@
 use crate::{
+    config::symbol_minutes::SymbolMinutes,
     model::candle::Candle,
     technicals::{macd::macd_tac::MacdTac, pivots::Pivot},
     utils::str_to_datetime,
@@ -46,12 +47,11 @@ impl<'a> Plotter<'a> {
 
     pub fn plot<P: AsRef<Path>>(
         &self,
-        symbol: &str,
-        minutes: &u32,
+        symbol_minutes: &SymbolMinutes,
         image_path: P,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let (min_price, max_price) = prices_range_from_candles(&self.candles);
-        let (from_date, to_date) = date_time_range_from_candles(&self.candles, minutes);
+        let (from_date, to_date) = date_time_range_from_candles(&self.candles, &symbol_minutes.minutes);
 
         let (upper, lower) = {
             let root = BitMapBackend::new(&image_path, (1920, 1080)).into_drawing_area();
@@ -67,7 +67,10 @@ impl<'a> Plotter<'a> {
             .set_label_area_size(LabelAreaPosition::Right, 80)
             .y_label_area_size(80)
             .x_label_area_size(30)
-            .caption(iformat!("{symbol} price"), ("sans-serif", 20.0).into_font())
+            .caption(
+                iformat!("{symbol_minutes.symbol} price"),
+                ("sans-serif", 20.0).into_font(),
+            )
             .build_cartesian_2d(from_date..to_date, min_price..max_price)?;
 
         chart_context_upper
@@ -83,7 +86,7 @@ impl<'a> Plotter<'a> {
         lower.fill(&WHITE)?;
 
         for plotter_ind in self.plotters_ind.iter() {
-            plotter_ind.plot(symbol, &minutes, &from_date, &to_date, &upper, &lower)?;
+            plotter_ind.plot(&symbol_minutes, &from_date, &to_date, &upper, &lower)?;
         }
 
         // for plotters_ind_upper_ind in self.plotters_ind_lower.iter() {
@@ -107,8 +110,7 @@ pub fn prices_range_from_candles(candles: &[&Candle]) -> (Decimal, Decimal) {
 }
 
 pub fn plot_candles<'a>(
-    symbol: &str,
-    minutes: &u32,
+    symbol_minutes: &SymbolMinutes,
     candles: &'a [&'a Candle],
     pivots: &'a [Pivot],
     macd_tac: &'a MacdTac,
@@ -123,7 +125,7 @@ pub fn plot_candles<'a>(
     plotter.add_plotter_upper_ind(&pivot_plotter);
     plotter.add_plotter_ind(&macd_plotter);
 
-    plotter.plot(symbol, minutes, image_name)?;
+    plotter.plot(symbol_minutes, image_name)?;
 
     Ok(())
 }

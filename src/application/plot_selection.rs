@@ -11,8 +11,7 @@ pub fn plot_from_selection(selection: &Selection, candles: &[&Candle], image_nam
     let pivots = PivotTac::new(candles).pivots();
 
     plot_candles(
-        &selection.symbol,
-        &selection.minutes,
+        &selection.candles_selection.symbol_minutes,
         &candles,
         &pivots,
         &macd_tac,

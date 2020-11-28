@@ -1,4 +1,5 @@
 use crate::{
+    config::symbol_minutes::SymbolMinutes,
     model::candle::Candle,
     utils::{datetime_to_str, str_to_datetime},
 };
@@ -26,29 +27,27 @@ impl Repository {
         result.0.unwrap_or_default()
     }
 
-    pub fn last_close_time(&self, symbol: &str, minutes: &u32) -> Option<DateTime<Utc>> {
-        let minutes = Decimal::from(*minutes);
-        let future =
-            sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1 AND minutes = $2")
-                .bind(symbol)
-                .bind(minutes)
-                .fetch_one(&self.pool);
+    pub fn last_close_time(&self, symbol_minutes: &SymbolMinutes) -> Option<DateTime<Utc>> {
+        let minutes = Decimal::from(symbol_minutes.minutes);
+        let future = sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1 AND minutes = $2")
+            .bind(symbol_minutes.symbol)
+            .bind(symbol_minutes.minutes)
+            .fetch_one(&self.pool);
         let result: (Option<String>,) = async_std::task::block_on(future).unwrap();
         result.0.map(|dt| str_to_datetime(&dt))
     }
 
     pub fn candle_by_id(&self, id: Decimal) -> Option<Candle> {
-        let future =
-            sqlx::query_as!(Candle, "SELECT * FROM candle WHERE id = $1", id).fetch_one(&self.pool);
+        let future = sqlx::query_as!(Candle, "SELECT * FROM candle WHERE id = $1", id).fetch_one(&self.pool);
         async_std::task::block_on(future).ok()
     }
 
-    pub fn candles_default(&self, symbol: &str, minutes: &u32) -> Vec<Candle> {
+    pub fn candles_default(&self, symbol_minutes: &SymbolMinutes) -> Vec<Candle> {
         let start = Instant::now();
         let end_time = Utc::now();
         let start_time = end_time - Duration::days(14);
         let result = self
-            .candles_by_time(symbol, minutes, &start_time, &end_time)
+            .candles_by_time(symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
         iprintln!("Read repository: {start.elapsed():?}");
         result
@@ -56,12 +55,11 @@ impl Repository {
 
     pub fn candles_by_time(
         &self,
-        symbol: &str,
-        minutes: &u32,
+        symbol_minutes: &SymbolMinutes,
         start_time: &DateTime<Utc>,
         end_time: &DateTime<Utc>,
     ) -> Option<Vec<Candle>> {
-        let minutes = Decimal::from(*minutes);
+        let minutes = Decimal::from(symbol_minutes.minutes);
         let start_time = datetime_to_str(start_time);
         let end_time = datetime_to_str(end_time);
 
@@ -73,7 +71,7 @@ impl Repository {
                 WHERE symbol = $1 AND minutes = $2 AND (open_time BETWEEN $3 AND $4 OR close_time BETWEEN $3 AND $4)
                 ORDER BY open_time
             "#,
-            symbol,
+            symbol_minutes.symbol,
             minutes,
             start_time,
             end_time
@@ -141,24 +139,22 @@ impl Repository {
         async_std::task::block_on(future).unwrap();
     }
 
-    pub fn delete_last_candle(&self, symbol: &str, minutes: &u32) {
-        let minutes = Decimal::from(*minutes);
+    pub fn delete_last_candle(&self, symbol_minutes: &SymbolMinutes) {
+        let minutes = Decimal::from(symbol_minutes.minutes);
         let future = sqlx::query!(
             r#"DELETE FROM candle WHERE id = 
             (SELECT id FROM candle WHERE symbol = $1 AND minutes = $2 
                 ORDER BY close_time DESC FETCH FIRST 1 ROWS ONLY
             )"#,
-            symbol,
-            minutes
+            symbol_minutes.symbol,
+            symbol_minutes.minutes as i64,
         )
         .execute(&self.pool);
         async_std::task::block_on(future).unwrap();
     }
 
     pub fn list_candles(&self, symbol: &str, minutes: &u32, limit: &i64) {
-        let candles = self
-            .last_candles(symbol, minutes, limit)
-            .unwrap_or_default();
+        let candles = self.last_candles(symbol, minutes, limit).unwrap_or_default();
         iprintln!("Listing candles limit {limit}:");
         for candle in candles.iter() {
             iprintln!("{candle}");
@@ -181,8 +177,9 @@ pub mod tests {
         let end_time = Utc::now();
         let start_time = end_time - Duration::days(30);
         let repo = Repository::new().unwrap();
+        let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
         let candles = repo
-            .candles_by_time("BTCUSDT", &15, &start_time, &end_time)
+            .candles_by_time(&symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
 
         println!("Found candles:");

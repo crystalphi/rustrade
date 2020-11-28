@@ -2,30 +2,30 @@ use chrono::{Duration, Utc};
 use ifmt::iprintln;
 use rust_decimal_macros::dec;
 
-use crate::{exchange::Exchange, repository::Repository, utils::inconsistent_candles};
+use crate::{
+    config::symbol_minutes::SymbolMinutes, exchange::Exchange, repository::Repository, utils::inconsistent_candles,
+};
 
 pub struct Synchronizer<'a> {
     repo: &'a Repository,
     exchange: &'a Exchange,
-    symbol: &'a str,
-    minutes: &'a u32,
+    symbol_minutes: &'a SymbolMinutes,
 }
 
 impl<'a> Synchronizer<'a> {
-    pub fn new(symbol: &'a str, minutes: &'a u32, repository: &'a Repository, exchange: &'a Exchange) -> Self {
+    pub fn new(symbol_minutes: &'a SymbolMinutes, repository: &'a Repository, exchange: &'a Exchange) -> Self {
         Synchronizer {
             repo: repository,
             exchange,
-            symbol,
-            minutes,
+            symbol_minutes,
         }
     }
 
     pub fn synchronize(&self) {
         loop {
-            self.repo.delete_last_candle(&self.symbol, &self.minutes);
+            self.repo.delete_last_candle(&self.symbol_minutes);
 
-            let mut last_close_time = self.repo.last_close_time(&self.symbol, &self.minutes);
+            let mut last_close_time = self.repo.last_close_time(&self.symbol_minutes);
 
             // If not found last candle then assume last 180 days
             let last_close_time = last_close_time.get_or_insert_with(|| Utc::now() - Duration::days(180));
@@ -35,8 +35,7 @@ impl<'a> Synchronizer<'a> {
             let d1 = dec!(1);
 
             let mut candles = self.exchange.candles(
-                &self.symbol,
-                &self.minutes,
+                &self.symbol_minutes,
                 &Some(*last_close_time),
                 &None, //  + Duration::minutes(*self.minutes as i64)
             );
@@ -67,15 +66,19 @@ impl<'a> Synchronizer<'a> {
         let end_time = Utc::now();
         let start_time = end_time - Duration::days(180);
         let repo = Repository::new().unwrap();
+
         let candles = repo
-            .candles_by_time(&self.symbol, &15, &start_time, &end_time)
+            .candles_by_time(&self.symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
 
         iprintln!("Found candles: {candles.len()}");
 
         let candles_ref: Vec<_> = candles.iter().collect();
 
-        let inconsist = inconsistent_candles(candles_ref.as_slice(), &Duration::minutes(*self.minutes as i64));
+        let inconsist = inconsistent_candles(
+            candles_ref.as_slice(),
+            &Duration::minutes(self.symbol_minutes.minutes as i64),
+        );
         iprintln!("Inconsist candles: {inconsist.len()}");
         for candle in inconsist.iter() {
             iprintln!("{candle}");
@@ -86,8 +89,9 @@ impl<'a> Synchronizer<'a> {
         let end_time = Utc::now();
         let start_time = end_time - Duration::days(180);
         let repo = Repository::new().unwrap();
+
         let candles = repo
-            .candles_by_time(&self.symbol, &15, &start_time, &end_time)
+            .candles_by_time(&self.symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
 
         iprintln!("Found candles: {candles.len()}");
@@ -95,7 +99,10 @@ impl<'a> Synchronizer<'a> {
         let candles_ref: Vec<_> = candles.iter().collect();
 
         println!("Inconsist candles:");
-        let inconsist = inconsistent_candles(candles_ref.as_slice(), &Duration::minutes(*self.minutes as i64));
+        let inconsist = inconsistent_candles(
+            candles_ref.as_slice(),
+            &Duration::minutes(self.symbol_minutes.minutes as i64),
+        );
         for candle in inconsist.iter() {
             iprintln!("{candle}");
             self.repo.delete_candle(&candle.id);

@@ -1,4 +1,4 @@
-use crate::{technicals::macd::macd_tac::MacdTac, utils::str_to_datetime};
+use crate::{config::symbol_minutes::SymbolMinutes, technicals::macd::macd_tac::MacdTac, utils::str_to_datetime};
 use chrono::{DateTime, Utc};
 use plotters::{
     coord::Shift,
@@ -22,8 +22,7 @@ impl<'a> MacdPlotter<'a> {
 impl<'a> IndicatorPlotter for MacdPlotter<'a> {
     fn plot(
         &self,
-        _symbol: &str,
-        _minutes: &u32,
+        _symbol_minutes: &SymbolMinutes,
         from_date: &DateTime<Utc>,
         to_date: &DateTime<Utc>,
         _upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,

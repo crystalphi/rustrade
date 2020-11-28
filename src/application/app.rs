@@ -1,5 +1,8 @@
 use crate::{
-    config::{definition::ConfigDefinition, selection::Selection},
+    config::{
+        candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection,
+        symbol_minutes::SymbolMinutes,
+    },
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
 };
 
@@ -13,10 +16,13 @@ impl App {
         App {
             selection: Selection {
                 tacs: vec![MacdTac::definition()],
-                minutes: 15u32,
-                symbol: "BTCUSDT".to_string(),
-                period_start: "2020-10-01 00:00:00".to_string(),
-                period_end: "2020-11-30 00:00:00".to_string(),
+                candles_selection: CandlesSelection::new(
+                    "BTCUSDT",
+                    &15u32,
+                    &"2020-10-01 00:00:00",
+                    &"2020-11-30 00:00:00",
+                ),
+
                 image_name: "out/stock.png".to_string(),
             },
             definition: ConfigDefinition::new(),

@@ -5,11 +5,12 @@ use plotters::{
 };
 use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
 
+use crate::config::symbol_minutes::SymbolMinutes;
+
 pub trait IndicatorPlotter {
     fn plot(
         &self,
-        symbol: &str,
-        minutes: &u32,
+        symbol_minutes: &SymbolMinutes,
         from_date: &DateTime<Utc>,
         to_date: &DateTime<Utc>,
         upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
