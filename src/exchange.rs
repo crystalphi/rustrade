@@ -28,14 +28,21 @@ impl Exchange {
         Binance::new(Some(self.api_key.clone()), Some(self.secret_key.clone()))
     }
 
-    pub fn candles(&self, symbol: &str, minutes: &u32, start_time: &Option<DateTime<Utc>>) -> Vec<Candle> {
+    pub fn candles(
+        &self,
+        symbol: &str,
+        minutes: &u32,
+        start_time: &Option<DateTime<Utc>>,
+        end_time: &Option<DateTime<Utc>>,
+    ) -> Vec<Candle> {
         let mut result = Vec::new();
 
         let start_time = start_time.map(|d| datetime_to_timestamp(&d));
+        let end_time = end_time.map(|d| datetime_to_timestamp(&d));
 
         let market = self.futures_market();
 
-        match market.get_klines(symbol.to_string(), iformat! {"{minutes}m"}, 1000, start_time, None) {
+        match market.get_klines(symbol.to_string(), iformat! {"{minutes}m"}, 1000, start_time, end_time) {
             Ok(answer) => match answer {
                 binance::model::KlineSummaries::AllKlineSummaries(summaries) => {
                     for summary in summaries {
@@ -62,7 +69,7 @@ mod tests {
         dotenv::dotenv().unwrap();
         let exchange = Exchange::new().unwrap();
         let start = Utc::now() - Duration::minutes(15);
-        let candles = exchange.candles("BTCUSDT", &15, &Some(start));
+        let candles = exchange.candles("BTCUSDT", &15, &Some(start), &None);
         for candle in candles {
             iprintln!("{candle}");
         }

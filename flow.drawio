@@ -1,14 +1,31 @@
-<mxfile host="65bd71144e" modified="2020-11-22T02:16:31.644Z" agent="5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.51.0 Chrome/83.0.4103.122 Electron/9.3.3 Safari/537.36" version="13.6.5" etag="CQw4IADFFxOFbEHQdUmo">
-    <diagram id="AlSfbbJ31shBEqbPLoWx" name="Page-1">
-        <mxGraphModel dx="1204" dy="497" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<mxfile host="65bd71144e" modified="2020-11-28T02:27:08.958Z" agent="5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.51.0 Chrome/83.0.4103.122 Electron/9.3.3 Safari/537.36" etag="6XADlRimS3FpkQVgb5MG" version="13.6.5" pages="2">
+    <diagram id="AlSfbbJ31shBEqbPLoWx" name="Position">
+        <mxGraphModel dx="1133" dy="569" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="2" value="Position" style="html=1;dashed=0;whitespace=wrap;" vertex="1" parent="1">
-                    <mxGeometry x="320" y="80" width="100" height="50" as="geometry"/>
+                <mxCell id="2" value="Position" style="html=1;dashed=0;whitespace=wrap;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="80" width="100" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="Order" style="html=1;dashed=0;whitespace=wrap;" vertex="1" parent="1">
-                    <mxGeometry x="320" y="200" width="100" height="50" as="geometry"/>
+                <mxCell id="3" value="Order" style="html=1;dashed=0;whitespace=wrap;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="200" width="100" height="50" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="FQg-209FIwxwQvKPKOsK" name="Provider">
+        <mxGraphModel dx="1133" dy="569" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="-ykCVsKQU3B62XkSd_iy-0"/>
+                <mxCell id="-ykCVsKQU3B62XkSd_iy-1" parent="-ykCVsKQU3B62XkSd_iy-0"/>
+                <mxCell id="-ykCVsKQU3B62XkSd_iy-2" value="Buffer" style="html=1;dashed=0;whitespace=wrap;" vertex="1" parent="-ykCVsKQU3B62XkSd_iy-1">
+                    <mxGeometry x="240" y="240" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="-ykCVsKQU3B62XkSd_iy-3" value="Repo" style="html=1;dashed=0;whitespace=wrap;" vertex="1" parent="-ykCVsKQU3B62XkSd_iy-1">
+                    <mxGeometry x="240" y="320" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="-ykCVsKQU3B62XkSd_iy-4" value="Exchange" style="html=1;dashed=0;whitespace=wrap;" vertex="1" parent="-ykCVsKQU3B62XkSd_iy-1">
+                    <mxGeometry x="240" y="400" width="100" height="50" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
