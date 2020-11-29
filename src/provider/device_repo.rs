@@ -1,4 +1,4 @@
-use crate::repository::Repository;
+use crate::{model::candle::Candle, repository::Repository};
 
 use super::device_trait::DeviceTrait;
 
@@ -13,11 +13,14 @@ impl<'a> DeviceRepo<'a> {
 }
 
 impl<'a> DeviceTrait for DeviceRepo<'a> {
-    fn candles(&mut self) -> Vec<crate::model::candle::Candle> {
+    fn read(
+        &mut self,
+        selection: &crate::config::candles_selection::CandlesSelection,
+    ) -> (crate::config::candles_selection::DatesSelection, Vec<Candle>) {
         todo!()
     }
 
-    fn insert_candles(&mut self, candles: &[&crate::model::candle::Candle]) {
+    fn write(&mut self, candles: &[&Candle]) {
         todo!()
     }
 }

@@ -16,3 +16,8 @@ impl CandlesSelection {
         }
     }
 }
+
+pub struct DatesSelection {
+    pub start_time: Option<String>,
+    pub end_time: Option<String>,
+}

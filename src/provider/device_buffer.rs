@@ -1,29 +1,23 @@
-use crate::{model::candle::Candle, repository::Repository};
+use crate::{config::candles_selection::CandlesSelection, model::candle::Candle, config::candles_selection::DatesSelection};
 
-use super::device_trait::DeviceTrait;
+use super::{candles_buffer::CandlesBuffer, device_trait::DeviceTrait};
 
-pub struct DeviceBuff {
-    candles: Vec<Candle>,
+pub struct DeviceBuff<'a> {
+    candles_buffer: &'a CandlesBuffer,
 }
 
-impl DeviceBuff {
-    pub fn new() -> Self {
-        Self { candles: Vec::new() }
+impl<'a> DeviceBuff<'a> {
+    pub fn new(candles_buffer: &'a CandlesBuffer) -> Self {
+        Self { candles_buffer }
     }
 }
 
-impl Default for DeviceBuff {
-    fn default() -> Self {
-        DeviceBuff::new()
-    }
-}
-
-impl DeviceTrait for DeviceBuff {
-    fn candles(&mut self) -> Vec<crate::model::candle::Candle> {
+impl<'a> DeviceTrait for DeviceBuff<'a> {
+    fn read(&mut self, selection: &CandlesSelection) -> (DatesSelection, Vec<Candle>) {
         todo!()
     }
 
-    fn insert_candles(&mut self, candles: &[&crate::model::candle::Candle]) {
+    fn write(&mut self, candles: &[&Candle]) {
         todo!()
     }
 }
