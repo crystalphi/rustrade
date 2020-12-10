@@ -37,7 +37,7 @@ impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
 
         let candle_series = self.candles.iter().map(|x| {
             CandleStick::new(
-                str_to_datetime(&x.close_time),
+                x.close_time,
                 x.open.to_f32().unwrap(),
                 x.high.to_f32().unwrap(),
                 x.low.to_f32().unwrap(),

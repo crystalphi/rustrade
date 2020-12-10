@@ -6,7 +6,7 @@ use rust_decimal::Decimal;
 
 use crate::{config::definition::TacDefinition, model::candle::Candle};
 
-use super::{indicator::Indicator, technical::Technical};
+use super::technical::Technical;
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash)]
 pub enum PivotType {
     Low,

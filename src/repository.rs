@@ -28,7 +28,6 @@ impl Repository {
     }
 
     pub fn last_close_time(&self, symbol_minutes: &SymbolMinutes) -> Option<DateTime<Utc>> {
-        let minutes = Decimal::from(symbol_minutes.minutes);
         let future = sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1 AND minutes = $2")
             .bind(&symbol_minutes.symbol)
             .bind(&symbol_minutes.minutes)
@@ -60,8 +59,6 @@ impl Repository {
         end_time: &DateTime<Utc>,
     ) -> Option<Vec<Candle>> {
         let minutes = Decimal::from(symbol_minutes.minutes);
-        let start_time = datetime_to_str(start_time);
-        let end_time = datetime_to_str(end_time);
 
         #[allow(clippy::suspicious_else_formatting)]
         let future = sqlx::query_as!(
@@ -140,7 +137,6 @@ impl Repository {
     }
 
     pub fn delete_last_candle(&self, symbol_minutes: &SymbolMinutes) {
-        let minutes = Decimal::from(symbol_minutes.minutes);
         let future = sqlx::query!(
             r#"DELETE FROM candle WHERE id = 
             (SELECT id FROM candle WHERE symbol = $1 AND minutes = $2 

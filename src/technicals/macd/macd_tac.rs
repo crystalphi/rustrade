@@ -17,7 +17,7 @@ impl<'a> Technical for MacdTac<'a> {
     // }
 
     fn definition() -> crate::config::definition::TacDefinition {
-        let mut indicators = vec!["macd", "signal", "divergence"];
+        let indicators = vec!["macd", "signal", "divergence"];
         TacDefinition::new("macd", &indicators)
     }
 }

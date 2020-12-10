@@ -1,4 +1,6 @@
-use crate::{config::candles_selection::CandlesSelection, model::candle::Candle, config::candles_selection::DatesSelection};
+use crate::{
+    config::candles_selection::CandlesSelection, config::candles_selection::DatesSelection, model::candle::Candle,
+};
 
 use super::{candles_buffer::CandlesBuffer, device_trait::DeviceTrait};
 
@@ -13,11 +15,19 @@ impl<'a> DeviceBuff<'a> {
 }
 
 impl<'a> DeviceTrait for DeviceBuff<'a> {
-    fn read(&mut self, selection: &CandlesSelection) -> (DatesSelection, Vec<Candle>) {
+    fn write(&mut self, candles: &[&Candle]) {
         todo!()
     }
 
-    fn write(&mut self, candles: &[&Candle]) {
+    fn read_ref(&mut self, selection: &CandlesSelection) -> (DatesSelection, Vec<&Candle>) {
+        todo!()
+    }
+
+    fn read_own(&mut self, selection: &CandlesSelection) -> (DatesSelection, Vec<Candle>) {
+        todo!()
+    }
+
+    fn on_new_from_child(&mut self, candles: Vec<Candle>) {
         todo!()
     }
 }

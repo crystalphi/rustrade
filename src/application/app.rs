@@ -1,11 +1,10 @@
 use crate::{
     config::{candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection},
-    exchange,
     exchange::Exchange,
+    provider::candles_buffer::CandlesBuffer,
     repository::Repository,
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
 };
-use anyhow::Result;
 
 use super::{candles_provider::CandlesProvider, plot_selection::plot_from_selection};
 
@@ -16,9 +15,9 @@ pub struct Application<'a> {
 }
 
 impl<'a> Application<'a> {
-    pub fn new(repo: &'a Repository, exchange: &'a Exchange) -> Self {
+    pub fn new(repo: &'a Repository, exchange: &'a Exchange, candles_buffer: &'a mut CandlesBuffer) -> Self {
         Application {
-            candles_provider: CandlesProvider::new(repo, exchange),
+            candles_provider: CandlesProvider::new(candles_buffer, repo, exchange),
             selection: Selection {
                 tacs: vec![MacdTac::definition()],
                 candles_selection: CandlesSelection::new(
@@ -78,8 +77,9 @@ impl<'a> Application<'a> {
                 self.set_selection(Selection::from_json(&line));
 
                 let candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
+                let candles_ref = candles.iter().collect::<Vec<_>>();
 
-                plot_from_selection(&self.selection, candles.as_slice());
+                plot_from_selection(&self.selection, candles_ref.as_slice());
                 continue;
             }
             println!("Unknown command {}", line);

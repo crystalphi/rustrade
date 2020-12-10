@@ -101,6 +101,14 @@ pub fn inconsistent_candles(candles: &[&Candle], duration: &Duration) -> Vec<Can
         .0
 }
 
+/// Returns min/max from dates from candles list
+pub fn min_max_date_from_candles(candles: &[&Candle]) -> (String, String) {
+    let mut min_date = &datetime_to_str(&str_to_datetime("01/01/2000"));
+    let max_date = candles.iter().fold(min_date, |acc, x| acc.max(&x.close_time));
+    min_date = candles.iter().fold(max_date, |acc, x| acc.min(&x.close_time));
+    (min_date.clone(), max_date.clone())
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;

@@ -10,7 +10,7 @@ impl SymbolMinutes {
     pub fn new(symbol: &str, minutes: &u32) -> Self {
         Self {
             symbol: symbol.into(),
-            minutes: minutes.clone(),
+            minutes: *minutes,
         }
     }
 }

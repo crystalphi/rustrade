@@ -17,6 +17,7 @@ use clap::App;
 use config::symbol_minutes::SymbolMinutes;
 use exchange::Exchange;
 use ifmt::iprintln;
+use provider::candles_buffer::CandlesBuffer;
 use repository::Repository;
 use synchronizer::Synchronizer;
 use tac_plotters::plotter::plot_candles;
@@ -80,7 +81,9 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {
-        read_stream(Application::new(&repo, &exchange));
+        let mut candles_buffer = CandlesBuffer::new();
+
+        read_stream(Application::new(&repo, &exchange, &mut candles_buffer));
     }
 
     //assert_e!(row.0, 150);

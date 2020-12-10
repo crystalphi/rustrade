@@ -13,14 +13,25 @@ impl<'a> DeviceExch<'a> {
 }
 
 impl<'a> DeviceTrait for DeviceExch<'a> {
-    fn read(
+    fn write(&mut self, candles: &[&Candle]) {
+        todo!()
+    }
+
+    fn read_ref(
+        &mut self,
+        selection: &crate::config::candles_selection::CandlesSelection,
+    ) -> (crate::config::candles_selection::DatesSelection, Vec<&Candle>) {
+        todo!()
+    }
+
+    fn read_own(
         &mut self,
         selection: &crate::config::candles_selection::CandlesSelection,
     ) -> (crate::config::candles_selection::DatesSelection, Vec<Candle>) {
         todo!()
     }
 
-    fn write(&mut self, candles: &[&Candle]) {
+    fn on_new_from_child(&mut self, candles: Vec<Candle>) {
         todo!()
     }
 }

@@ -2,8 +2,6 @@
 
 use crate::config::definition::TacDefinition;
 
-use super::indicator::Indicator;
-
 pub trait Technical {
     // , T: Technical<'a, T>
     //fn new(candles: &'a [&'a Candle]) -> T;

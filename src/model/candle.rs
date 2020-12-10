@@ -1,10 +1,13 @@
+use chrono::{DateTime, Utc};
 use ifmt::iwrite;
 use rust_decimal::Decimal;
 use std::fmt::Display;
+
+use crate::utils::datetime_to_str;
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Candle {
-    pub open_time: String,
-    pub close_time: String,
+    pub open_time: DateTime<Utc>,
+    pub close_time: DateTime<Utc>,
     pub id: Decimal,
     pub symbol: String,
     pub minutes: Decimal,
@@ -17,10 +20,10 @@ pub struct Candle {
 
 impl Display for Candle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let close_time = self.close_time[11..19].to_string();
+        let close_time_fmt = datetime_to_str(&self.close_time);
         iwrite!(
             f,
-            "{self.symbol} [{self.minutes} {self.open_time} {close_time}] {self.close}"
+            "{self.symbol} [{self.minutes} {self.open_time} {close_time_fmt}] {self.close}"
         )
     }
 }

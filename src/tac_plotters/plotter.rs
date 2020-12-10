@@ -98,8 +98,8 @@ impl<'a> Plotter<'a> {
 }
 
 pub fn date_time_range_from_candles(candles: &[&Candle], minutes: &u32) -> (DateTime<Utc>, DateTime<Utc>) {
-    let from_date = str_to_datetime(&candles[0].close_time) - Duration::minutes(*minutes as i64);
-    let to_date = str_to_datetime(&candles[candles.len() - 1].close_time) + Duration::minutes(*minutes as i64);
+    let from_date = candles[0].close_time - Duration::minutes(*minutes as i64);
+    let to_date = candles[candles.len() - 1].close_time + Duration::minutes(*minutes as i64);
     (from_date, to_date)
 }
 
