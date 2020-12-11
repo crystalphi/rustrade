@@ -1,11 +1,13 @@
+use chrono::{DateTime, Utc};
+
 use crate::utils::min_max_date_from_candles;
 
 use super::candle::Candle;
 
 pub struct CandlesResult {
     candles: Vec<Candle>,
-    start_date: Option<String>,
-    end_date: Option<String>,
+    start_date: Option<DateTime<Utc>>,
+    end_date: Option<DateTime<Utc>>,
 }
 
 impl CandlesResult {

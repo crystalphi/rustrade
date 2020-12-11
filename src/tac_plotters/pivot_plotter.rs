@@ -40,7 +40,7 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
             self.pivots
                 .iter()
                 .filter(|p| p.type_p == PivotType::Low)
-                .map(|c| (str_to_datetime(&c.close_time), c.price.to_f32().unwrap())),
+                .map(|c| (c.close_time.clone(), c.price.to_f32().unwrap())),
             3,
             ShapeStyle::from(&red).filled(),
             &|coord, size, style| {
@@ -54,7 +54,7 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
             self.pivots
                 .iter()
                 .filter(|p| p.type_p == PivotType::High)
-                .map(|c| (str_to_datetime(&c.close_time), c.price.to_f32().unwrap())),
+                .map(|c| (c.close_time.clone(), c.price.to_f32().unwrap())),
             3,
             ShapeStyle::from(&green).filled(),
             &|coord, size, style| {

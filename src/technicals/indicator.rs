@@ -1,3 +1,5 @@
+use chrono::{DateTime, Utc};
+
 use super::serie::Serie;
 
 pub struct Indicator<'a> {
@@ -17,7 +19,7 @@ impl<'a> Indicator<'a> {
         self.series.push(serie);
     }
 
-    pub fn push_serie(&mut self, date_time: &'a str, value: f64) {
+    pub fn push_serie(&mut self, date_time: &'a DateTime<Utc>, value: f64) {
         self.series.push(Serie::new(date_time, value));
     }
 }

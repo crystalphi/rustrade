@@ -2,7 +2,6 @@ use crate::{
     config::symbol_minutes::SymbolMinutes,
     model::candle::Candle,
     technicals::{macd::macd_tac::MacdTac, pivots::Pivot},
-    utils::str_to_datetime,
 };
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;

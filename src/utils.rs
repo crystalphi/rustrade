@@ -25,8 +25,8 @@ pub fn fdec(value: f64) -> Decimal {
 
 // Convert binance Kline to app Candle
 pub fn kline_to_candle(summary: &KlineSummary, symbol: &str, minutes: u32, id: &Decimal) -> Candle {
-    let open_time_fmt = timestamp_to_str(&(summary.open_time as u64));
-    let close_time_fmt = timestamp_to_str(&(summary.close_time as u64));
+    let open_time_fmt = timestamp_to_datetime(&(summary.open_time as u64));
+    let close_time_fmt = timestamp_to_datetime(&(summary.close_time as u64));
 
     Candle {
         id: *id,
@@ -43,9 +43,14 @@ pub fn kline_to_candle(summary: &KlineSummary, symbol: &str, minutes: u32, id: &
 }
 
 /// Convert numeric date to String iso formatted
-pub fn timestamp_to_str(timestamp: &u64) -> String {
+pub fn timestamp_to_datetime(timestamp: &u64) -> DateTime<Utc> {
     let naive = NaiveDateTime::from_timestamp((timestamp / 1000) as i64, 0);
-    let date_time: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+    DateTime::from_utc(naive, Utc)
+}
+
+/// Convert numeric date to String iso formatted
+pub fn timestamp_to_str(timestamp: &u64) -> String {
+    let date_time: DateTime<Utc> = timestamp_to_datetime(timestamp);
     date_time.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
@@ -89,8 +94,8 @@ pub fn inconsistent_candles(candles: &[&Candle], duration: &Duration) -> Vec<Can
         .fold((Vec::new(), None::<&&Candle>), |mut previous, current| {
             if let Some(previous_c) = previous.1 {
                 if let Some(current_c) = current {
-                    let previous_d = str_to_datetime(&previous_c.open_time);
-                    let current_d = str_to_datetime(&current_c.open_time);
+                    let previous_d = previous_c.open_time;
+                    let current_d = current_c.open_time;
                     if current_d - previous_d != *duration {
                         previous.0.push((*current_c).clone());
                     }
@@ -102,8 +107,8 @@ pub fn inconsistent_candles(candles: &[&Candle], duration: &Duration) -> Vec<Can
 }
 
 /// Returns min/max from dates from candles list
-pub fn min_max_date_from_candles(candles: &[&Candle]) -> (String, String) {
-    let mut min_date = &datetime_to_str(&str_to_datetime("01/01/2000"));
+pub fn min_max_date_from_candles(candles: &[&Candle]) -> (DateTime<Utc>, DateTime<Utc>) {
+    let mut min_date = &str_to_datetime("01/01/2000");
     let max_date = candles.iter().fold(min_date, |acc, x| acc.max(&x.close_time));
     min_date = candles.iter().fold(max_date, |acc, x| acc.min(&x.close_time));
     (min_date.clone(), max_date.clone())
@@ -129,8 +134,8 @@ pub mod tests {
     fn candles_sorted_ok_test() {
         let c1 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 12:00:00".into(),
-            close_time: "2020-01-12 12:14:59".into(),
+            open_time: str_to_datetime("2020-01-12 12:00:00"),
+            close_time: str_to_datetime("2020-01-12 12:14:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -141,8 +146,8 @@ pub mod tests {
         };
         let c2 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 12:15:00".into(),
-            close_time: "2020-01-12 12:29:59".into(),
+            open_time: str_to_datetime("2020-01-12 12:15:00"),
+            close_time: str_to_datetime("2020-01-12 12:29:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -152,8 +157,8 @@ pub mod tests {
             volume: dec!(100.0),
         };
 
-        let d1 = str_to_datetime(&c1.open_time);
-        let d2 = str_to_datetime(&c2.open_time);
+        let d1 = c1.open_time;
+        let d2 = c2.open_time;
 
         let d15m = Duration::minutes(15);
         assert_eq!(d2 - d1, d15m);
@@ -170,8 +175,8 @@ pub mod tests {
 
         let c3 = Candle {
             id: dec!(0),
-            open_time: "2020-11-16 01:25:00".into(),
-            close_time: "2020-11-16 01:29:59".into(),
+            open_time: str_to_datetime("2020-11-16 01:25:00"),
+            close_time: str_to_datetime("2020-11-16 01:29:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -183,8 +188,8 @@ pub mod tests {
 
         let c4 = Candle {
             id: dec!(0),
-            open_time: "2020-11-20 11:15:00".into(),
-            close_time: "2020-11-20 11:29:59".into(),
+            open_time: str_to_datetime("2020-11-20 11:15:00"),
+            close_time: str_to_datetime("2020-11-20 11:29:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),

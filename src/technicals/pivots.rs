@@ -1,5 +1,6 @@
 use std::{cmp::Ordering, collections::HashSet};
 
+use chrono::{DateTime, Utc};
 use ifmt::iformat;
 use log::debug;
 use rust_decimal::Decimal;
@@ -21,13 +22,13 @@ impl std::fmt::Display for PivotType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Pivot<'a> {
-    pub close_time: &'a str,
+    pub close_time: &'a DateTime<Utc>,
     pub price: &'a Decimal,
     pub type_p: PivotType,
 }
 
 impl<'a> Pivot<'a> {
-    pub fn new(type_p: PivotType, close_time: &'a str, price: &'a Decimal) -> Self {
+    pub fn new(type_p: PivotType, close_time: &'a DateTime<Utc>, price: &'a Decimal) -> Self {
         Self {
             close_time,
             type_p,
@@ -161,6 +162,8 @@ fn min_price<'a>(previous: &'a Pivot, current: &'a Pivot) -> &'a Pivot<'a> {
 
 #[cfg(test)]
 pub mod tests {
+    use crate::utils::str_to_datetime;
+
     use super::*;
     use ifmt::iprintln;
     use rust_decimal_macros::dec;
@@ -169,8 +172,8 @@ pub mod tests {
     fn pivot_test() {
         let c1 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 12:00:00".into(),
-            close_time: "2020-01-12 12:14:59".into(),
+            open_time: str_to_datetime("2020-01-12 12:00:00"),
+            close_time: str_to_datetime("2020-01-12 12:14:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -182,8 +185,8 @@ pub mod tests {
 
         let c2 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 12:15:00".into(),
-            close_time: "2020-01-12 12:29:59".into(),
+            open_time: str_to_datetime("2020-01-12 12:15:00"),
+            close_time: str_to_datetime("2020-01-12 12:29:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -195,8 +198,8 @@ pub mod tests {
 
         let c3 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 12:30:00".into(),
-            close_time: "2020-01-12 12:44:59".into(),
+            open_time: str_to_datetime("2020-01-12 12:30:00"),
+            close_time: str_to_datetime("2020-01-12 12:44:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -208,8 +211,8 @@ pub mod tests {
 
         let c4 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 12:45:00".into(),
-            close_time: "2020-01-12 12:59:59".into(),
+            open_time: str_to_datetime("2020-01-12 12:45:00"),
+            close_time: str_to_datetime("2020-01-12 12:59:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -221,8 +224,8 @@ pub mod tests {
 
         let c5 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 13:00:00".into(),
-            close_time: "2020-01-12 13:14:59".into(),
+            open_time: str_to_datetime("2020-01-12 13:00:00"),
+            close_time: str_to_datetime("2020-01-12 13:14:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -234,8 +237,8 @@ pub mod tests {
 
         let c6 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 13:15:00".into(),
-            close_time: "2020-01-12 13:29:59".into(),
+            open_time: str_to_datetime("2020-01-12 13:15:00"),
+            close_time: str_to_datetime("2020-01-12 13:29:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -247,8 +250,8 @@ pub mod tests {
 
         let c7 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 13:30:00".into(),
-            close_time: "2020-01-12 13:44:59".into(),
+            open_time: str_to_datetime("2020-01-12 13:30:00"),
+            close_time: str_to_datetime("2020-01-12 13:44:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -260,8 +263,8 @@ pub mod tests {
 
         let c8 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 13:45:00".into(),
-            close_time: "2020-01-12 13:59:59".into(),
+            open_time: str_to_datetime("2020-01-12 13:45:00"),
+            close_time: str_to_datetime("2020-01-12 13:59:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -273,8 +276,8 @@ pub mod tests {
 
         let c9 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 14:00:00".into(),
-            close_time: "2020-01-12 14:14:59".into(),
+            open_time: str_to_datetime("2020-01-12 14:00:00"),
+            close_time: str_to_datetime("2020-01-12 14:14:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -286,8 +289,8 @@ pub mod tests {
 
         let c10 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 14:15:00".into(),
-            close_time: "2020-01-12 14:29:59".into(),
+            open_time: str_to_datetime("2020-01-12 14:15:00"),
+            close_time: str_to_datetime("2020-01-12 14:29:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -299,8 +302,8 @@ pub mod tests {
 
         let c11 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 14:30:00".into(),
-            close_time: "2020-01-12 14:44:59".into(),
+            open_time: str_to_datetime("2020-01-12 14:30:00"),
+            close_time: str_to_datetime("2020-01-12 14:44:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -312,8 +315,8 @@ pub mod tests {
 
         let c12 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 14:45:00".into(),
-            close_time: "2020-01-12 14:59:59".into(),
+            open_time: str_to_datetime("2020-01-12 14:45:00"),
+            close_time: str_to_datetime("2020-01-12 14:59:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -325,8 +328,8 @@ pub mod tests {
 
         let c13 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 15:00:00".into(),
-            close_time: "2020-01-12 15:14:59".into(),
+            open_time: str_to_datetime("2020-01-12 15:00:00"),
+            close_time: str_to_datetime("2020-01-12 15:14:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -338,8 +341,8 @@ pub mod tests {
 
         let c14 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 15:15:00".into(),
-            close_time: "2020-01-12 15:29:59".into(),
+            open_time: str_to_datetime("2020-01-12 15:15:00"),
+            close_time: str_to_datetime("2020-01-12 15:29:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -351,8 +354,8 @@ pub mod tests {
 
         let c15 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 15:30:00".into(),
-            close_time: "2020-01-12 15:44:59".into(),
+            open_time: str_to_datetime("2020-01-12 15:30:00"),
+            close_time: str_to_datetime("2020-01-12 15:44:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -364,8 +367,8 @@ pub mod tests {
 
         let c16 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 15:45:00".into(),
-            close_time: "2020-01-12 15:59:59".into(),
+            open_time: str_to_datetime("2020-01-12 15:45:00"),
+            close_time: str_to_datetime("2020-01-12 15:59:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
@@ -377,8 +380,8 @@ pub mod tests {
 
         let c17 = Candle {
             id: dec!(0),
-            open_time: "2020-01-12 16:00:00".into(),
-            close_time: "2020-01-12 16:14:59".into(),
+            open_time: str_to_datetime("2020-01-12 16:00:00"),
+            close_time: str_to_datetime("2020-01-12 16:14:59"),
             symbol: "BTCUSDT".into(),
             minutes: dec!(15),
             open: dec!(100.0),
