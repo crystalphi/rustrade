@@ -1,13 +1,10 @@
-use std::{cmp::Ordering, collections::HashSet};
-
+use super::technical::Technical;
+use crate::{config::definition::TacDefinition, model::candle::Candle};
 use chrono::{DateTime, Utc};
 use ifmt::iformat;
 use log::debug;
 use rust_decimal::Decimal;
-
-use crate::{config::definition::TacDefinition, model::candle::Candle};
-
-use super::technical::Technical;
+use std::{cmp::Ordering, collections::HashSet};
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash)]
 pub enum PivotType {
     Low,

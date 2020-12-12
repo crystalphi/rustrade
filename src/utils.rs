@@ -111,8 +111,19 @@ pub fn min_max_date_from_candles(candles: &[&Candle]) -> (DateTime<Utc>, DateTim
     let mut min_date = &str_to_datetime("01/01/2000");
     let max_date = candles.iter().fold(min_date, |acc, x| acc.max(&x.close_time));
     min_date = candles.iter().fold(max_date, |acc, x| acc.min(&x.close_time));
-    (min_date.clone(), max_date.clone())
+    (*min_date, *max_date)
 }
+
+/*
+      01/10/2020-               01/12/2020 exepected
+
+            01/11/2020 10/10/12/2020      returned
+
+
+      missing range:
+      01/10/2020-01/11/2020, 10/10/2020-01/12/2020
+
+*/
 
 #[cfg(test)]
 pub mod tests {

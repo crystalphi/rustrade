@@ -6,8 +6,8 @@ use super::candle::Candle;
 
 pub struct CandlesResult {
     candles: Vec<Candle>,
-    start_date: Option<DateTime<Utc>>,
-    end_date: Option<DateTime<Utc>>,
+    pub start_date: Option<DateTime<Utc>>,
+    pub end_date: Option<DateTime<Utc>>,
 }
 
 impl CandlesResult {

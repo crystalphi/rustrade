@@ -4,6 +4,7 @@ use crate::{
     provider::candles_buffer::CandlesBuffer,
     repository::Repository,
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
+    utils::str_to_datetime,
 };
 
 use super::{candles_provider::CandlesProvider, plot_selection::plot_from_selection};
@@ -23,8 +24,8 @@ impl<'a> Application<'a> {
                 candles_selection: CandlesSelection::new(
                     "BTCUSDT",
                     &15u32,
-                    Some(&"2020-10-01 00:00:00"),
-                    Some(&"2020-11-30 00:00:00"),
+                    Some(&str_to_datetime("2020-10-01 00:00:00")),
+                    Some(&str_to_datetime("2020-11-30 00:00:00")),
                 ),
 
                 image_name: "out/stock.png".to_string(),

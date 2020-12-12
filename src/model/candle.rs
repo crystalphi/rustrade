@@ -4,6 +4,7 @@ use rust_decimal::Decimal;
 use std::fmt::Display;
 
 use crate::utils::datetime_to_str;
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Candle {
     pub open_time: DateTime<Utc>,

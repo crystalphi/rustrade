@@ -1,17 +1,17 @@
 use crate::{
-    config::selection::Selection, exchange::Exchange, model::candle::Candle, provider::candles_buffer::CandlesBuffer,
-    repository::Repository, utils::str_to_datetime,
+    config::selection::Selection, exchange::Exchange, model::candle::Candle, model::candles_result::CandlesResult,
+    provider::candles_buffer::CandlesBuffer, repository::Repository,
 };
 use anyhow::anyhow;
 use anyhow::Result;
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Utc};
 
 pub struct CandlesProvider<'a> {
     exchange: &'a Exchange,
     repo: &'a Repository,
     candles: Vec<Candle>,
-    current_start_time: Option<String>,
-    current_end_time: Option<String>,
+    current_start_time: Option<DateTime<Utc>>,
+    current_end_time: Option<DateTime<Utc>>,
 }
 
 impl<'a> CandlesProvider<'a> {
@@ -29,18 +29,27 @@ impl<'a> CandlesProvider<'a> {
         let start_time = &selection
             .candles_selection
             .start_time
-            .map(|s| str_to_datetime(&s))
             .unwrap_or_else(|| Utc::now() - Duration::days(180));
 
-        let end_time = &selection
-            .candles_selection
-            .end_time
-            .map(|s| str_to_datetime(&s))
-            .unwrap_or_else(Utc::now);
+        let end_time = &selection.candles_selection.end_time.unwrap_or_else(Utc::now);
 
         let candles = self
             .repo
             .candles_by_time(&selection.candles_selection.symbol_minutes, &start_time, &end_time);
+
+        let candles_result = CandlesResult::new(candles.unwrap_or_default());
+
+        let max_start_time = candles_result.start_date.unwrap_or(*start_time).max(*start_time);
+        let min_end_time = candles_result.end_date.unwrap_or(*end_time).max(*end_time);
+
+        if &max_start_time != start_time || &min_end_time != end_time {
+            // get from exchang
+            // increment minutes from start
+            // decrement minutres from end
+            let candles_from_exch =
+                self.repo
+                    .candles_by_time(&selection.candles_selection.symbol_minutes, start_time, end_time);
+        }
 
         // Candles
         // #symbol
@@ -60,5 +69,3 @@ impl<'a> CandlesProvider<'a> {
         candles.ok_or(anyhow!("Not found"))
     }
 }
-
-fn diff_date_range() {}

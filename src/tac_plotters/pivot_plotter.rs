@@ -8,10 +8,7 @@ use plotters::{
 use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
 use rust_decimal::prelude::ToPrimitive;
 
-use crate::{
-    technicals::pivots::{Pivot, PivotType},
-    utils::str_to_datetime,
-};
+use crate::technicals::pivots::{Pivot, PivotType};
 
 use super::indicator_plotter::PlotterIndicatorContext;
 
