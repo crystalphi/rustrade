@@ -93,6 +93,13 @@ impl Repository {
         async_std::task::block_on(future).ok()
     }
 
+    pub fn add_candles(&self, candles: &Vec<Candle>) -> anyhow::Result<()> {
+        for candle in candles.iter() {
+            self.add_candle(candle)?;
+        }
+        Ok(())
+    }
+
     pub fn add_candle(&self, candle: &Candle) -> anyhow::Result<Decimal> {
         let future = sqlx::query!(
             r#"

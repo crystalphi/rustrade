@@ -1,6 +1,6 @@
 use crate::{
-    config::selection::Selection, exchange::Exchange, model::candle::Candle, model::candles_result::CandlesResult,
-    provider::candles_buffer::CandlesBuffer, repository::Repository,
+    candles_range::candles_to_ranges_missing, config::selection::Selection, exchange::Exchange, model::candle::Candle,
+    model::candles_result::CandlesResult, provider::candles_buffer::CandlesBuffer, repository::Repository,
 };
 use anyhow::anyhow;
 use anyhow::Result;
@@ -10,8 +10,6 @@ pub struct CandlesProvider<'a> {
     exchange: &'a Exchange,
     repo: &'a Repository,
     candles: Vec<Candle>,
-    current_start_time: Option<DateTime<Utc>>,
-    current_end_time: Option<DateTime<Utc>>,
 }
 
 impl<'a> CandlesProvider<'a> {
@@ -20,8 +18,6 @@ impl<'a> CandlesProvider<'a> {
             exchange: exch,
             repo,
             candles: Vec::new(),
-            current_start_time: None,
-            current_end_time: None,
         }
     }
 
@@ -37,36 +33,23 @@ impl<'a> CandlesProvider<'a> {
             .repo
             .candles_by_time(&selection.candles_selection.symbol_minutes, &start_time, &end_time);
 
-        let candles_result = CandlesResult::new(candles.unwrap_or_default());
+        let mut candles = candles.unwrap_or_default();
+        let candles_ref = candles.iter().collect::<Vec<_>>();
 
-        let max_start_time = candles_result.start_date.unwrap_or(*start_time).max(*start_time);
-        let min_end_time = candles_result.end_date.unwrap_or(*end_time).max(*end_time);
+        let minutes = selection.candles_selection.symbol_minutes.minutes;
 
-        if candles_result.is_empty() || &max_start_time != start_time || &min_end_time != end_time {
-            // get from exchange
-            // increment minutes from start
-            // decrement minutes from end
-            let candles_from_exch =
-                self.repo
-                    .candles_by_time(&selection.candles_selection.symbol_minutes, start_time, end_time);
+        let ranges_missing = candles_to_ranges_missing(start_time, end_time, &minutes, candles_ref.as_slice());
+        for range_missing in ranges_missing.iter() {
+            let mut candles_exch = self.exchange.candles(
+                &selection.candles_selection.symbol_minutes,
+                &Some(range_missing.0),
+                &Some(range_missing.1),
+            );
+
+            self.repo.add_candles(&candles_exch)?;
+            candles.append(&mut candles_exch);
         }
 
-        // Candles
-        // #symbol
-        // #minutes
-        //
-
-        // Find candle in repo
-
-        // Find candle in repo
-
-        // self.candles = self
-        //     .repo
-        //     .candles_by_time(&selection.candles_selection.symbol_minutes, start_time, end_time)
-        //     .unwrap_or_default();
-
-        // let candles = self.candles.iter().collect();
-        Ok(candles_result.candles)
-        //candles.ok_or(anyhow!("Not found"))
+        Ok(candles)
     }
 }

@@ -120,7 +120,7 @@ fn minutes_close_trunc(start_time: &DateTime<Utc>, minutes: &u32) -> DateTime<Ut
     start_time
 }
 
-fn candles_to_ranges_missing(
+pub fn candles_to_ranges_missing(
     start_time: &DateTime<Utc>,
     end_time: &DateTime<Utc>,
     minutes: &u32,
@@ -139,8 +139,7 @@ pub mod testes {
 
     use super::*;
 
-    #[test]
-    fn candles_sorted_ok_test() {
+    fn candles_test() -> Vec<Candle> {
         let c1 = Candle::new(
             0,
             "2020-01-12 12:00:00",
@@ -193,13 +192,41 @@ pub mod testes {
             100.0,
         );
 
-        let candles = vec![c1, c2, c3, c4];
+        vec![c1, c2, c3, c4]
+    }
+
+    #[test]
+    fn invert_ranges_test() {
+        let candles = candles_test();
+
         let candles_ref = candles.iter().collect::<Vec<_>>();
         let ranges = candles_ranges(candles_ref.as_slice(), &15);
-        println!("Candles:");
-        for (i, range) in ranges.ranges.iter().enumerate() {
-            println!(" {} ({}) = {:?}", i, range.len(), range);
+        println!("Ranges:");
+        for range in ranges.ranges.iter() {
+            let date_range = range.min_max();
+            println!("{} - {}", date_range.0, date_range.1);
         }
+        assert_eq!(
+            ranges.ranges.get(0).unwrap().min_max(),
+            (
+                str_to_datetime("2020-01-12 12:14:59"),
+                str_to_datetime("2020-01-12 12:29:59")
+            )
+        );
+        assert_eq!(
+            ranges.ranges.get(1).unwrap().min_max(),
+            (
+                str_to_datetime("2020-11-16 01:29:59"),
+                str_to_datetime("2020-11-16 01:29:59"),
+            )
+        );
+        assert_eq!(
+            ranges.ranges.get(2).unwrap().min_max(),
+            (
+                str_to_datetime("2020-11-20 11:29:59"),
+                str_to_datetime("2020-11-20 11:29:59"),
+            )
+        );
 
         let start_time = str_to_datetime("2020-01-01 00:00:00") - Duration::seconds(1);
         let end_time = str_to_datetime("2020-11-30 00:00:00") - Duration::seconds(1);
@@ -210,6 +237,35 @@ pub mod testes {
         for inverted_range in inverted_ranges.iter() {
             println!("{} - {}", inverted_range.0, inverted_range.1);
         }
+
+        assert_eq!(
+            *inverted_ranges.get(0).unwrap(),
+            (
+                str_to_datetime("2019-12-31 23:59:59"),
+                str_to_datetime("2020-01-12 11:59:59")
+            )
+        );
+        assert_eq!(
+            *inverted_ranges.get(1).unwrap(),
+            (
+                str_to_datetime("2020-01-12 12:44:59"),
+                str_to_datetime("2020-11-16 01:14:59")
+            )
+        );
+        assert_eq!(
+            *inverted_ranges.get(2).unwrap(),
+            (
+                str_to_datetime("2020-11-16 01:44:59"),
+                str_to_datetime("2020-11-20 11:14:59")
+            )
+        );
+        assert_eq!(
+            *inverted_ranges.get(3).unwrap(),
+            (
+                str_to_datetime("2020-11-20 11:44:59"),
+                str_to_datetime("2020-11-29 23:59:59")
+            )
+        );
     }
 
     #[test]
@@ -228,5 +284,49 @@ pub mod testes {
         assert_eq!(truncated, str_to_datetime("2020-01-01 00:29:59"));
 
         println!("{}", truncated);
+    }
+
+    #[test]
+    fn candles_to_ranges_missing_test() {
+        let start_time = str_to_datetime("2020-01-01 00:00:00");
+        let end_time = str_to_datetime("2020-11-30 00:00:00");
+
+        let candles = candles_test();
+
+        let candles_ref = candles.iter().collect::<Vec<_>>();
+        let ranges_missing = candles_to_ranges_missing(&start_time, &end_time, &15, candles_ref.as_slice());
+
+        for range in ranges_missing.iter() {
+            println!("{} - {}", range.0, range.1);
+        }
+
+        assert_eq!(
+            *ranges_missing.get(0).unwrap(),
+            (
+                str_to_datetime("2019-12-31 23:59:59"),
+                str_to_datetime("2020-01-12 11:59:59"),
+            )
+        );
+        assert_eq!(
+            *ranges_missing.get(1).unwrap(),
+            (
+                str_to_datetime("2020-01-12 12:44:59"),
+                str_to_datetime("2020-11-16 01:14:59"),
+            )
+        );
+        assert_eq!(
+            *ranges_missing.get(2).unwrap(),
+            (
+                str_to_datetime("2020-11-16 01:44:59"),
+                str_to_datetime("2020-11-20 11:14:59"),
+            )
+        );
+        assert_eq!(
+            *ranges_missing.get(3).unwrap(),
+            (
+                str_to_datetime("2020-11-20 11:44:59"),
+                str_to_datetime("2020-11-29 23:59:59"),
+            )
+        );
     }
 }
