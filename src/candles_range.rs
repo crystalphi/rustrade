@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 use chrono::{DateTime, Duration, Utc};
 
 use crate::{
@@ -64,8 +65,9 @@ impl<'a> Default for CandlesRanges<'a> {
     }
 }
 
-/// Returns inconsistent candles
-pub fn candles_ranges<'a>(candles: &[&'a Candle], duration: &Duration) -> CandlesRanges<'a> {
+pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> CandlesRanges<'a> {
+    let duration = &Duration::minutes(*minutes as i64);
+    // Returns inconsistent candles
     candles
         .iter()
         .map(Some)
@@ -85,18 +87,20 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], duration: &Duration) -> Candle
         .0
 }
 
-pub fn invert_rages(
+pub fn invert_ranges(
     start_time: &DateTime<Utc>,
     end_time: &DateTime<Utc>,
     ranges: &CandlesRanges,
+    minutes: &u32,
 ) -> Vec<(DateTime<Utc>, DateTime<Utc>)> {
+    let duration = Duration::minutes(*minutes as i64);
     let mut inverted_ranges = Vec::new();
     let mut prev_start_time = *start_time;
     for range in ranges.ranges.iter() {
         let range_dates = range.min_max();
         let start = prev_start_time;
-        let end = range_dates.0 - Duration::minutes(15);
-        prev_start_time = range_dates.1 + Duration::minutes(15);
+        let end = range_dates.0 - duration;
+        prev_start_time = range_dates.1 + duration;
         inverted_ranges.push((start, end));
     }
     inverted_ranges.push((prev_start_time, *end_time));
@@ -104,75 +108,125 @@ pub fn invert_rages(
     inverted_ranges
 }
 
-#[test]
-fn candles_sorted_ok_test() {
-    let c1 = Candle::new(
-        0,
-        "2020-01-12 12:00:00",
-        "2020-01-12 12:14:59",
-        "BTCUSDT",
-        15,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-    );
+fn minutes_close_trunc(start_time: &DateTime<Utc>, minutes: &u32) -> DateTime<Utc> {
+    let mut start_time = *start_time;
 
-    let c2 = Candle::new(
-        0,
-        "2020-01-12 12:15:00",
-        "2020-01-12 12:29:59",
-        "BTCUSDT",
-        15,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-    );
+    if start_time.second() == 59 {
+        start_time = start_time + Duration::seconds(1);
+    };
+    let minute = start_time.minute() - (start_time.minute() % minutes);
+    start_time = start_time.with_minute(minute).unwrap();
+    start_time = start_time - Duration::seconds(1);
+    start_time
+}
 
-    let c3 = Candle::new(
-        0,
-        "2020-11-16 01:25:00",
-        "2020-11-16 01:29:59",
-        "BTCUSDT",
-        15,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-    );
+fn candles_to_ranges_missing(
+    start_time: &DateTime<Utc>,
+    end_time: &DateTime<Utc>,
+    minutes: &u32,
+    candles: &[&Candle],
+) -> Vec<(DateTime<Utc>, DateTime<Utc>)> {
+    let start_time = minutes_close_trunc(start_time, minutes);
+    let end_time = minutes_close_trunc(end_time, minutes);
 
-    let c4 = Candle::new(
-        0,
-        "2020-11-20 11:15:00",
-        "2020-11-20 11:29:59",
-        "BTCUSDT",
-        15,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-    );
+    let candles_ranges = candles_ranges(candles, minutes);
+    invert_ranges(&start_time, &end_time, &candles_ranges, minutes)
+}
 
-    let candles = vec![c1, c2, c3, c4];
-    let candles_ref = candles.iter().collect::<Vec<_>>();
-    let ranges = candles_ranges(candles_ref.as_slice(), &Duration::minutes(15 as i64));
-    println!("Candles:");
-    for (i, range) in ranges.ranges.iter().enumerate() {
-        println!(" {} ({}) = {:?}", i, range.len(), range);
+#[cfg(test)]
+pub mod testes {
+    use std::println;
+
+    use super::*;
+
+    #[test]
+    fn candles_sorted_ok_test() {
+        let c1 = Candle::new(
+            0,
+            "2020-01-12 12:00:00",
+            "2020-01-12 12:14:59",
+            "BTCUSDT",
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
+
+        let c2 = Candle::new(
+            0,
+            "2020-01-12 12:15:00",
+            "2020-01-12 12:29:59",
+            "BTCUSDT",
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
+
+        let c3 = Candle::new(
+            0,
+            "2020-11-16 01:25:00",
+            "2020-11-16 01:29:59",
+            "BTCUSDT",
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
+
+        let c4 = Candle::new(
+            0,
+            "2020-11-20 11:15:00",
+            "2020-11-20 11:29:59",
+            "BTCUSDT",
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
+
+        let candles = vec![c1, c2, c3, c4];
+        let candles_ref = candles.iter().collect::<Vec<_>>();
+        let ranges = candles_ranges(candles_ref.as_slice(), &15);
+        println!("Candles:");
+        for (i, range) in ranges.ranges.iter().enumerate() {
+            println!(" {} ({}) = {:?}", i, range.len(), range);
+        }
+
+        let start_time = str_to_datetime("2020-01-01 00:00:00") - Duration::seconds(1);
+        let end_time = str_to_datetime("2020-11-30 00:00:00") - Duration::seconds(1);
+
+        let inverted_ranges = invert_ranges(&start_time, &end_time, &ranges, &15);
+
+        println!("Inverted ranges:");
+        for inverted_range in inverted_ranges.iter() {
+            println!("{} - {}", inverted_range.0, inverted_range.1);
+        }
     }
 
-    let start_time = str_to_datetime("2020-01-01 00:00:00");
-    let end_time = str_to_datetime("2020-11-30 00:00:00");
+    #[test]
+    fn minutes_close_trunc_test() {
+        let truncated = minutes_close_trunc(&str_to_datetime("2020-01-01 00:00:00"), &15);
 
-    let inverted_ranges = invert_rages(&start_time, &end_time, &ranges);
+        assert_eq!(truncated, str_to_datetime("2019-12-31 23:59:59"));
 
-    println!("Inverted ranges:");
-    for inverted_range in inverted_ranges.iter() {
-        println!("{} - {}", inverted_range.0, inverted_range.1);
+        let truncated = minutes_close_trunc(&str_to_datetime("2020-01-01 00:15:00"), &15);
+        assert_eq!(truncated, str_to_datetime("2020-01-01 00:14:59"));
+
+        let truncated = minutes_close_trunc(&str_to_datetime("2020-01-01 00:20:00"), &15);
+        assert_eq!(truncated, str_to_datetime("2020-01-01 00:14:59"));
+
+        let truncated = minutes_close_trunc(&str_to_datetime("2020-01-01 00:31:00"), &15);
+        assert_eq!(truncated, str_to_datetime("2020-01-01 00:29:59"));
+
+        println!("{}", truncated);
     }
 }
