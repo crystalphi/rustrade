@@ -1,5 +1,6 @@
 pub mod analyzers;
 pub mod application;
+pub mod candles_range;
 pub mod config;
 pub mod exchange;
 pub mod model;

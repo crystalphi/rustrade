@@ -1,9 +1,10 @@
 use chrono::{DateTime, Utc};
 use ifmt::iwrite;
 use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use std::fmt::Display;
 
-use crate::utils::datetime_to_str;
+use crate::utils::{datetime_to_str, fdec, str_to_datetime};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Candle {
@@ -17,6 +18,34 @@ pub struct Candle {
     pub low: Decimal,
     pub close: Decimal,
     pub volume: Decimal,
+}
+
+impl Candle {
+    pub fn new(
+        id: u32,
+        open_time: &str,
+        close_time: &str,
+        symbol: &str,
+        minutes: u32,
+        open: f64,
+        high: f64,
+        low: f64,
+        close: f64,
+        volume: f64,
+    ) -> Self {
+        Self {
+            id: Decimal::from(id),
+            open_time: str_to_datetime(open_time),
+            close_time: str_to_datetime(close_time),
+            symbol: symbol.into(),
+            minutes: Decimal::from(minutes),
+            open: fdec(open),
+            high: fdec(high),
+            low: fdec(low),
+            close: fdec(close),
+            volume: fdec(volume),
+        }
+    }
 }
 
 impl Display for Candle {

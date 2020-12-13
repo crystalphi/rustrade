@@ -42,10 +42,10 @@ impl<'a> CandlesProvider<'a> {
         let max_start_time = candles_result.start_date.unwrap_or(*start_time).max(*start_time);
         let min_end_time = candles_result.end_date.unwrap_or(*end_time).max(*end_time);
 
-        if &max_start_time != start_time || &min_end_time != end_time {
-            // get from exchang
+        if candles_result.is_empty() || &max_start_time != start_time || &min_end_time != end_time {
+            // get from exchange
             // increment minutes from start
-            // decrement minutres from end
+            // decrement minutes from end
             let candles_from_exch =
                 self.repo
                     .candles_by_time(&selection.candles_selection.symbol_minutes, start_time, end_time);
@@ -66,6 +66,7 @@ impl<'a> CandlesProvider<'a> {
         //     .unwrap_or_default();
 
         // let candles = self.candles.iter().collect();
-        candles.ok_or(anyhow!("Not found"))
+        Ok(candles_result.candles)
+        //candles.ok_or(anyhow!("Not found"))
     }
 }

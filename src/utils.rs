@@ -114,22 +114,10 @@ pub fn min_max_date_from_candles(candles: &[&Candle]) -> (DateTime<Utc>, DateTim
     (*min_date, *max_date)
 }
 
-/*
-      01/10/2020-               01/12/2020 exepected
-
-            01/11/2020 10/10/12/2020      returned
-
-
-      missing range:
-      01/10/2020-01/11/2020, 10/10/2020-01/12/2020
-
-*/
-
 #[cfg(test)]
 pub mod tests {
     use super::*;
     use chrono::Duration;
-    use rust_decimal_macros::dec;
 
     #[test]
     fn timestamp_to_str_test() {
@@ -143,30 +131,30 @@ pub mod tests {
 
     #[test]
     fn candles_sorted_ok_test() {
-        let c1 = Candle {
-            id: dec!(0),
-            open_time: str_to_datetime("2020-01-12 12:00:00"),
-            close_time: str_to_datetime("2020-01-12 12:14:59"),
-            symbol: "BTCUSDT".into(),
-            minutes: dec!(15),
-            open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
-            close: dec!(100.0),
-            volume: dec!(100.0),
-        };
-        let c2 = Candle {
-            id: dec!(0),
-            open_time: str_to_datetime("2020-01-12 12:15:00"),
-            close_time: str_to_datetime("2020-01-12 12:29:59"),
-            symbol: "BTCUSDT".into(),
-            minutes: dec!(15),
-            open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
-            close: dec!(100.0),
-            volume: dec!(100.0),
-        };
+        let c1 = Candle::new(
+            0,
+            "2020-01-12 12:00:00",
+            "2020-01-12 12:14:59",
+            "BTCUSDT".into(),
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
+        let c2 = Candle::new(
+            0,
+            "2020-01-12 12:15:00",
+            "2020-01-12 12:29:59",
+            "BTCUSDT".into(),
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
 
         let d1 = c1.open_time;
         let d2 = c2.open_time;
@@ -184,31 +172,31 @@ pub mod tests {
         assert_eq!(inconsistent_candles(&[&c1, &c1], &d15m).len(), 1);
         assert_eq!(inconsistent_candles(&[&c2, &c2], &d15m).len(), 1);
 
-        let c3 = Candle {
-            id: dec!(0),
-            open_time: str_to_datetime("2020-11-16 01:25:00"),
-            close_time: str_to_datetime("2020-11-16 01:29:59"),
-            symbol: "BTCUSDT".into(),
-            minutes: dec!(15),
-            open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
-            close: dec!(100.0),
-            volume: dec!(100.0),
-        };
+        let c3 = Candle::new(
+            0,
+            "2020-11-16 01:25:00",
+            "2020-11-16 01:29:59",
+            "BTCUSDT".into(),
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
 
-        let c4 = Candle {
-            id: dec!(0),
-            open_time: str_to_datetime("2020-11-20 11:15:00"),
-            close_time: str_to_datetime("2020-11-20 11:29:59"),
-            symbol: "BTCUSDT".into(),
-            minutes: dec!(15),
-            open: dec!(100.0),
-            high: dec!(100.0),
-            low: dec!(100.0),
-            close: dec!(100.0),
-            volume: dec!(100.0),
-        };
+        let c4 = Candle::new(
+            0,
+            "2020-11-20 11:15:00",
+            "2020-11-20 11:29:59",
+            "BTCUSDT".into(),
+            15,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+        );
 
         assert_eq!(inconsistent_candles(&[&c3, &c4], &d15m).len(), 1);
     }

@@ -5,7 +5,7 @@ use crate::utils::min_max_date_from_candles;
 use super::candle::Candle;
 
 pub struct CandlesResult {
-    candles: Vec<Candle>,
+    pub candles: Vec<Candle>,
     pub start_date: Option<DateTime<Utc>>,
     pub end_date: Option<DateTime<Utc>>,
 }
@@ -25,5 +25,13 @@ impl CandlesResult {
             start_date,
             end_date,
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.candles.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.candles.is_empty()
     }
 }
