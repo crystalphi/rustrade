@@ -86,11 +86,13 @@ impl<'a> Application<'a> {
                 if line == SET_SELECTION {
                     println!("set selection...");
                     in_selection = true;
+                    continue;
                 }
                 if line == END_SELECTION {
                     println!(
                         "end selection... in_selection = {} selection_buffer.len() = {}",
-                        in_selection, selection_buffer
+                        in_selection,
+                        selection_buffer.len()
                     );
                     if in_selection {
                         in_selection = false;

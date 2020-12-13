@@ -1,3 +1,8 @@
 #!/bin/bash
 cargo build --release
-printf "SetSelection\n" && cat selection.json && printf "\n" && printf "EndSelection\n" | target/release/rustrade stream
+
+printf "SetSelection\n" > /tmp/command.txt 
+cat selection.json >> /tmp/command.txt
+printf "\n" >> /tmp/command.txt
+printf "EndSelection\n" >> /tmp/command.txt
+cat /tmp/command.txt | target/release/rustrade stream

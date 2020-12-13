@@ -5,6 +5,8 @@ use crate::{
 use anyhow::anyhow;
 use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 pub struct CandlesProvider<'a> {
     exchange: &'a Exchange,
@@ -45,6 +47,16 @@ impl<'a> CandlesProvider<'a> {
                 &Some(range_missing.0),
                 &Some(range_missing.1),
             );
+
+            let mut candle_id = self.repo.last_id();
+
+            let one = dec!(1);
+            candles_exch.iter_mut().for_each(|c| {
+                c.id = {
+                    candle_id += one;
+                    candle_id
+                }
+            });
 
             self.repo.add_candles(&candles_exch)?;
             candles.append(&mut candles_exch);
