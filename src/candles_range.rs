@@ -28,15 +28,15 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], duration: &Duration) -> Candle
         .iter()
         .map(Some)
         .fold((CandlesRanges::new(), None::<&&Candle>), |mut previous, current| {
-            if let Some(previous_c) = previous.1 {
-                if let Some(current_c) = current {
+            if let Some(current_c) = current {
+                if let Some(previous_c) = previous.1 {
                     let previous_d = previous_c.open_time;
                     let current_d = current_c.open_time;
                     if current_d - previous_d != *duration {
                         previous.0.new_range();
                     }
-                    previous.0.push(current_c);
                 }
+                previous.0.push(current_c);
             };
             (previous.0, current)
         })
