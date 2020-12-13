@@ -108,7 +108,7 @@ pub fn inconsistent_candles(candles: &[&Candle], duration: &Duration) -> Vec<Can
 
 /// Returns min/max from dates from candles list
 pub fn min_max_date_from_candles(candles: &[&Candle]) -> (DateTime<Utc>, DateTime<Utc>) {
-    let mut min_date = &str_to_datetime("01/01/2000");
+    let mut min_date = &str_to_datetime("2000-01-01 00:00:00");
     let max_date = candles.iter().fold(min_date, |acc, x| acc.max(&x.close_time));
     min_date = candles.iter().fold(max_date, |acc, x| acc.min(&x.close_time));
     (*min_date, *max_date)
@@ -135,7 +135,7 @@ pub mod tests {
             0,
             "2020-01-12 12:00:00",
             "2020-01-12 12:14:59",
-            "BTCUSDT".into(),
+            "BTCUSDT",
             15,
             100.0,
             100.0,
@@ -147,7 +147,7 @@ pub mod tests {
             0,
             "2020-01-12 12:15:00",
             "2020-01-12 12:29:59",
-            "BTCUSDT".into(),
+            "BTCUSDT",
             15,
             100.0,
             100.0,
@@ -176,7 +176,7 @@ pub mod tests {
             0,
             "2020-11-16 01:25:00",
             "2020-11-16 01:29:59",
-            "BTCUSDT".into(),
+            "BTCUSDT",
             15,
             100.0,
             100.0,
@@ -189,7 +189,7 @@ pub mod tests {
             0,
             "2020-11-20 11:15:00",
             "2020-11-20 11:29:59",
-            "BTCUSDT".into(),
+            "BTCUSDT",
             15,
             100.0,
             100.0,
