@@ -13,7 +13,7 @@ pub struct CandlesProvider<'a> {
 }
 
 impl<'a> CandlesProvider<'a> {
-    pub fn new(candles_buffer: &'a mut CandlesBuffer, repo: &'a Repository, exch: &'a Exchange) -> Self {
+    pub fn new(repo: &'a Repository, exch: &'a Exchange) -> Self {
         Self {
             exchange: exch,
             repo,

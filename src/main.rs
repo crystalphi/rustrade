@@ -82,9 +82,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {
-        let mut candles_buffer = CandlesBuffer::new();
-
-        read_stream(Application::new(&repo, &exchange, &mut candles_buffer));
+        read_stream(Application::new(&repo, &exchange));
     }
 
     //assert_e!(row.0, 150);

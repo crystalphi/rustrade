@@ -1,3 +1,5 @@
+use std::{thread, time};
+
 use crate::{
     config::{candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection},
     exchange::Exchange,
@@ -16,9 +18,9 @@ pub struct Application<'a> {
 }
 
 impl<'a> Application<'a> {
-    pub fn new(repo: &'a Repository, exchange: &'a Exchange, candles_buffer: &'a mut CandlesBuffer) -> Self {
+    pub fn new(repo: &'a Repository, exchange: &'a Exchange) -> Self {
         Application {
-            candles_provider: CandlesProvider::new(candles_buffer, repo, exchange),
+            candles_provider: CandlesProvider::new(repo, exchange),
             selection: Selection {
                 tacs: vec![MacdTac::definition()],
                 candles_selection: CandlesSelection::new(
@@ -46,44 +48,72 @@ impl<'a> Application<'a> {
         self.selection = selection;
     }
 
-    fn read_line() -> String {
-        let mut line = String::new();
-        std::io::stdin().read_line(&mut line).unwrap();
-        line.trim_end_matches('\n').to_string()
+    fn read_lines() -> Vec<String> {
+        loop {
+            let mut line = String::new();
+            std::io::stdin().read_line(&mut line).unwrap();
+            let result = line.trim_end_matches('\n').to_string();
+            if !result.is_empty() {
+                break result.lines().map(|l| l.to_string()).collect();
+            }
+            thread::sleep(time::Duration::from_millis(500));
+        }
     }
 
     pub fn run_stream(&mut self) {
         const GET_DEFINITION: &str = "GetDefinition";
         const GET_SELECTION: &str = "GetSelection";
         const SET_SELECTION: &str = "SetSelection";
+        const END_SELECTION: &str = "EndSelection";
         const TERMINATE: &str = "Terminate";
 
+        let mut in_selection = false;
+        let mut selection_buffer = String::from("");
         loop {
-            let mut line = Self::read_line();
+            for line in Self::read_lines() {
+                if line == TERMINATE {
+                    println!("Terminated!");
+                    break;
+                }
+                if line == GET_DEFINITION {
+                    println!("{}", self.definition.to_json());
+                    continue;
+                }
+                if line == GET_SELECTION {
+                    println!("{}", self.selection.to_json());
+                    continue;
+                }
+                if line == SET_SELECTION {
+                    println!("set selection...");
+                    in_selection = true;
+                }
+                if line == END_SELECTION {
+                    println!(
+                        "end selection... in_selection = {} selection_buffer.len() = {}",
+                        in_selection, selection_buffer
+                    );
+                    if in_selection {
+                        in_selection = false;
+                        self.set_selection(Selection::from_json(&selection_buffer));
 
-            if line == TERMINATE {
-                println!("Terminated!");
-                break;
-            }
-            if line == GET_DEFINITION {
-                println!("{}", self.definition.to_json());
-                continue;
-            }
-            if line == GET_SELECTION {
-                println!("{}", self.selection.to_json());
-                continue;
-            }
-            if line == SET_SELECTION {
-                line = Self::read_line();
-                self.set_selection(Selection::from_json(&line));
+                        println!("getting candles...");
+                        let candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
+                        println!("candles got");
+                        let candles_ref = candles.iter().collect::<Vec<_>>();
 
-                let candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
-                let candles_ref = candles.iter().collect::<Vec<_>>();
+                        println!("plotting...");
+                        plot_from_selection(&self.selection, candles_ref.as_slice());
+                        println!("plotted!");
+                    }
+                    continue;
+                }
 
-                plot_from_selection(&self.selection, candles_ref.as_slice());
-                continue;
+                if in_selection {
+                    selection_buffer.push_str(&line);
+                    continue;
+                }
+                println!("Unknown command \"{}\"", line);
             }
-            println!("Unknown command {}", line);
         }
     }
 }

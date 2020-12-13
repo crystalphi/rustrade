@@ -4,8 +4,6 @@ use crate::{
 };
 
 pub fn plot_from_selection(selection: &Selection, candles: &[&Candle]) {
-    //let candles_ref: Vec<_> = candles.iter().collect();
-
     let macd_tac = MacdTac::new(candles);
 
     let pivots = PivotTac::new(candles).pivots();

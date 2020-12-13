@@ -1,0 +1,21 @@
+{
+    "tacs": [
+        {
+            "name": "macd",
+            "indicators": [
+                "macd",
+                "signal",
+                "divergence"
+            ]
+        }
+    ],
+    "candles_selection": {
+        "symbol_minutes": {
+            "symbol": "BTCUSDT",
+            "minutes": 15
+        },
+        "start_time": "2020-10-01 00:00:00",
+        "end_time": "2020-11-30 00:00:00"
+    },
+    "image_name": "out/stock.png"
+}

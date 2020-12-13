@@ -93,7 +93,7 @@ impl Repository {
         async_std::task::block_on(future).ok()
     }
 
-    pub fn add_candles(&self, candles: &Vec<Candle>) -> anyhow::Result<()> {
+    pub fn add_candles(&self, candles: &[Candle]) -> anyhow::Result<()> {
         for candle in candles.iter() {
             self.add_candle(candle)?;
         }
