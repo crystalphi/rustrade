@@ -1,11 +1,12 @@
 use crate::{
     candles_range::candles_to_ranges_missing, config::selection::Selection, exchange::Exchange, model::candle::Candle,
-    model::candles_result::CandlesResult, provider::candles_buffer::CandlesBuffer, repository::Repository,
+    repository::Repository,
 };
-use anyhow::anyhow;
+
 use anyhow::Result;
-use chrono::{DateTime, Duration, Utc};
-use rust_decimal::Decimal;
+use chrono::{Duration, Utc};
+use ifmt::iprintln;
+
 use rust_decimal_macros::dec;
 
 pub struct CandlesProvider<'a> {
@@ -23,7 +24,7 @@ impl<'a> CandlesProvider<'a> {
         }
     }
 
-    pub fn candles_selection(&mut self, selection: Selection) -> Result<Vec<Candle>> {
+    pub fn candles_selection(&mut self, selection: Selection) -> anyhow::Result<Vec<Candle>> {
         let start_time = &selection
             .candles_selection
             .start_time
@@ -40,8 +41,11 @@ impl<'a> CandlesProvider<'a> {
 
         let minutes = selection.candles_selection.symbol_minutes.minutes;
 
-        let ranges_missing = candles_to_ranges_missing(start_time, end_time, &minutes, candles_ref.as_slice());
+        let ranges_missing = candles_to_ranges_missing(start_time, end_time, &minutes, candles_ref.as_slice())?;
+
         for range_missing in ranges_missing.iter() {
+            iprintln!("Missing range: {range_missing:?}");
+
             let mut candles_exch = self.exchange.candles(
                 &selection.candles_selection.symbol_minutes,
                 &Some(range_missing.0),

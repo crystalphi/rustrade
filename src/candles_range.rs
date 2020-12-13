@@ -1,10 +1,10 @@
-use chrono::prelude::*;
-use chrono::{DateTime, Duration, Utc};
-
 use crate::{
     model::candle::Candle,
     utils::{min_max_date_from_candles, str_to_datetime},
 };
+use anyhow::*;
+use chrono::prelude::*;
+use chrono::{DateTime, Duration, Utc};
 
 #[derive(Debug)]
 pub struct CandlesRange<'a> {
@@ -28,8 +28,8 @@ impl<'a> CandlesRange<'a> {
         self.candles.is_empty()
     }
 
-    pub fn min_max(&self) -> (DateTime<Utc>, DateTime<Utc>) {
-        min_max_date_from_candles(self.candles.as_slice())
+    pub fn min_max(&self) -> anyhow::Result<(DateTime<Utc>, DateTime<Utc>)> {
+        min_max_date_from_candles(self.candles.as_slice()).context("CandlesRange.min_max: Candles is empty!")
     }
 }
 
@@ -65,10 +65,13 @@ impl<'a> Default for CandlesRanges<'a> {
     }
 }
 
-pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> CandlesRanges<'a> {
+pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Result<CandlesRanges<'a>> {
+    if candles.is_empty() {
+        return Err(anyhow!("candles_ranges: Candles is empty!"));
+    }
     let duration = &Duration::minutes(*minutes as i64);
     // Returns inconsistent candles
-    candles
+    let result = candles
         .iter()
         .map(Some)
         .fold((CandlesRanges::new(), None::<&&Candle>), |mut previous, current| {
@@ -84,7 +87,8 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> CandlesRange
             };
             (previous.0, current)
         })
-        .0
+        .0;
+    Ok(result)
 }
 
 pub fn invert_ranges(
@@ -92,12 +96,12 @@ pub fn invert_ranges(
     end_time: &DateTime<Utc>,
     ranges: &CandlesRanges,
     minutes: &u32,
-) -> Vec<(DateTime<Utc>, DateTime<Utc>)> {
+) -> anyhow::Result<Vec<(DateTime<Utc>, DateTime<Utc>)>> {
     let duration = Duration::minutes(*minutes as i64);
     let mut inverted_ranges = Vec::new();
     let mut prev_start_time = *start_time;
     for range in ranges.ranges.iter() {
-        let range_dates = range.min_max();
+        let range_dates = range.min_max()?;
         let start = prev_start_time;
         let end = range_dates.0 - duration;
         prev_start_time = range_dates.1 + duration;
@@ -105,7 +109,7 @@ pub fn invert_ranges(
     }
     inverted_ranges.push((prev_start_time, *end_time));
 
-    inverted_ranges
+    Ok(inverted_ranges)
 }
 
 fn minutes_close_trunc(start_time: &DateTime<Utc>, minutes: &u32) -> DateTime<Utc> {
@@ -125,12 +129,23 @@ pub fn candles_to_ranges_missing(
     end_time: &DateTime<Utc>,
     minutes: &u32,
     candles: &[&Candle],
-) -> Vec<(DateTime<Utc>, DateTime<Utc>)> {
+) -> anyhow::Result<Vec<(DateTime<Utc>, DateTime<Utc>)>> {
+    if candles.is_empty() {
+        return Ok(vec![(*start_time, *end_time)]);
+    }
+    let limit_date = str_to_datetime("2010-01-01 00:00:00");
+    if start_time < &limit_date {
+        return Err(anyhow!("Start time {:?} is less than allowed!", start_time));
+    }
+    if end_time < &limit_date {
+        return Err(anyhow!("End time {:?} is less than allowed!", end_time));
+    }
     let start_time = minutes_close_trunc(start_time, minutes);
     let end_time = minutes_close_trunc(end_time, minutes);
 
-    let candles_ranges = candles_ranges(candles, minutes);
-    invert_ranges(&start_time, &end_time, &candles_ranges, minutes)
+    let candles_ranges = candles_ranges(candles, minutes)?;
+    let result = invert_ranges(&start_time, &end_time, &candles_ranges, minutes)?;
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -203,25 +218,25 @@ pub mod testes {
         let ranges = candles_ranges(candles_ref.as_slice(), &15);
         println!("Ranges:");
         for range in ranges.ranges.iter() {
-            let date_range = range.min_max();
+            let date_range = range.min_max().unwrap();
             println!("{} - {}", date_range.0, date_range.1);
         }
         assert_eq!(
-            ranges.ranges.get(0).unwrap().min_max(),
+            ranges.ranges.get(0).unwrap().min_max().unwrap(),
             (
                 str_to_datetime("2020-01-12 12:14:59"),
                 str_to_datetime("2020-01-12 12:29:59")
             )
         );
         assert_eq!(
-            ranges.ranges.get(1).unwrap().min_max(),
+            ranges.ranges.get(1).unwrap().min_max().unwrap(),
             (
                 str_to_datetime("2020-11-16 01:29:59"),
                 str_to_datetime("2020-11-16 01:29:59"),
             )
         );
         assert_eq!(
-            ranges.ranges.get(2).unwrap().min_max(),
+            ranges.ranges.get(2).unwrap().min_max().unwrap(),
             (
                 str_to_datetime("2020-11-20 11:29:59"),
                 str_to_datetime("2020-11-20 11:29:59"),
@@ -231,7 +246,7 @@ pub mod testes {
         let start_time = str_to_datetime("2020-01-01 00:00:00") - Duration::seconds(1);
         let end_time = str_to_datetime("2020-11-30 00:00:00") - Duration::seconds(1);
 
-        let inverted_ranges = invert_ranges(&start_time, &end_time, &ranges, &15);
+        let inverted_ranges = invert_ranges(&start_time, &end_time, &ranges, &15).unwrap();
 
         println!("Inverted ranges:");
         for inverted_range in inverted_ranges.iter() {
@@ -294,7 +309,7 @@ pub mod testes {
         let candles = candles_test();
 
         let candles_ref = candles.iter().collect::<Vec<_>>();
-        let ranges_missing = candles_to_ranges_missing(&start_time, &end_time, &15, candles_ref.as_slice());
+        let ranges_missing = candles_to_ranges_missing(&start_time, &end_time, &15, candles_ref.as_slice()).unwrap();
 
         for range in ranges_missing.iter() {
             println!("{} - {}", range.0, range.1);
