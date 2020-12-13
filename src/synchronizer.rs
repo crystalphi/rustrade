@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use chrono::{Duration, Utc};
 use ifmt::iprintln;
 use rust_decimal_macros::dec;
@@ -63,9 +65,16 @@ impl<'a> Synchronizer<'a> {
     }
 
     pub fn check_inconsist(&self) {
-        let end_time = Utc::now();
-        let start_time = end_time - Duration::days(180);
+        let start = Instant::now();
+        let mut end_time = Utc::now();
+        let mut start_time = end_time - Duration::days(180);
         let repo = Repository::new().unwrap();
+
+        let range = repo.ranges_symbol_minutes(&self.symbol_minutes);
+        start_time = range.0.unwrap_or(start_time);
+        end_time = range.1.unwrap_or(end_time);
+
+        iprintln!("Check consistent: {self.symbol_minutes:?} {start_time:?} {end_time:?}");
 
         let candles = repo
             .candles_by_time(&self.symbol_minutes, &start_time, &end_time)
@@ -83,6 +92,7 @@ impl<'a> Synchronizer<'a> {
         for candle in inconsist.iter() {
             iprintln!("{candle}");
         }
+        iprintln!("Elapsed: {start.elapsed():?}");
     }
 
     pub fn delete_inconsist(&self) {

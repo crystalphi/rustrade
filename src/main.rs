@@ -18,7 +18,6 @@ use clap::App;
 use config::symbol_minutes::SymbolMinutes;
 use exchange::Exchange;
 use ifmt::iprintln;
-use provider::candles_buffer::CandlesBuffer;
 use repository::Repository;
 use synchronizer::Synchronizer;
 use tac_plotters::plotter::plot_candles;

@@ -2,7 +2,7 @@ use crate::{config::symbol_minutes::SymbolMinutes, model::candle::Candle, utils:
 use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iprintln;
-use rust_decimal::Decimal;
+use rust_decimal::{prelude::FromPrimitive, prelude::ToPrimitive, Decimal};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, time::Instant};
 pub struct Repository {
@@ -24,12 +24,28 @@ impl Repository {
     }
 
     pub fn last_close_time(&self, symbol_minutes: &SymbolMinutes) -> Option<DateTime<Utc>> {
-        let future = sqlx::query_as("SELECT MAX(close_time) FROM candle WHERE symbol = $1 AND minutes = $2")
-            .bind(&symbol_minutes.symbol)
-            .bind(&symbol_minutes.minutes)
-            .fetch_one(&self.pool);
-        let result: (Option<String>,) = async_std::task::block_on(future).unwrap();
-        result.0.map(|dt| str_to_datetime(&dt))
+        let future = sqlx::query!(
+            "SELECT MAX(close_time) as close_time FROM candle WHERE symbol = $1 AND minutes = $2",
+            &symbol_minutes.symbol,
+            Decimal::from_u32(symbol_minutes.minutes)
+        )
+        .fetch_one(&self.pool);
+        let result = async_std::task::block_on(future).unwrap();
+        result.close_time
+    }
+
+    pub fn ranges_symbol_minutes(
+        &self,
+        symbol_minutes: &SymbolMinutes,
+    ) -> (Option<DateTime<Utc>>, Option<DateTime<Utc>>) {
+        let future = sqlx::query!(
+            "SELECT MIN(close_time) as min_close_time, MAX(close_time) as max_close_time FROM candle WHERE symbol = $1 AND minutes = $2",
+            &symbol_minutes.symbol,
+            Decimal::from_u32(symbol_minutes.minutes)
+        )
+        .fetch_one(&self.pool);
+        let result = async_std::task::block_on(future).unwrap();
+        (result.min_close_time, result.max_close_time)
     }
 
     pub fn candle_by_id(&self, id: Decimal) -> Option<Candle> {
@@ -45,6 +61,25 @@ impl Repository {
             .candles_by_time(symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
         iprintln!("Read repository: {start.elapsed():?}");
+        result
+    }
+
+    pub fn symbols_minutes(&self) -> Vec<(SymbolMinutes, i64)> {
+        let mut result = Vec::new();
+
+        let future = sqlx::query_as(
+            r#"
+                SELECT symbol, minutes, count(*) as qtd FROM candle                 
+                GROUP BY symbol, minutes
+            "#,
+        )
+        .fetch_all(&self.pool);
+
+        let rows: Vec<(String, Decimal, i64)> = async_std::task::block_on(future).unwrap();
+        for row in rows {
+            let symbol_minutes = SymbolMinutes::new(&row.0, &row.1.to_u32().unwrap());
+            result.push((symbol_minutes, row.2));
+        }
         result
     }
 
@@ -163,12 +198,10 @@ impl Repository {
 
 #[cfg(test)]
 pub mod tests {
+    use super::*;
+    use crate::utils::inconsistent_candles;
     use chrono::Duration;
     use ifmt::iprintln;
-
-    use crate::utils::inconsistent_candles;
-
-    use super::*;
 
     #[test]
     fn candles_test() {
@@ -192,6 +225,21 @@ pub mod tests {
         let inconsist = inconsistent_candles(candles_ref.as_slice(), &Duration::minutes(15));
         for candle in inconsist.iter() {
             iprintln!("{candle}");
+        }
+    }
+
+    #[test]
+    fn symbols_minutes_test() {
+        dotenv::dotenv().unwrap();
+        let repo = Repository::new().unwrap();
+        let symbols_minutes = repo.symbols_minutes();
+
+        iprintln!("symbols_minutes.len: {symbols_minutes.len()}");
+        for (symbol_minutes, count) in symbols_minutes {
+            let last_close_time = repo.last_close_time(&symbol_minutes);
+            iprintln!("{symbol_minutes:?} {count}  {last_close_time:?}");
+            let range = repo.ranges_symbol_minutes(&symbol_minutes);
+            iprintln!("{symbol_minutes:?} {count}  {range.0:?} - {range.1:?}");
         }
     }
 }
