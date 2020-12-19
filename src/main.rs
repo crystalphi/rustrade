@@ -1,12 +1,11 @@
 pub mod analyzers;
 pub mod application;
 pub mod candles_range;
+pub mod checker;
 pub mod config;
 pub mod exchange;
 pub mod model;
-pub mod provider;
 pub mod repository;
-pub mod synchronizer;
 pub mod tac_plotters;
 pub mod technicals;
 pub mod utils;
@@ -14,12 +13,12 @@ pub mod utils;
 use std::time::Instant;
 
 use application::app::Application;
+use checker::Checker;
 use clap::App;
 use config::symbol_minutes::SymbolMinutes;
 use exchange::Exchange;
 use ifmt::iprintln;
 use repository::Repository;
-use synchronizer::Synchronizer;
 use tac_plotters::plotter::plot_candles;
 use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac};
 
@@ -43,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
     let repo: Repository = Repository::new().unwrap();
 
     let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
-    let synchronizer = Synchronizer::new(&symbol_minutes, &repo, &exchange);
+    let synchronizer = Checker::new(&symbol_minutes, &repo, &exchange);
 
     if let Some(_sync) = matches.subcommand_matches("sync") {
         synchronizer.synchronize();
@@ -81,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if let Some(_stream) = matches.subcommand_matches("stream") {
-        read_stream(Application::new(&repo, &exchange));
+        read_stream(Application::new(&repo, &exchange, &synchronizer));
     }
 
     //assert_e!(row.0, 150);

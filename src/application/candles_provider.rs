@@ -25,6 +25,7 @@ impl<'a> CandlesProvider<'a> {
     }
 
     pub fn candles_selection(&mut self, selection: Selection) -> anyhow::Result<Vec<Candle>> {
+        // Normalize default start/end date time
         let start_time = &selection
             .candles_selection
             .start_time
@@ -32,38 +33,40 @@ impl<'a> CandlesProvider<'a> {
 
         let end_time = &selection.candles_selection.end_time.unwrap_or_else(Utc::now);
 
-        let candles = self
+        // Get candles from repository
+        let mut candles = self
             .repo
-            .candles_by_time(&selection.candles_selection.symbol_minutes, &start_time, &end_time);
+            .candles_by_time(&selection.candles_selection.symbol_minutes, &start_time, &end_time)
+            .unwrap_or_default();
 
-        let mut candles = candles.unwrap_or_default();
-        let candles_ref = candles.iter().collect::<Vec<_>>();
+        loop {
+            // Get ranges missing
+            let ranges_missing = candles_to_ranges_missing(
+                start_time,
+                end_time,
+                &selection.candles_selection.symbol_minutes.minutes,
+                candles.iter().collect::<Vec<_>>().as_slice(),
+            )?;
 
-        let minutes = selection.candles_selection.symbol_minutes.minutes;
+            if ranges_missing.is_empty() {
+                break;
+            }
 
-        let ranges_missing = candles_to_ranges_missing(start_time, end_time, &minutes, candles_ref.as_slice())?;
+            for range_missing in ranges_missing.iter() {
+                iprintln!("Missing range: {range_missing:?}");
 
-        for range_missing in ranges_missing.iter() {
-            iprintln!("Missing range: {range_missing:?}");
+                let mut candles_exch = self.exchange.candles(
+                    &selection.candles_selection.symbol_minutes,
+                    &Some(range_missing.0),
+                    &Some(range_missing.1),
+                );
 
-            let mut candles_exch = self.exchange.candles(
-                &selection.candles_selection.symbol_minutes,
-                &Some(range_missing.0),
-                &Some(range_missing.1),
-            );
+                // Save news candles on repository
+                self.repo.add_candles(&mut candles_exch)?;
 
-            let mut candle_id = self.repo.last_id();
-
-            let one = dec!(1);
-            candles_exch.iter_mut().for_each(|c| {
-                c.id = {
-                    candle_id += one;
-                    candle_id
-                }
-            });
-
-            self.repo.add_candles(&candles_exch)?;
-            candles.append(&mut candles_exch);
+                // Insert candles on buffer
+                candles.append(&mut candles_exch);
+            }
         }
 
         Ok(candles)

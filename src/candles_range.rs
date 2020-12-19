@@ -215,7 +215,7 @@ pub mod testes {
         let candles = candles_test();
 
         let candles_ref = candles.iter().collect::<Vec<_>>();
-        let ranges = candles_ranges(candles_ref.as_slice(), &15);
+        let ranges = candles_ranges(candles_ref.as_slice(), &15).unwrap();
         println!("Ranges:");
         for range in ranges.ranges.iter() {
             let date_range = range.min_max().unwrap();

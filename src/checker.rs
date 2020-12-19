@@ -8,15 +8,16 @@ use crate::{
     config::symbol_minutes::SymbolMinutes, exchange::Exchange, repository::Repository, utils::inconsistent_candles,
 };
 
-pub struct Synchronizer<'a> {
+pub struct Checker<'a> {
     repo: &'a Repository,
     exchange: &'a Exchange,
     symbol_minutes: &'a SymbolMinutes,
 }
 
-impl<'a> Synchronizer<'a> {
+impl<'a> Checker<'a> {
+
     pub fn new(symbol_minutes: &'a SymbolMinutes, repository: &'a Repository, exchange: &'a Exchange) -> Self {
-        Synchronizer {
+        Checker {
             repo: repository,
             exchange,
             symbol_minutes,

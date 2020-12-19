@@ -3,6 +3,7 @@ use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iprintln;
 use rust_decimal::{prelude::FromPrimitive, prelude::ToPrimitive, Decimal};
+use rust_decimal_macros::dec;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, time::Instant};
 pub struct Repository {
@@ -128,7 +129,15 @@ impl Repository {
         async_std::task::block_on(future).ok()
     }
 
-    pub fn add_candles(&self, candles: &[Candle]) -> anyhow::Result<()> {
+    pub fn add_candles(&self, candles: &mut [Candle]) -> anyhow::Result<()> {
+        let mut candle_id = self.last_id();
+        let one = dec!(1);
+        candles.iter_mut().for_each(|c| {
+            c.id = {
+                candle_id += one;
+                candle_id
+            }
+        });
         for candle in candles.iter() {
             self.add_candle(candle)?;
         }

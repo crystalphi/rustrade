@@ -1,9 +1,10 @@
 use std::{thread, time};
 
 use crate::{
+    checker::Checker,
     config::{candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection},
     exchange::Exchange,
-    provider::candles_buffer::CandlesBuffer,
+    model::candle::Candle,
     repository::Repository,
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
     utils::str_to_datetime,
@@ -15,11 +16,13 @@ pub struct Application<'a> {
     definition: ConfigDefinition,
     selection: Selection,
     candles_provider: CandlesProvider<'a>,
+    synchronizer: &'a Checker<'a>,
 }
 
 impl<'a> Application<'a> {
-    pub fn new(repo: &'a Repository, exchange: &'a Exchange) -> Self {
+    pub fn new(repo: &'a Repository, exchange: &'a Exchange, synchronizer: &'a Checker<'a>) -> Self {
         Application {
+            synchronizer,
             candles_provider: CandlesProvider::new(repo, exchange),
             selection: Selection {
                 tacs: vec![MacdTac::definition()],
@@ -65,7 +68,14 @@ impl<'a> Application<'a> {
         const GET_SELECTION: &str = "GetSelection";
         const SET_SELECTION: &str = "SetSelection";
         const END_SELECTION: &str = "EndSelection";
+
+        const IMPORT: &str = "Import";
+        const CHECK: &str = "Check";
+        const PLOTT: &str = "Plott";
+
         const TERMINATE: &str = "Terminate";
+
+        let mut candles: Vec<Candle> = Vec::new();
 
         let mut in_selection = false;
         let mut selection_buffer = String::from("");
@@ -83,30 +93,22 @@ impl<'a> Application<'a> {
                     println!("{}", self.selection.to_json());
                     continue;
                 }
+
                 if line == SET_SELECTION {
                     println!("set selection...");
                     in_selection = true;
                     continue;
                 }
+
                 if line == END_SELECTION {
                     println!(
                         "end selection... in_selection = {} selection_buffer.len() = {}",
                         in_selection,
                         selection_buffer.len()
                     );
-                    if in_selection {
-                        in_selection = false;
-                        self.set_selection(Selection::from_json(&selection_buffer));
-
-                        println!("getting candles...");
-                        let candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
-                        println!("candles got");
-                        let candles_ref = candles.iter().collect::<Vec<_>>();
-
-                        println!("plotting...");
-                        plot_from_selection(&self.selection, candles_ref.as_slice());
-                        println!("plotted!");
-                    }
+                    in_selection = false;
+                    self.set_selection(Selection::from_json(&selection_buffer));
+                    selection_buffer.clear();
                     continue;
                 }
 
@@ -114,6 +116,29 @@ impl<'a> Application<'a> {
                     selection_buffer.push_str(&line);
                     continue;
                 }
+
+                if line == IMPORT {
+                    println!("getting candles...");
+                    candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
+                    println!("candles got");
+                    continue;
+                }
+
+                if line == PLOTT {
+                    println!("plotting...");
+                    let candles_ref = candles.iter().collect::<Vec<_>>();
+                    plot_from_selection(&self.selection, candles_ref.as_slice());
+                    println!("plotted!");
+                    continue;
+                }
+
+                if line == CHECK {
+                    println!("checking...");
+                    self.synchronizer.check_inconsist();
+                    println!("checked!");
+                    continue;
+                }
+
                 println!("Unknown command \"{}\"", line);
             }
         }
