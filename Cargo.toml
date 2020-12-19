@@ -11,12 +11,12 @@ anyhow = "1.0"
 async-std = {version = "1.8.0", features = ["attributes"]}
 binance = "0.11.0"
 chrono = "0.4.19"
-clap = "2.33.3"
 colored = "2.0.0"
 dotenv = "0.15.0"
 futures = "0.3"
 ifmt = "0.3.2"
 plotters = {version = "0.3.0"}
+structopt = "0.3"
 # plotters = {Version = "0.3.0", default_features = false, features = ["datetime", "candlestick", "point_series", "line_series", "ttf", "bitmap_encoder"]}
 # plotters-bitmap = {version = "0.3.0", default-features = true, features = ["image_encoder"]}
 log = "0.4.11"

@@ -9,31 +9,57 @@ pub mod repository;
 pub mod tac_plotters;
 pub mod technicals;
 pub mod utils;
-// use clap::App;
-use std::time::Instant;
-
 use application::app::Application;
 use checker::Checker;
-use clap::App;
-use config::symbol_minutes::SymbolMinutes;
+use config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes};
 use exchange::Exchange;
 use ifmt::iprintln;
 use repository::Repository;
+use std::time::Instant;
+use structopt::StructOpt;
 use tac_plotters::plotter::plot_candles;
 use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac};
+use utils::str_to_datetime;
+
+#[derive(Debug, StructOpt)]
+#[structopt(about = "Commands")]
+enum Command {
+    /// Check content
+    Check {},
+    /// Synchronize
+    Sync {},
+    /// Fix records
+    Fix {},
+    /// List  
+    List {},
+    /// Plot graph
+    Plot {},
+    /// Interative stream
+    Stream {},
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(name = "rustrade", about = "A Rust Bot Trade")]
+struct Opt {
+    /// Symbol (e.g. BTCUST)
+    #[structopt(short = "y", long, default_value = "BTCUSDT")]
+    symbol: String,
+    /// Minutes (e.g. 15)
+    #[structopt(short, long, default_value = "15")]
+    minutes: u32,
+    /// Start date time
+    #[structopt(short, long, default_value = "2020-11-01 00:00:00")]
+    start_time: String,
+    /// End date time
+    #[structopt(short, long, default_value = "2020-12-01 00:00:00")]
+    end_time: String,
+    #[structopt(subcommand)]
+    command: Command,
+}
 
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
-    let matches = App::new("Rustrade")
-        .version("1.0")
-        .about("Rustrade")
-        .subcommand(App::new("sync").about("sync candles"))
-        .subcommand(App::new("check").about("check insconsist"))
-        .subcommand(App::new("fix").about("fix insconsist"))
-        .subcommand(App::new("list").about("list last"))
-        .subcommand(App::new("plot").about("plot"))
-        .subcommand(App::new("stream").about("stream"))
-        .get_matches();
+    let opt = Opt::from_args();
 
     dotenv::dotenv().unwrap();
 
@@ -41,47 +67,34 @@ async fn main() -> anyhow::Result<()> {
 
     let repo: Repository = Repository::new().unwrap();
 
-    let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+    let candles_selection = CandlesSelection::new(
+        &opt.symbol,
+        &opt.minutes,
+        Some(&str_to_datetime(&opt.start_time)),
+        Some(&str_to_datetime(&opt.end_time)),
+    );
+
+    let symbol_minutes = SymbolMinutes::new(&opt.symbol, &opt.minutes);
     let synchronizer = Checker::new(&symbol_minutes, &repo, &exchange);
 
-    if let Some(_sync) = matches.subcommand_matches("sync") {
-        synchronizer.synchronize();
-    }
-
-    if let Some(_sync) = matches.subcommand_matches("check") {
-        synchronizer.check_inconsist();
-    }
-
-    if let Some(_fix) = matches.subcommand_matches("fix") {
-        synchronizer.delete_inconsist();
-    }
-
-    if let Some(_list) = matches.subcommand_matches("list") {
-        repo.list_candles("BTCUSDT", &15, &10);
-    }
-
-    if let Some(_plot) = matches.subcommand_matches("plot") {
-        let start = Instant::now();
-        let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
-        let candles = repo.candles_default(&symbol_minutes);
-
-        iprintln!("Loading {start.elapsed():?}");
-        let start = Instant::now();
-
-        let candles_ref: Vec<_> = candles.iter().collect();
-
-        let macd_tac = MacdTac::new(candles_ref.as_slice());
-
-        let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
-        let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
-        plot_candles(&symbol_minutes, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
-
-        iprintln!("Plotting {start.elapsed():?}");
-    }
-
-    if let Some(_stream) = matches.subcommand_matches("stream") {
-        read_stream(Application::new(&repo, &exchange, &synchronizer));
-    }
+    match opt.command {
+        Command::Check {} => {
+            synchronizer.check_inconsist();
+        }
+        Command::Sync {} => {
+            synchronizer.synchronize();
+        }
+        Command::Fix {} => {
+            synchronizer.delete_inconsist();
+        }
+        Command::List {} => {
+            repo.list_candles("BTCUSDT", &15, &10);
+        }
+        Command::Plot {} => plot(&repo),
+        Command::Stream {} => {
+            read_stream(Application::new(&repo, &exchange, &synchronizer));
+        }
+    };
 
     //assert_e!(row.0, 150);
     // https://github.com/launchbadge/sqlx/blob/master/examples/postgres/todos/src/main.rs
@@ -89,9 +102,25 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn plot(repo: &Repository) {
+    let start = Instant::now();
+    let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+    let candles = repo.candles_default(&symbol_minutes);
+
+    iprintln!("Loading {start.elapsed():?}");
+    let start = Instant::now();
+
+    let candles_ref: Vec<_> = candles.iter().collect();
+
+    let macd_tac = MacdTac::new(candles_ref.as_slice());
+
+    let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
+    let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+    plot_candles(&symbol_minutes, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
+
+    iprintln!("Plotting {start.elapsed():?}");
+}
+
 fn read_stream(mut app: Application) {
     app.run_stream();
-    // let mut line = String::new();
-    // std::io::stdin().read_line(&mut line).unwrap();
-    // println!("{}", line);
 }

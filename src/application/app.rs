@@ -85,10 +85,12 @@ impl<'a> Application<'a> {
                     println!("Terminated!");
                     break;
                 }
+
                 if line == GET_DEFINITION {
                     println!("{}", self.definition.to_json());
                     continue;
                 }
+
                 if line == GET_SELECTION {
                     println!("{}", self.selection.to_json());
                     continue;

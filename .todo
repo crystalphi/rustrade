@@ -2,6 +2,9 @@
 ✔ Consist candle intervals @done(20-11-21 15:26)
 ✔ Auto delete inconsists @done(20-11-21 17:45)
 ✔ Auto insert from last @done(20-11-21 17:45)
+☐ Assume default candles selection from struct ops
+☐ Apply candles selection in all commands
+☐ Find cause of integrity problem
 ☐ Delete last candle from repo before reinsert
 ☐ Finish flow retrieving candles
 ☐ Gui interface
