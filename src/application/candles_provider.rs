@@ -25,6 +25,8 @@ impl<'a> CandlesProvider<'a> {
     }
 
     pub fn candles_selection(&mut self, selection: Selection) -> anyhow::Result<Vec<Candle>> {
+        iprintln!("Initializing import");
+
         // Normalize default start/end date time
         let start_time = &selection
             .candles_selection
@@ -63,11 +65,11 @@ impl<'a> CandlesProvider<'a> {
 
                 // Save news candles on repository
                 self.repo.add_candles(&mut candles_exch)?;
-
                 // Insert candles on buffer
                 candles.append(&mut candles_exch);
             }
         }
+        iprintln!("Finished import");
 
         Ok(candles)
     }

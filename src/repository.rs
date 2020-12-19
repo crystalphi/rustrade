@@ -1,4 +1,4 @@
-use crate::{config::symbol_minutes::SymbolMinutes, model::candle::Candle, utils::str_to_datetime};
+use crate::{config::symbol_minutes::SymbolMinutes, model::candle::Candle};
 use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iprintln;
@@ -72,7 +72,7 @@ impl Repository {
             r#"
                 SELECT symbol, minutes, count(*) as qtd FROM candle                 
                 GROUP BY symbol, minutes
-            "#,
+                "#,
         )
         .fetch_all(&self.pool);
 
