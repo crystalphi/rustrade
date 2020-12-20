@@ -5,6 +5,7 @@ use crate::{
 use anyhow::*;
 use chrono::prelude::*;
 use chrono::{DateTime, Duration, Utc};
+use ifmt::iformat;
 use log::error;
 
 #[derive(Debug)]
@@ -119,17 +120,32 @@ pub fn invert_ranges(
     ranges: &CandlesRanges,
     minutes: &u32,
 ) -> anyhow::Result<Vec<(DateTime<Utc>, DateTime<Utc>)>> {
-    let duration = Duration::minutes(*minutes as i64);
+    fn add_range(
+        inverted_ranges: &mut Vec<(DateTime<Utc>, DateTime<Utc>)>,
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
+    ) -> anyhow::Result<()> {
+        if start == end {
+            let message = format!("Attempt to add equal range {}", start);
+            error!("{}, added invert_ranges({}):", message, inverted_ranges.len());
+            inverted_ranges.iter().for_each(|r| error!("{:?}", r));
+
+            bail!(message);
+        }
+        inverted_ranges.push((start, end));
+        Ok(())
+    };
     let mut inverted_ranges = Vec::new();
+    let duration = Duration::minutes(*minutes as i64);
     let mut prev_start_time = *start_time;
     for range in ranges.ranges.iter() {
         let range_dates = range.min_max()?;
         let start = prev_start_time;
         let end = range_dates.0 - duration;
         prev_start_time = range_dates.1 + duration;
-        inverted_ranges.push((start, end));
+        add_range(&mut inverted_ranges, start, end)?;
     }
-    inverted_ranges.push((prev_start_time, *end_time));
+    add_range(&mut inverted_ranges, prev_start_time, *end_time)?;
 
     Ok(inverted_ranges)
 }
@@ -166,8 +182,20 @@ pub fn candles_to_ranges_missing(
     let end_time = minutes_close_trunc(end_time, minutes);
 
     let candles_ranges = candles_ranges(candles, minutes)?;
-    let result = invert_ranges(&start_time, &end_time, &candles_ranges, minutes)?;
-    Ok(result)
+    match invert_ranges(&start_time, &end_time, &candles_ranges, minutes) {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            error!(
+                "error returning invert_ranges ({} {}), candles_ranges:",
+                start_time, end_time
+            );
+            candles_ranges
+                .ranges
+                .iter()
+                .for_each(|c| error!("{:?}", c.min_max().unwrap()));
+            Err(anyhow!("{}", e))
+        }
+    }
 }
 
 #[cfg(test)]
