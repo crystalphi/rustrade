@@ -66,23 +66,24 @@ pub fn str_to_datetime(string: &str) -> DateTime<Utc> {
     Utc.datetime_from_str(string, "%Y-%m-%d %H:%M:%S").unwrap()
 }
 
+pub fn str_d(string: &str) -> DateTime<Utc> {
+    str_to_datetime(string)
+}
+
 /// If candles are sorted ok
 pub fn candles_sorted_ok(candles: &[&Candle]) -> bool {
-    let sort_ok = candles
-        .iter()
-        .map(Some)
-        .fold((true, None::<&&Candle>), |previous, current| {
-            let result = if let Some(previous_c) = previous.1 {
-                if let Some(current_c) = current {
-                    previous.0 && (current_c.open_time > previous_c.open_time)
-                } else {
-                    previous.0
-                }
+    let sort_ok = candles.iter().map(Some).fold((true, None::<&&Candle>), |previous, current| {
+        let result = if let Some(previous_c) = previous.1 {
+            if let Some(current_c) = current {
+                previous.0 && (current_c.open_time > previous_c.open_time)
             } else {
                 previous.0
-            };
-            (result, current)
-        });
+            }
+        } else {
+            previous.0
+        };
+        (result, current)
+    });
     sort_ok.0
 }
 
@@ -106,8 +107,8 @@ pub fn inconsistent_candles(candles: &[&Candle], duration: &Duration) -> Vec<Can
         .0
 }
 
-/// Returns min/max from dates from candles list
-pub fn min_max_date_from_candles(candles: &[&Candle]) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
+/// Returns min/max close time from candles list
+pub fn min_max_close_time_from_candles(candles: &[&Candle]) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
     if candles.is_empty() {
         return None;
     }
