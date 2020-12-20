@@ -60,20 +60,15 @@ struct Opt {
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
     let opt = Opt::from_args();
-
     dotenv::dotenv().unwrap();
-
     let exchange: Exchange = Exchange::new().unwrap();
-
     let repo: Repository = Repository::new().unwrap();
-
     let candles_selection = CandlesSelection::new(
         &opt.symbol,
         &opt.minutes,
         Some(&str_to_datetime(&opt.start_time)),
         Some(&str_to_datetime(&opt.end_time)),
     );
-
     let symbol_minutes = SymbolMinutes::new(&opt.symbol, &opt.minutes);
     let synchronizer = Checker::new(&symbol_minutes, &repo, &exchange);
 
@@ -88,11 +83,11 @@ async fn main() -> anyhow::Result<()> {
             synchronizer.delete_inconsist();
         }
         Command::List {} => {
-            repo.list_candles("BTCUSDT", &15, &10);
+            repo.list_candles(&opt.symbol, &opt.minutes, &10);
         }
-        Command::Plot {} => plot(&repo),
+        Command::Plot {} => plot(&repo, &candles_selection),
         Command::Stream {} => {
-            read_stream(Application::new(&repo, &exchange, &synchronizer));
+            read_stream(Application::new(&repo, &exchange, &synchronizer, &candles_selection));
         }
     };
 
@@ -102,9 +97,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn plot(repo: &Repository) {
+fn plot(repo: &Repository, candles_selection: &CandlesSelection) {
     let start = Instant::now();
-    let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
+    let symbol_minutes = SymbolMinutes::new(
+        &candles_selection.symbol_minutes.symbol,
+        &candles_selection.symbol_minutes.minutes,
+    );
     let candles = repo.candles_default(&symbol_minutes);
 
     iprintln!("Loading {start.elapsed():?}");
@@ -115,8 +113,14 @@ fn plot(repo: &Repository) {
     let macd_tac = MacdTac::new(candles_ref.as_slice());
 
     let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
-    let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
-    plot_candles(&symbol_minutes, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
+    plot_candles(
+        &candles_selection.symbol_minutes,
+        &candles_ref,
+        &pivots,
+        &macd_tac,
+        "out/stock.png",
+    )
+    .unwrap();
 
     iprintln!("Plotting {start.elapsed():?}");
 }

@@ -7,7 +7,6 @@ use crate::{
     model::candle::Candle,
     repository::Repository,
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
-    utils::str_to_datetime,
 };
 
 use super::{candles_provider::CandlesProvider, plot_selection::plot_from_selection};
@@ -20,19 +19,18 @@ pub struct Application<'a> {
 }
 
 impl<'a> Application<'a> {
-    pub fn new(repo: &'a Repository, exchange: &'a Exchange, synchronizer: &'a Checker<'a>) -> Self {
+    pub fn new(
+        repo: &'a Repository,
+        exchange: &'a Exchange,
+        synchronizer: &'a Checker<'a>,
+        candles_selection: &CandlesSelection,
+    ) -> Self {
         Application {
             synchronizer,
             candles_provider: CandlesProvider::new(repo, exchange),
             selection: Selection {
                 tacs: vec![MacdTac::definition()],
-                candles_selection: CandlesSelection::new(
-                    "BTCUSDT",
-                    &15u32,
-                    Some(&str_to_datetime("2020-10-01 00:00:00")),
-                    Some(&str_to_datetime("2020-11-30 00:00:00")),
-                ),
-
+                candles_selection: candles_selection.clone(),
                 image_name: "out/stock.png".to_string(),
             },
             definition: ConfigDefinition::new(),

@@ -9,17 +9,12 @@
 ☐ Finish flow retrieving candles
 ☐ Gui interface
 
-
 Regra fibonnaci
 https://www.modalmais.com.br/blog/fibonacci#:~:text=No%20mercado%20financeiro%2C%20%C3%A9%20utilizada,%C3%A0%20soma%20dos%20dois%20anteriores.&text=Na%20an%C3%A1lise%20t%C3%A9cnica%20de%20investimentos,pontos%20de%20expans%C3%A3o%20ou%20retra%C3%A7%C3%A3o.
-
-
 
 https://www.youtube.com/watch?v=JnOGgsRCpHw&list=PLgXR3B3sPcIIID4weJrK-kcTI6eBdimBn
 00:08:00
 Ganho 1/3 risco ganho
-
-
 
 https://www.youtube.com/watch?v=VFQ-KjCzUrE&list=PLgXR3B3sPcIIID4weJrK-kcTI6eBdimBn&index=2
 1:06:00
@@ -34,7 +29,6 @@ ema 72 = laranja
 ema 17 = roxo
 
 ===========
-
 allowed: {
     minutes: [1,5,15],
     symbol: ["BTCUSDT", "IOTUSDT],
