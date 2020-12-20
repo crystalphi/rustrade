@@ -1,4 +1,4 @@
-use crate::{config::symbol_minutes::SymbolMinutes, technicals::macd::macd_tac::MacdTac, utils::str_to_datetime};
+use crate::{config::symbol_minutes::SymbolMinutes, technicals::macd::macd_tac::MacdTac};
 use chrono::{DateTime, Utc};
 use plotters::{
     coord::Shift,
@@ -52,7 +52,7 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
         cart_context_lower.configure_mesh().light_line_style(&WHITE).draw()?;
 
         let macd_fast_series = LineSeries::new(
-            self.macd_tac.macd.series.iter().map(|t| (t.date_time.clone(), t.value)),
+            self.macd_tac.macd.series.iter().map(|t| (*t.date_time, t.value)),
             &BLACK,
         );
 

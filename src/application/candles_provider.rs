@@ -3,25 +3,17 @@ use crate::{
     repository::Repository,
 };
 
-use anyhow::Result;
 use chrono::{Duration, Utc};
 use ifmt::iprintln;
-
-use rust_decimal_macros::dec;
 
 pub struct CandlesProvider<'a> {
     exchange: &'a Exchange,
     repo: &'a Repository,
-    candles: Vec<Candle>,
 }
 
 impl<'a> CandlesProvider<'a> {
     pub fn new(repo: &'a Repository, exch: &'a Exchange) -> Self {
-        Self {
-            exchange: exch,
-            repo,
-            candles: Vec::new(),
-        }
+        Self { exchange: exch, repo }
     }
 
     pub fn candles_selection(&mut self, selection: Selection) -> anyhow::Result<Vec<Candle>> {

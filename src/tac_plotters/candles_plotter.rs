@@ -4,7 +4,7 @@ use plotters::{coord::types::RangedCoordf32, prelude::*};
 use plotters_bitmap::bitmap_pixel::RGBPixel;
 use rust_decimal::prelude::ToPrimitive;
 
-use crate::{model::candle::Candle, utils::str_to_datetime};
+use crate::model::candle::Candle;
 
 use super::indicator_plotter::PlotterIndicatorContext;
 
