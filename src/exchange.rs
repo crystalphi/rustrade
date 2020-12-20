@@ -56,7 +56,7 @@ impl Exchange {
                         for summary in summaries {
                             let candle =
                                 kline_to_candle(&summary, &symbol_minutes.symbol, symbol_minutes.minutes, &0u32.into());
-                            info!("{}", iformat!("exchange: {candle.open_time}"));
+                            info!("{}", iformat!("exchange: {candle}"));
                             candles.push(candle);
                         }
                     }

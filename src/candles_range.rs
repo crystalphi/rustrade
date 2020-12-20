@@ -5,6 +5,7 @@ use crate::{
 use anyhow::*;
 use chrono::prelude::*;
 use chrono::{DateTime, Duration, Utc};
+use log::error;
 
 #[derive(Debug)]
 pub struct CandlesRange<'a> {
@@ -70,6 +71,9 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
         return Err(anyhow!("candles_ranges: Candles is empty!"));
     }
     let duration = &Duration::minutes(*minutes as i64);
+
+    let mut duplicated = false;
+
     // Returns inconsistent candles
     let result = candles
         .iter()
@@ -79,15 +83,33 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
                 if let Some(previous_c) = previous.1 {
                     let previous_d = previous_c.open_time;
                     let current_d = current_c.open_time;
+
+                    if current_d == previous_d {
+                        duplicated = true;
+                    }
+
                     if current_d - previous_d != *duration {
                         previous.0.new_range();
+                    }
+
+                    if current_d == previous_d {
+                        duplicated = true;
                     }
                 }
                 previous.0.push(current_c);
             };
+
             (previous.0, current)
         })
         .0;
+
+    if duplicated {
+        let error = format!("Found duplicate start x end! Candles list {}:", candles.len());
+        error!("{}", error);
+        candles.iter().for_each(|c| error!("{}", c.to_string()));
+        bail!(error);
+    }
+
     Ok(result)
 }
 

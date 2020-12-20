@@ -71,7 +71,7 @@ impl<'a> Application<'a> {
 
         const IMPORT: &str = "Import";
         const CHECK: &str = "Check";
-        const PLOTT: &str = "Plott";
+        const PLOT: &str = "Plot";
 
         const TERMINATE: &str = "Terminate";
 
@@ -126,8 +126,8 @@ impl<'a> Application<'a> {
                     continue;
                 }
 
-                if line == PLOTT {
-                    info!("plotting...");
+                if line == PLOT {
+                    info!("Plotting...");
                     let candles_ref = candles.iter().collect::<Vec<_>>();
                     plot_from_selection(&self.selection, candles_ref.as_slice());
                     info!("plotted!");
@@ -135,9 +135,9 @@ impl<'a> Application<'a> {
                 }
 
                 if line == CHECK {
-                    info!("checking...");
+                    info!("Checking...");
                     self.synchronizer.check_inconsist();
-                    info!("checked!");
+                    info!("Checked!");
                     continue;
                 }
 
