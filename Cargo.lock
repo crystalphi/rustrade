@@ -2162,6 +2162,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ri-lib-log-utils"
+version = "0.1.0"
+dependencies = [
+ "atty",
+ "chrono",
+ "colored",
+ "lazy_static",
+ "log",
+ "termcolor",
+]
+
+[[package]]
 name = "rust-argon2"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2224,6 +2236,7 @@ dependencies = [
  "plotters",
  "plotters-bitmap",
  "postgres",
+ "ri-lib-log-utils",
  "rust_decimal",
  "rust_decimal_macros",
  "serde",
@@ -2666,6 +2679,15 @@ dependencies = [
  "redox_syscall",
  "remove_dir_all",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "termcolor"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2dfed899f0eb03f32ee8c6a0aabdb8a7949659e3466561fc0adf54e26d88c5f4"
+dependencies = [
+ "winapi-util",
 ]
 
 [[package]]

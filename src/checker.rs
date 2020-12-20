@@ -1,7 +1,8 @@
 use std::time::Instant;
 
 use chrono::{Duration, Utc};
-use ifmt::iprintln;
+use ifmt::iformat;
+use log::info;
 use rust_decimal_macros::dec;
 
 use crate::{
@@ -15,7 +16,6 @@ pub struct Checker<'a> {
 }
 
 impl<'a> Checker<'a> {
-
     pub fn new(symbol_minutes: &'a SymbolMinutes, repository: &'a Repository, exchange: &'a Exchange) -> Self {
         Checker {
             repo: repository,
@@ -24,7 +24,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    pub fn synchronize(&self) {
+    pub fn synchronize(&self) -> anyhow::Result<()> {
         loop {
             self.repo.delete_last_candle(&self.symbol_minutes);
 
@@ -33,7 +33,7 @@ impl<'a> Checker<'a> {
             // If not found last candle then assume last 180 days
             let last_close_time = last_close_time.get_or_insert_with(|| Utc::now() - Duration::days(180));
 
-            iprintln!("Last close time: {last_close_time:?}");
+            info!("{}", iformat!("Last close time: {last_close_time:?}"));
 
             let d1 = dec!(1);
 
@@ -41,7 +41,7 @@ impl<'a> Checker<'a> {
                 &self.symbol_minutes,
                 &Some(*last_close_time),
                 &None, //  + Duration::minutes(*self.minutes as i64)
-            );
+            )?;
 
             let mut last_id = self.repo.last_id();
 
@@ -58,11 +58,12 @@ impl<'a> Checker<'a> {
                 self.repo.add_candle(c).unwrap();
             });
 
-            iprintln!("Imported candles: {candles.len()}");
+            info!("{}", iformat!("Imported candles: {candles.len()}"));
             if candles.is_empty() {
                 break;
             }
         }
+        Ok(())
     }
 
     pub fn check_inconsist(&self) {
@@ -75,13 +76,16 @@ impl<'a> Checker<'a> {
         start_time = range.0.unwrap_or(start_time);
         end_time = range.1.unwrap_or(end_time);
 
-        iprintln!("Check consistent: {self.symbol_minutes:?} {start_time:?} {end_time:?}");
+        info!(
+            "{}",
+            iformat!("Check consistent: {self.symbol_minutes:?} {start_time:?} {end_time:?}")
+        );
 
         let candles = repo
             .candles_by_time(&self.symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
 
-        iprintln!("Found candles: {candles.len()}");
+        info!("{}", iformat!("Found candles: {candles.len()}"));
 
         let candles_ref: Vec<_> = candles.iter().collect();
 
@@ -89,11 +93,11 @@ impl<'a> Checker<'a> {
             candles_ref.as_slice(),
             &Duration::minutes(self.symbol_minutes.minutes as i64),
         );
-        iprintln!("Inconsist candles: {inconsist.len()}");
+        info!("{}", iformat!("Inconsist candles: {inconsist.len()}"));
         for candle in inconsist.iter() {
-            iprintln!("{candle}");
+            info!("{}", iformat!("{candle}"));
         }
-        iprintln!("Elapsed: {start.elapsed():?}");
+        info!("{}", iformat!("Elapsed: {start.elapsed():?}"));
     }
 
     pub fn delete_inconsist(&self) {
@@ -105,17 +109,17 @@ impl<'a> Checker<'a> {
             .candles_by_time(&self.symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
 
-        iprintln!("Found candles: {candles.len()}");
+        info!("{}", iformat!("Found candles: {candles.len()}"));
 
         let candles_ref: Vec<_> = candles.iter().collect();
 
-        println!("Inconsist candles:");
+        info!("Inconsist candles:");
         let inconsist = inconsistent_candles(
             candles_ref.as_slice(),
             &Duration::minutes(self.symbol_minutes.minutes as i64),
         );
         for candle in inconsist.iter() {
-            iprintln!("{candle}");
+            info!("{}", iformat!("{candle}"));
             self.repo.delete_candle(&candle.id);
         }
     }

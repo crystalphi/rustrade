@@ -1,5 +1,7 @@
 use std::{thread, time};
 
+use log::info;
+
 use crate::{
     checker::Checker,
     config::{candles_selection::CandlesSelection, definition::ConfigDefinition, selection::Selection},
@@ -80,28 +82,28 @@ impl<'a> Application<'a> {
         loop {
             for line in Self::read_lines() {
                 if line == TERMINATE {
-                    println!("Terminated!");
+                    info!("Terminated!");
                     break;
                 }
 
                 if line == GET_DEFINITION {
-                    println!("{}", self.definition.to_json());
+                    info!("{}", self.definition.to_json());
                     continue;
                 }
 
                 if line == GET_SELECTION {
-                    println!("{}", self.selection.to_json());
+                    info!("{}", self.selection.to_json());
                     continue;
                 }
 
                 if line == SET_SELECTION {
-                    println!("set selection...");
+                    info!("set selection...");
                     in_selection = true;
                     continue;
                 }
 
                 if line == END_SELECTION {
-                    println!(
+                    info!(
                         "end selection... in_selection = {} selection_buffer.len() = {}",
                         in_selection,
                         selection_buffer.len()
@@ -118,28 +120,28 @@ impl<'a> Application<'a> {
                 }
 
                 if line == IMPORT {
-                    println!("getting candles...");
+                    info!("getting candles...");
                     candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
-                    println!("candles got");
+                    info!("candles got");
                     continue;
                 }
 
                 if line == PLOTT {
-                    println!("plotting...");
+                    info!("plotting...");
                     let candles_ref = candles.iter().collect::<Vec<_>>();
                     plot_from_selection(&self.selection, candles_ref.as_slice());
-                    println!("plotted!");
+                    info!("plotted!");
                     continue;
                 }
 
                 if line == CHECK {
-                    println!("checking...");
+                    info!("checking...");
                     self.synchronizer.check_inconsist();
-                    println!("checked!");
+                    info!("checked!");
                     continue;
                 }
 
-                println!("Unknown command \"{}\"", line);
+                info!("Unknown command \"{}\"", line);
             }
         }
     }

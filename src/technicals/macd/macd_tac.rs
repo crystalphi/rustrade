@@ -1,6 +1,7 @@
 use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
 use crate::{model::candle::Candle, technicals::technical::Technical};
-use ifmt::iprintln;
+use ifmt::iformat;
+use log::info;
 use rust_decimal::prelude::ToPrimitive;
 use std::time::Instant;
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
@@ -40,7 +41,7 @@ impl<'a> MacdTac<'a> {
             mac_tac.signal.push_serie(&candle.close_time, macd_result.1);
             mac_tac.divergence.push_serie(&candle.close_time, macd_result.2);
         }
-        iprintln!("Technicals {candles.len()}: {start.elapsed():?}");
+        info!("{}", iformat!("Technicals {candles.len()}: {start.elapsed():?}"));
         mac_tac
     }
 }

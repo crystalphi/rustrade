@@ -13,7 +13,8 @@ use application::app::Application;
 use checker::Checker;
 use config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes};
 use exchange::Exchange;
-use ifmt::iprintln;
+use ifmt::{iformat, iprintln};
+use log::{info, LevelFilter};
 use repository::Repository;
 use std::time::Instant;
 use structopt::StructOpt;
@@ -60,6 +61,9 @@ struct Opt {
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
     let opt = Opt::from_args();
+
+    ri_lib_log_utils::setup_log(LevelFilter::Debug);
+
     dotenv::dotenv().unwrap();
     let exchange: Exchange = Exchange::new().unwrap();
     let repo: Repository = Repository::new().unwrap();
@@ -77,7 +81,7 @@ async fn main() -> anyhow::Result<()> {
             synchronizer.check_inconsist();
         }
         Command::Sync {} => {
-            synchronizer.synchronize();
+            synchronizer.synchronize().unwrap();
         }
         Command::Fix {} => {
             synchronizer.delete_inconsist();
@@ -105,7 +109,7 @@ fn plot(repo: &Repository, candles_selection: &CandlesSelection) {
     );
     let candles = repo.candles_default(&symbol_minutes);
 
-    iprintln!("Loading {start.elapsed():?}");
+    info!("{}", iformat!("Loading {start.elapsed():?}"));
     let start = Instant::now();
 
     let candles_ref: Vec<_> = candles.iter().collect();

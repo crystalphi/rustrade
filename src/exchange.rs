@@ -2,7 +2,8 @@ use std::env;
 
 use binance::{api::Binance, futures::market::FuturesMarket};
 use chrono::{DateTime, Utc};
-use ifmt::{iformat, iprintln};
+use ifmt::iformat;
+use log::{error, info};
 
 use crate::{
     config::symbol_minutes::SymbolMinutes,
@@ -10,7 +11,7 @@ use crate::{
     utils::{datetime_to_timestamp, kline_to_candle},
 };
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 
 pub struct Exchange {
     api_key: String,
@@ -34,8 +35,8 @@ impl Exchange {
         symbol_minutes: &SymbolMinutes,
         start_time: &Option<DateTime<Utc>>,
         end_time: &Option<DateTime<Utc>>,
-    ) -> Vec<Candle> {
-        let mut result = Vec::new();
+    ) -> anyhow::Result<Vec<Candle>> {
+        let mut candles = Vec::new();
 
         let start_time = start_time.map(|d| datetime_to_timestamp(&d));
         let end_time = end_time.map(|d| datetime_to_timestamp(&d));
@@ -49,25 +50,32 @@ impl Exchange {
             start_time,
             end_time,
         ) {
-            Ok(answer) => match answer {
-                binance::model::KlineSummaries::AllKlineSummaries(summaries) => {
-                    for summary in summaries {
-                        let candle =
-                            kline_to_candle(&summary, &symbol_minutes.symbol, symbol_minutes.minutes, &0u32.into());
-                        iprintln!("{candle.open_time}");
-                        result.push(candle);
+            Ok(answer) => {
+                match answer {
+                    binance::model::KlineSummaries::AllKlineSummaries(summaries) => {
+                        for summary in summaries {
+                            let candle =
+                                kline_to_candle(&summary, &symbol_minutes.symbol, symbol_minutes.minutes, &0u32.into());
+                            info!("{}", iformat!("exchange: {candle.open_time}"));
+                            candles.push(candle);
+                        }
                     }
                 }
-            },
-            Err(e) => println!("Error: {}", e),
+                Ok(candles)
+            }
+            Err(e) => {
+                let error = iformat!("exchange: {e}");
+                error!("{}", error);
+                bail!(error)
+            }
         }
-        result
     }
 }
 
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
+    use ifmt::iprintln;
 
     use super::*;
 
@@ -77,7 +85,7 @@ mod tests {
         let exchange = Exchange::new().unwrap();
         let start = Utc::now() - Duration::minutes(15);
         let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
-        let candles = exchange.candles(&symbol_minutes, &Some(start), &None);
+        let candles = exchange.candles(&symbol_minutes, &Some(start), &None).unwrap();
         for candle in candles {
             iprintln!("{candle}");
         }

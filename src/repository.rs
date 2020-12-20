@@ -1,7 +1,8 @@
 use crate::{config::symbol_minutes::SymbolMinutes, model::candle::Candle};
 use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
-use ifmt::iprintln;
+use ifmt::iformat;
+use log::info;
 use rust_decimal::{prelude::FromPrimitive, prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -61,7 +62,7 @@ impl Repository {
         let result = self
             .candles_by_time(symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
-        iprintln!("Read repository: {start.elapsed():?}");
+        info!("{}", iformat!("Read repository: {start.elapsed():?}"));
         result
     }
 
@@ -198,9 +199,9 @@ impl Repository {
 
     pub fn list_candles(&self, symbol: &str, minutes: &u32, limit: &i64) {
         let candles = self.last_candles(symbol, minutes, limit).unwrap_or_default();
-        iprintln!("Listing candles limit {limit}:");
+        info!("{}", iformat!("Listing candles limit {limit}:"));
         for candle in candles.iter() {
-            iprintln!("{candle}");
+            info!("{}", iformat!("{candle}"));
         }
     }
 }

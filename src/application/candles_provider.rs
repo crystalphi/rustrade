@@ -2,9 +2,9 @@ use crate::{
     candles_range::candles_to_ranges_missing, config::selection::Selection, exchange::Exchange, model::candle::Candle,
     repository::Repository,
 };
-
 use chrono::{Duration, Utc};
-use ifmt::iprintln;
+use ifmt::iformat;
+use log::{info, warn};
 
 pub struct CandlesProvider<'a> {
     exchange: &'a Exchange,
@@ -17,7 +17,7 @@ impl<'a> CandlesProvider<'a> {
     }
 
     pub fn candles_selection(&mut self, selection: Selection) -> anyhow::Result<Vec<Candle>> {
-        iprintln!("Initializing import");
+        info!("Initializing import");
 
         // Normalize default start/end date time
         let start_time = &selection
@@ -47,13 +47,14 @@ impl<'a> CandlesProvider<'a> {
             }
 
             for range_missing in ranges_missing.iter() {
-                iprintln!("Missing range: {range_missing:?}");
+                let msg = iformat!("Missing range: {range_missing:?}").to_string();
+                warn!("{}", msg);
 
                 let mut candles_exch = self.exchange.candles(
                     &selection.candles_selection.symbol_minutes,
                     &Some(range_missing.0),
                     &Some(range_missing.1),
-                );
+                )?;
 
                 // Save news candles on repository
                 self.repo.add_candles(&mut candles_exch)?;
@@ -61,7 +62,7 @@ impl<'a> CandlesProvider<'a> {
                 candles.append(&mut candles_exch);
             }
         }
-        iprintln!("Finished import");
+        info!("Finished import");
 
         Ok(candles)
     }
