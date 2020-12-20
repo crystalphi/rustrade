@@ -1,11 +1,11 @@
-use std::str::FromStr;
+use std::{cmp, str::FromStr};
 
 use binance::model::KlineSummary;
 use chrono::{DateTime, Duration, NaiveDateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use ta::DataItem;
 
-use crate::model::candle::Candle;
+use crate::model::{candle::Candle, open_close::OpenClose};
 
 /// Convert binance Kline to TA DataItem
 pub fn kline_to_data_item(summary: &KlineSummary) -> DataItem {
@@ -108,14 +108,14 @@ pub fn inconsistent_candles(candles: &[&Candle], duration: &Duration) -> Vec<Can
 }
 
 /// Returns min/max close time from candles list
-pub fn min_max_close_time_from_candles(candles: &[&Candle]) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
+pub fn min_max_close_time_from_candles(candles: &[&Candle]) -> Option<(OpenClose, OpenClose)> {
     if candles.is_empty() {
         return None;
     }
-    let mut min_date = &str_to_datetime("2000-01-01 00:00:00");
-    let max_date = candles.iter().fold(min_date, |acc, x| acc.max(&x.close_time));
-    min_date = candles.iter().fold(max_date, |acc, x| acc.min(&x.close_time));
-    Some((*min_date, *max_date))
+    let mut min_date = OpenClose::Open(str_to_datetime("2000-01-01 00:00:00"));
+    let max_date = candles.iter().map(|c| c.open_close()).fold(min_date, |acc, x| acc.max(x));
+    min_date = candles.iter().map(|c| c.open_close()).fold(max_date, |acc, x| acc.min(x));
+    Some((min_date, max_date))
 }
 
 #[cfg(test)]

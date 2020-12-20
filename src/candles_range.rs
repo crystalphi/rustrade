@@ -1,5 +1,5 @@
 use crate::{
-    model::candle::Candle,
+    model::{candle::Candle, open_close::OpenClose},
     utils::{min_max_close_time_from_candles, str_to_datetime},
 };
 use anyhow::*;
@@ -30,7 +30,7 @@ impl<'a> CandlesRange<'a> {
         self.candles.is_empty()
     }
 
-    pub fn min_max_close(&self) -> anyhow::Result<(DateTime<Utc>, DateTime<Utc>)> {
+    pub fn min_max_close(&self) -> anyhow::Result<(OpenClose, OpenClose)> {
         min_max_close_time_from_candles(self.candles.as_slice()).context("CandlesRange.min_max: Candles is empty!")
     }
 }
@@ -155,8 +155,8 @@ pub fn invert_ranges_close(
     for range in ranges.ranges.iter() {
         let range_dates = range.min_max_close()?;
         let start = prev_start_time;
-        let end = range_dates.0 - duration;
-        prev_start_time = range_dates.1 + duration;
+        let end = range_dates.0.open(minutes) - duration;
+        prev_start_time = range_dates.1.open(minutes) + duration;
         add_range(&ranges, &mut inverted_ranges, start, end)?;
     }
 
@@ -246,15 +246,15 @@ pub mod testes {
         }
         assert_eq!(
             ranges.ranges.get(0).unwrap().min_max_close().unwrap(),
-            (str_d("2020-01-12 12:14:59"), str_d("2020-01-12 12:29:59"))
+            (OpenClose::Close(str_d("2020-01-12 12:14:59")), OpenClose::Close(str_d("2020-01-12 12:29:59")))
         );
         assert_eq!(
             ranges.ranges.get(1).unwrap().min_max_close().unwrap(),
-            (str_d("2020-11-16 01:29:59"), str_d("2020-11-16 01:29:59"),)
+            (OpenClose::Close(str_d("2020-11-16 01:29:59")), OpenClose::Close(str_d("2020-11-16 01:29:59")))
         );
         assert_eq!(
             ranges.ranges.get(2).unwrap().min_max_close().unwrap(),
-            (str_d("2020-11-20 11:29:59"), str_d("2020-11-20 11:29:59"),)
+            (OpenClose::Close(str_d("2020-11-20 11:29:59")), OpenClose::Close(str_d("2020-11-20 11:29:59")))
         );
     }
 

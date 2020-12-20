@@ -1,10 +1,10 @@
-use std::convert::TryFrom;
+use std::{cmp::Ordering, convert::TryFrom, fmt};
 
 use anyhow::bail;
 use chrono::{DateTime, Duration, Timelike, Utc};
 
 use crate::utils::str_d;
-#[derive(Debug)]
+#[derive(Debug, Eq, Copy, Clone)]
 pub enum OpenClose {
     Open(DateTime<Utc>),
     Close(DateTime<Utc>),
@@ -14,15 +14,56 @@ pub enum OpenClose {
 impl PartialEq for OpenClose {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (OpenClose::Open(so), OpenClose::Open(oo)) => so == oo,
-            (OpenClose::Open(_so), OpenClose::Close(_oc)) => false,
-            (OpenClose::Open(so), OpenClose::OpenClose(oo, _oc)) => so == oo,
-            (OpenClose::Close(_sc), OpenClose::Open(_oo)) => false,
-            (OpenClose::Close(sc), OpenClose::Close(oc)) => sc == oc,
-            (OpenClose::Close(sc), OpenClose::OpenClose(_oo, oc)) => sc == oc,
-            (OpenClose::OpenClose(so, _sc), OpenClose::Open(oo)) => so == oo,
-            (OpenClose::OpenClose(_so, sc), OpenClose::Close(oc)) => sc == oc,
-            (OpenClose::OpenClose(so, _sc), OpenClose::OpenClose(oo, _oc)) => so == oo,
+            (OpenClose::Open(self_open), OpenClose::Open(other_open)) => self_open == other_open,
+            (OpenClose::Open(_self_open), OpenClose::Close(_other_close)) => false,
+            (OpenClose::Open(self_open), OpenClose::OpenClose(other_open, _other_close)) => self_open == other_open,
+            (OpenClose::Close(_self_close), OpenClose::Open(_other_open)) => false,
+            (OpenClose::Close(self_close), OpenClose::Close(other_close)) => self_close == other_close,
+            (OpenClose::Close(self_close), OpenClose::OpenClose(_other_open, other_close)) => self_close == other_close,
+            (OpenClose::OpenClose(self_open, _self_close), OpenClose::Open(other_open)) => self_open == other_open,
+            (OpenClose::OpenClose(_self_open, self_close), OpenClose::Close(other_close)) => self_close == other_close,
+            (OpenClose::OpenClose(self_open, _sc), OpenClose::OpenClose(other_open, _other_close)) => self_open == other_open,
+        }
+    }
+}
+impl Ord for OpenClose {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (OpenClose::Open(self_open), OpenClose::Open(other_open)) => self_open.cmp(other_open),
+            (OpenClose::Open(_self_open), OpenClose::Close(_other_close)) => Ordering::Equal,
+            (OpenClose::Open(self_open), OpenClose::OpenClose(other_open, _other_close)) => self_open.cmp(other_open),
+            (OpenClose::Close(_self_close), OpenClose::Open(_other_open)) => Ordering::Equal,
+            (OpenClose::Close(self_close), OpenClose::Close(other_close)) => self_close.cmp(other_close),
+            (OpenClose::Close(self_close), OpenClose::OpenClose(_other_open, other_close)) => self_close.cmp(other_close),
+            (OpenClose::OpenClose(self_open, _self_close), OpenClose::Open(other_open)) => self_open.cmp(other_open),
+            (OpenClose::OpenClose(_self_open, self_close), OpenClose::Close(other_close)) => self_close.cmp(other_close),
+            (OpenClose::OpenClose(self_open, _sc), OpenClose::OpenClose(other_open, _other_close)) => self_open.cmp(other_open),
+        }
+    }
+}
+
+impl PartialOrd for OpenClose {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (OpenClose::Open(self_open), OpenClose::Open(other_open)) => Some(self_open.cmp(other_open)),
+            (OpenClose::Open(_self_open), OpenClose::Close(_other_close)) => None,
+            (OpenClose::Open(self_open), OpenClose::OpenClose(other_open, _other_close)) => Some(self_open.cmp(other_open)),
+            (OpenClose::Close(_self_close), OpenClose::Open(_other_open)) => None,
+            (OpenClose::Close(self_close), OpenClose::Close(other_close)) => Some(self_close.cmp(other_close)),
+            (OpenClose::Close(self_close), OpenClose::OpenClose(_other_open, other_close)) => Some(self_close.cmp(other_close)),
+            (OpenClose::OpenClose(self_open, _self_close), OpenClose::Open(other_open)) => Some(self_open.cmp(other_open)),
+            (OpenClose::OpenClose(_self_open, self_close), OpenClose::Close(other_close)) => Some(self_close.cmp(other_close)),
+            (OpenClose::OpenClose(self_open, _sc), OpenClose::OpenClose(other_open, _other_close)) => Some(self_open.cmp(other_open)),
+        }
+    }
+}
+
+impl fmt::Display for OpenClose {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OpenClose::Open(open) => write!(f, "{}", open),
+            OpenClose::Close(close) => write!(f, "{}", close),
+            OpenClose::OpenClose(open, _close) => write!(f, "{}", open),
         }
     }
 }
@@ -70,6 +111,5 @@ pub mod tests {
         let open_close = OpenClose::try_from("2020-01-20 00:00:00").unwrap();
         let date = str_d("2020-01-20 00:00:00");
         assert_eq!(open_close, OpenClose::Open(date));
-
     }
 }
