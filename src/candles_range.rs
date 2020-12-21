@@ -1,11 +1,13 @@
 use crate::{
-    model::{candle::Candle, open_close::OpenClose},
-    utils::{min_max_close_time_from_candles, str_to_datetime},
+    model::{
+        candle::Candle,
+        open_close::{str_open, OpenClose},
+    },
+    utils::min_max_close_time_from_candles,
 };
 use anyhow::*;
 use chrono::prelude::*;
 use chrono::{DateTime, Duration, Utc};
-use ifmt::iformat;
 use log::error;
 
 #[derive(Debug)]
@@ -113,18 +115,8 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
     Ok(result)
 }
 
-pub fn invert_ranges_close(
-    start_time: &DateTime<Utc>,
-    end_time: &DateTime<Utc>,
-    ranges: &CandlesRanges,
-    minutes: &u32,
-) -> anyhow::Result<Vec<(DateTime<Utc>, DateTime<Utc>)>> {
-    fn add_range(
-        ranges: &CandlesRanges,
-        inverted_ranges: &mut Vec<(DateTime<Utc>, DateTime<Utc>)>,
-        start: DateTime<Utc>,
-        end: DateTime<Utc>,
-    ) -> anyhow::Result<()> {
+pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges: &CandlesRanges, minutes: &u32) -> anyhow::Result<Vec<(OpenClose, OpenClose)>> {
+    fn add_range(ranges: &CandlesRanges, inverted_ranges: &mut Vec<(OpenClose, OpenClose)>, start: OpenClose, end: OpenClose) -> anyhow::Result<()> {
         if start > end {
             let message = format!("Attempt to add range start {} > end {}", start, end);
             error!("{}, added invert_ranges({}):", message, inverted_ranges.len());
@@ -155,8 +147,8 @@ pub fn invert_ranges_close(
     for range in ranges.ranges.iter() {
         let range_dates = range.min_max_close()?;
         let start = prev_start_time;
-        let end = range_dates.0.open(minutes) - duration;
-        prev_start_time = range_dates.1.open(minutes) + duration;
+        let end = range_dates.0 - duration;
+        prev_start_time = range_dates.1 + duration;
         add_range(&ranges, &mut inverted_ranges, start, end)?;
     }
 
@@ -177,24 +169,31 @@ fn minutes_close_trunc(start_time: &DateTime<Utc>, minutes: &u32) -> DateTime<Ut
     start_time
 }
 
+pub fn minutes_open_trunc(start_time: &DateTime<Utc>, minutes: &u32) -> DateTime<Utc> {
+    let mut start_time = *start_time;
+    let minute = start_time.minute() - (start_time.minute() % minutes);
+    start_time = start_time.with_minute(minute).unwrap().with_second(0).unwrap();
+    start_time
+}
+
 pub fn candles_to_ranges_missing(
-    start_time: &DateTime<Utc>,
-    end_time: &DateTime<Utc>,
+    start_time: &OpenClose,
+    end_time: &OpenClose,
     minutes: &u32,
     candles: &[&Candle],
-) -> anyhow::Result<Vec<(DateTime<Utc>, DateTime<Utc>)>> {
+) -> anyhow::Result<Vec<(OpenClose, OpenClose)>> {
     if candles.is_empty() {
         return Ok(vec![(*start_time, *end_time)]);
     }
-    let limit_date = str_to_datetime("2010-01-01 00:00:00");
+    let limit_date = str_open("2010-01-01 00:00:00");
     if start_time < &limit_date {
         return Err(anyhow!("Start time {:?} is less than allowed!", start_time));
     }
     if end_time < &limit_date {
         return Err(anyhow!("End time {:?} is less than allowed!", end_time));
     }
-    let start_time = minutes_close_trunc(start_time, minutes);
-    let end_time = minutes_close_trunc(end_time, minutes);
+    // let start_time = minutes_close_trunc(start_time, minutes);
+    // let end_time = minutes_close_trunc(end_time, minutes);
 
     let candles_ranges = candles_ranges(candles, minutes)?;
     match invert_ranges_close(&start_time, &end_time, &candles_ranges, minutes) {
@@ -216,7 +215,10 @@ pub fn candles_to_ranges_missing(
 pub mod testes {
     use std::println;
 
-    use crate::utils::{datetime_to_str, str_d};
+    use crate::{
+        model::open_close::str_close,
+        utils::{datetime_to_str, str_d},
+    };
 
     use super::*;
 
@@ -266,8 +268,8 @@ pub mod testes {
         let ranges = candles_ranges(candles_ref.as_slice(), &15).unwrap();
         println!("Ranges:");
 
-        let start_time = str_d("2020-01-01 00:00:00") - Duration::seconds(1);
-        let end_time = str_d("2020-11-30 00:00:00") - Duration::seconds(1);
+        let start_time = OpenClose::Close(str_d("2020-01-01 00:00:00") - Duration::seconds(1));
+        let end_time = OpenClose::Close(str_d("2020-11-30 00:00:00") - Duration::seconds(1));
 
         let inverted_ranges = invert_ranges_close(&start_time, &end_time, &ranges, &15).unwrap();
 
@@ -276,10 +278,16 @@ pub mod testes {
             println!("{} - {}", inverted_range.0, inverted_range.1);
         }
 
-        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, str_d("2020-01-12 11:59:59")));
-        assert_eq!(*inverted_ranges.get(1).unwrap(), (str_d("2020-01-12 12:44:59"), str_d("2020-11-16 01:14:59")));
-        assert_eq!(*inverted_ranges.get(2).unwrap(), (str_d("2020-11-16 01:44:59"), str_d("2020-11-20 11:14:59")));
-        assert_eq!(*inverted_ranges.get(3).unwrap(), (str_d("2020-11-20 11:44:59"), end_time));
+        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, str_close("2020-01-12 11:59:59")));
+        assert_eq!(
+            *inverted_ranges.get(1).unwrap(),
+            (str_close("2020-01-12 12:44:59"), str_close("2020-11-16 01:14:59"))
+        );
+        assert_eq!(
+            *inverted_ranges.get(2).unwrap(),
+            (str_close("2020-11-16 01:44:59"), str_close("2020-11-20 11:14:59"))
+        );
+        assert_eq!(*inverted_ranges.get(3).unwrap(), (str_close("2020-11-20 11:44:59"), end_time));
     }
 
     #[test]
@@ -289,8 +297,8 @@ pub mod testes {
         let candles_ref = candles.iter().collect::<Vec<_>>();
         let ranges = candles_ranges(candles_ref.as_slice(), &15).unwrap();
 
-        let start_time = str_d("2020-01-01 00:00:00") - Duration::seconds(1);
-        let end_time = str_d("2020-11-30 00:00:00") - Duration::seconds(1);
+        let start_time = OpenClose::Close(str_d("2020-01-01 00:00:00") - Duration::seconds(1));
+        let end_time = OpenClose::Close(str_d("2020-11-30 00:00:00") - Duration::seconds(1));
 
         let inverted_ranges = invert_ranges_close(&start_time, &end_time, &ranges, &15).unwrap();
 
@@ -299,10 +307,16 @@ pub mod testes {
             println!("{} - {}", inverted_range.0, inverted_range.1);
         }
 
-        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, str_d("2020-01-12 11:59:59")));
-        assert_eq!(*inverted_ranges.get(1).unwrap(), (str_d("2020-01-12 12:44:59"), str_d("2020-11-16 01:14:59")));
-        assert_eq!(*inverted_ranges.get(2).unwrap(), (str_d("2020-11-16 01:44:59"), str_d("2020-11-20 11:14:59")));
-        assert_eq!(*inverted_ranges.get(3).unwrap(), (str_d("2020-11-20 11:44:59"), end_time));
+        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, str_close("2020-01-12 11:59:59")));
+        assert_eq!(
+            *inverted_ranges.get(1).unwrap(),
+            (str_close("2020-01-12 12:44:59"), str_close("2020-11-16 01:14:59"))
+        );
+        assert_eq!(
+            *inverted_ranges.get(2).unwrap(),
+            (str_close("2020-11-16 01:44:59"), str_close("2020-11-20 11:14:59"))
+        );
+        assert_eq!(*inverted_ranges.get(3).unwrap(), (str_close("2020-11-20 11:44:59"), end_time));
     }
 
     #[test]
@@ -323,22 +337,93 @@ pub mod testes {
     }
 
     #[test]
+    fn minutes_open_trunc_test() {
+        let truncated = minutes_open_trunc(&str_d("2020-01-01 00:00:00"), &15);
+        assert_eq!(truncated, str_d("2020-01-01 00:00:00"));
+
+        let truncated = minutes_open_trunc(&str_d("2020-01-01 00:17:00"), &15);
+        assert_eq!(truncated, str_d("2020-01-01 00:15:00"));
+
+        let truncated = minutes_open_trunc(&str_d("2020-01-01 00:14:59"), &15);
+        assert_eq!(truncated, str_d("2020-01-01 00:00:00"));
+
+        let truncated = minutes_open_trunc(&str_d("2020-01-01 00:31:00"), &15);
+        assert_eq!(truncated, str_d("2020-01-01 00:30:00"));
+
+        println!("{}", truncated);
+    }
+
+    #[test]
     fn candles_to_ranges_missing_test() {
-        let start_time = str_d("2020-01-01 00:00:00");
-        let end_time = str_d("2020-11-30 00:00:00");
+        let start_time = OpenClose::from_str("2020-01-01 00:00:00", &15);
+        let end_time = OpenClose::from_str("2020-11-30 00:00:00", &15);
 
         let candles = candles_test(&["2020-01-12 12:00:00", "2020-01-12 12:15:00", "2020-11-16 01:15:00", "2020-11-20 11:15:00"]);
 
         let candles_ref = candles.iter().collect::<Vec<_>>();
         let ranges_missing = candles_to_ranges_missing(&start_time, &end_time, &15, candles_ref.as_slice()).unwrap();
 
+        println!("ranges_missing ({}):", ranges_missing.len());
         for range in ranges_missing.iter() {
             println!("{} - {}", range.0, range.1);
         }
 
-        assert_eq!(*ranges_missing.get(0).unwrap(), (str_d("2019-12-31 23:59:59"), str_d("2020-01-12 11:59:59"),));
-        assert_eq!(*ranges_missing.get(1).unwrap(), (str_d("2020-01-12 12:44:59"), str_d("2020-11-16 01:14:59"),));
-        assert_eq!(*ranges_missing.get(2).unwrap(), (str_d("2020-11-16 01:44:59"), str_d("2020-11-20 11:14:59"),));
-        assert_eq!(*ranges_missing.get(3).unwrap(), (str_d("2020-11-20 11:44:59"), str_d("2020-11-29 23:59:59"),));
+        assert_eq!(
+            *ranges_missing.get(0).unwrap(),
+            (str_open("2020-01-01 00:00:00"), str_open("2020-01-12 11:45:00")),
+            "1"
+        );
+        assert_eq!(
+            *ranges_missing.get(1).unwrap(),
+            (str_open("2020-01-12 12:30:00"), str_open("2020-11-16 01:00:00"),),
+            "2"
+        );
+        assert_eq!(
+            *ranges_missing.get(2).unwrap(),
+            (str_open("2020-11-16 01:30:00"), str_open("2020-11-20 11:00:00"),),
+            "3"
+        );
+        assert_eq!(
+            *ranges_missing.get(3).unwrap(),
+            (str_open("2020-11-20 11:30:00"), str_open("2020-11-30 00:00:00"),),
+            "4"
+        );
+    }
+
+    #[test]
+    fn candles_to_ranges_missing_exact_bound_test() {
+        let start_time = OpenClose::from_str("2020-01-12 12:00:00", &15);
+        let end_time = OpenClose::from_str("2020-11-20 11:15:00", &15);
+
+        let candles = candles_test(&["2020-01-12 12:00:00", "2020-01-12 12:15:00", "2020-11-16 01:15:00", "2020-11-20 11:15:00"]);
+
+        let candles_ref = candles.iter().collect::<Vec<_>>();
+        let ranges_missing = candles_to_ranges_missing(&start_time, &end_time, &15, candles_ref.as_slice()).unwrap();
+
+        println!("ranges_missing ({}):", ranges_missing.len());
+        for range in ranges_missing.iter() {
+            println!("{} - {}", range.0, range.1);
+        }
+
+        // assert_eq!(
+        //     *ranges_missing.get(0).unwrap(),
+        //     (str_open("2020-01-01 00:00:00"), str_open("2020-01-12 11:45:00")),
+        //     "1"
+        // );
+        assert_eq!(
+            *ranges_missing.get(1).unwrap(),
+            (str_open("2020-01-12 12:30:00"), str_open("2020-11-16 01:00:00"),),
+            "2"
+        );
+        assert_eq!(
+            *ranges_missing.get(2).unwrap(),
+            (str_open("2020-11-16 01:30:00"), str_open("2020-11-20 11:00:00"),),
+            "3"
+        );
+        // assert_eq!(
+        //     *ranges_missing.get(3).unwrap(),
+        //     (str_open("2020-11-20 11:30:00"), str_open("2020-11-30 00:00:00"),),
+        //     "4"
+        // );
     }
 }

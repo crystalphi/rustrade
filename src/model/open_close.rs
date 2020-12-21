@@ -1,9 +1,12 @@
-use std::{cmp::Ordering, convert::TryFrom, fmt};
+use std::{cmp::Ordering, convert::TryFrom, fmt, ops::Add, ops::Sub};
 
 use anyhow::bail;
 use chrono::{DateTime, Duration, Timelike, Utc};
 
-use crate::utils::str_d;
+use crate::{
+    candles_range::minutes_open_trunc,
+    utils::{str_d, str_to_datetime},
+};
 #[derive(Debug, Eq, Copy, Clone)]
 pub enum OpenClose {
     Open(DateTime<Utc>),
@@ -97,6 +100,50 @@ impl OpenClose {
     pub fn close(&self, minutes: &u32) -> DateTime<Utc> {
         self.to_dates(minutes).1
     }
+
+    pub fn from_date(date_time: &DateTime<Utc>, minutes: &u32) -> OpenClose {
+        let open = minutes_open_trunc(date_time, minutes);
+        let close = open + Duration::minutes(*minutes as i64) - Duration::seconds(1);
+        OpenClose::OpenClose(open, close)
+    }
+
+    pub fn from_str(date_time: &str, minutes: &u32) -> OpenClose {
+        let open = minutes_open_trunc(&str_d(date_time), minutes);
+        let close = open + Duration::minutes(*minutes as i64) - Duration::seconds(1);
+        OpenClose::OpenClose(open, close)
+    }
+}
+
+impl Add<Duration> for OpenClose {
+    type Output = OpenClose;
+
+    fn add(self, other: Duration) -> OpenClose {
+        match self {
+            OpenClose::Open(open) => OpenClose::Open(open + other),
+            OpenClose::Close(close) => OpenClose::Close(close + other),
+            OpenClose::OpenClose(open, close) => OpenClose::OpenClose(open + other, close + other),
+        }
+    }
+}
+
+impl Sub<Duration> for OpenClose {
+    type Output = OpenClose;
+
+    fn sub(self, other: Duration) -> OpenClose {
+        match self {
+            OpenClose::Open(open) => OpenClose::Open(open - other),
+            OpenClose::Close(close) => OpenClose::Close(close - other),
+            OpenClose::OpenClose(open, close) => OpenClose::OpenClose(open - other, close - other),
+        }
+    }
+}
+
+pub fn str_open(date_time: &str) -> OpenClose {
+    OpenClose::Open(str_to_datetime(date_time))
+}
+
+pub fn str_close(date_time: &str) -> OpenClose {
+    OpenClose::Close(str_to_datetime(date_time))
 }
 
 #[cfg(test)]

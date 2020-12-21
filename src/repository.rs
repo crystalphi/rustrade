@@ -36,10 +36,7 @@ impl Repository {
         result.close_time
     }
 
-    pub fn ranges_symbol_minutes(
-        &self,
-        symbol_minutes: &SymbolMinutes,
-    ) -> (Option<DateTime<Utc>>, Option<DateTime<Utc>>) {
+    pub fn ranges_symbol_minutes(&self, symbol_minutes: &SymbolMinutes) -> (Option<DateTime<Utc>>, Option<DateTime<Utc>>) {
         let future = sqlx::query!(
             "SELECT MIN(close_time) as min_close_time, MAX(close_time) as max_close_time FROM candle WHERE symbol = $1 AND minutes = $2",
             &symbol_minutes.symbol,
@@ -59,9 +56,7 @@ impl Repository {
         let start = Instant::now();
         let end_time = Utc::now();
         let start_time = end_time - Duration::days(14);
-        let result = self
-            .candles_by_time(symbol_minutes, &start_time, &end_time)
-            .unwrap_or_default();
+        let result = self.candles_by_time(symbol_minutes, &start_time, &end_time).unwrap_or_default();
         info!("{}", iformat!("Read repository: {start.elapsed():?}"));
         result
     }
@@ -85,12 +80,7 @@ impl Repository {
         result
     }
 
-    pub fn candles_by_time(
-        &self,
-        symbol_minutes: &SymbolMinutes,
-        start_time: &DateTime<Utc>,
-        end_time: &DateTime<Utc>,
-    ) -> Option<Vec<Candle>> {
+    pub fn candles_by_time(&self, symbol_minutes: &SymbolMinutes, start_time: &DateTime<Utc>, end_time: &DateTime<Utc>) -> Option<Vec<Candle>> {
         let minutes = Decimal::from(symbol_minutes.minutes);
 
         #[allow(clippy::suspicious_else_formatting)]
@@ -220,9 +210,7 @@ pub mod tests {
         let start_time = end_time - Duration::days(30);
         let repo = Repository::new().unwrap();
         let symbol_minutes = SymbolMinutes::new("BTCUSDT", &15);
-        let candles = repo
-            .candles_by_time(&symbol_minutes, &start_time, &end_time)
-            .unwrap_or_default();
+        let candles = repo.candles_by_time(&symbol_minutes, &start_time, &end_time).unwrap_or_default();
 
         println!("Found candles:");
         for candle in candles.iter() {

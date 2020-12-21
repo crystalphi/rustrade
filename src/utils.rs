@@ -1,4 +1,4 @@
-use std::{cmp, str::FromStr};
+use std::str::FromStr;
 
 use binance::model::KlineSummary;
 use chrono::{DateTime, Duration, NaiveDateTime, TimeZone, Utc};

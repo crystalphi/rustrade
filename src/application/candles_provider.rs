@@ -1,5 +1,8 @@
 use crate::{
-    candles_range::candles_to_ranges_missing, config::selection::Selection, exchange::Exchange, model::candle::Candle,
+    candles_range::candles_to_ranges_missing,
+    config::selection::Selection,
+    exchange::Exchange,
+    model::{candle::Candle, open_close::OpenClose},
     repository::Repository,
 };
 use chrono::{Duration, Utc};
@@ -20,12 +23,10 @@ impl<'a> CandlesProvider<'a> {
         info!("Initializing import");
 
         // Normalize default start/end date time
-        let start_time = &selection
-            .candles_selection
-            .start_time
-            .unwrap_or_else(|| Utc::now() - Duration::days(180));
-
+        let start_time = &selection.candles_selection.start_time.unwrap_or_else(|| Utc::now() - Duration::days(180));
         let end_time = &selection.candles_selection.end_time.unwrap_or_else(Utc::now);
+
+        let minutes = &selection.candles_selection.symbol_minutes.minutes;
 
         // Get candles from repository
         let mut candles = self
@@ -33,11 +34,14 @@ impl<'a> CandlesProvider<'a> {
             .candles_by_time(&selection.candles_selection.symbol_minutes, &start_time, &end_time)
             .unwrap_or_default();
 
+        let start_time = OpenClose::from_date(start_time, minutes);
+        let end_time = OpenClose::from_date(end_time, minutes);
+
         loop {
             // Get ranges missing
             let ranges_missing = candles_to_ranges_missing(
-                start_time,
-                end_time,
+                &start_time,
+                &end_time,
                 &selection.candles_selection.symbol_minutes.minutes,
                 candles.iter().collect::<Vec<_>>().as_slice(),
             )?;
@@ -52,8 +56,8 @@ impl<'a> CandlesProvider<'a> {
 
                 let mut candles_exch = self.exchange.candles(
                     &selection.candles_selection.symbol_minutes,
-                    &Some(range_missing.0),
-                    &Some(range_missing.1),
+                    &Some(range_missing.0.open(minutes)),
+                    &Some(range_missing.1.open(minutes)),
                 )?;
 
                 // Save news candles on repository

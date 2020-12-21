@@ -30,12 +30,7 @@ impl Exchange {
         Binance::new(Some(self.api_key.clone()), Some(self.secret_key.clone()))
     }
 
-    pub fn candles(
-        &self,
-        symbol_minutes: &SymbolMinutes,
-        start_time: &Option<DateTime<Utc>>,
-        end_time: &Option<DateTime<Utc>>,
-    ) -> anyhow::Result<Vec<Candle>> {
+    pub fn candles(&self, symbol_minutes: &SymbolMinutes, start_time: &Option<DateTime<Utc>>, end_time: &Option<DateTime<Utc>>) -> anyhow::Result<Vec<Candle>> {
         let mut candles = Vec::new();
 
         let start_time = start_time.map(|d| datetime_to_timestamp(&d));
@@ -54,8 +49,7 @@ impl Exchange {
                 match answer {
                     binance::model::KlineSummaries::AllKlineSummaries(summaries) => {
                         for summary in summaries {
-                            let candle =
-                                kline_to_candle(&summary, &symbol_minutes.symbol, symbol_minutes.minutes, &0u32.into());
+                            let candle = kline_to_candle(&summary, &symbol_minutes.symbol, symbol_minutes.minutes, &0u32.into());
                             info!("{}", iformat!("exchange: {candle}"));
                             candles.push(candle);
                         }
