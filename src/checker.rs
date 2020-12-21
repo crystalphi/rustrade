@@ -5,7 +5,12 @@ use ifmt::iformat;
 use log::info;
 use rust_decimal_macros::dec;
 
-use crate::{config::symbol_minutes::SymbolMinutes, exchange::Exchange, repository::Repository, utils::inconsistent_candles};
+use crate::{
+    config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes},
+    exchange::Exchange,
+    repository::Repository,
+    utils::inconsistent_candles,
+};
 
 pub struct Checker<'a> {
     repo: &'a Repository,
@@ -64,16 +69,10 @@ impl<'a> Checker<'a> {
         Ok(())
     }
 
-    pub fn check_inconsist(&self) {
+    pub fn check_inconsist(&self, repo: &Repository, selection: &CandlesSelection) {
         let start = Instant::now();
-        let mut end_time = Utc::now();
-        let mut start_time = end_time - Duration::days(180);
-        let repo = Repository::new().unwrap();
-
-        let range = repo.ranges_symbol_minutes(&self.symbol_minutes);
-        start_time = range.0.unwrap_or(start_time);
-        end_time = range.1.unwrap_or(end_time);
-
+        let start_time = selection.start_time.unwrap();
+        let end_time = selection.end_time.unwrap();
         info!("{}", iformat!("Check consistent: {self.symbol_minutes:?} {start_time:?} {end_time:?}"));
 
         let candles = repo.candles_by_time(&self.symbol_minutes, &start_time, &end_time).unwrap_or_default();

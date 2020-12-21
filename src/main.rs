@@ -78,7 +78,7 @@ async fn main() -> anyhow::Result<()> {
 
     match opt.command {
         Command::Check {} => {
-            synchronizer.check_inconsist();
+            synchronizer.check_inconsist(&repo, &candles_selection);
         }
         Command::Sync {} => {
             synchronizer.synchronize().unwrap();
@@ -94,7 +94,7 @@ async fn main() -> anyhow::Result<()> {
             read_stream(Application::new(&repo, &exchange, &synchronizer, &candles_selection));
         }
     };
-
+    info!("Exiting program");
     //assert_e!(row.0, 150);
     // https://github.com/launchbadge/sqlx/blob/master/examples/postgres/todos/src/main.rs
 
@@ -103,10 +103,7 @@ async fn main() -> anyhow::Result<()> {
 
 fn plot(repo: &Repository, candles_selection: &CandlesSelection) {
     let start = Instant::now();
-    let symbol_minutes = SymbolMinutes::new(
-        &candles_selection.symbol_minutes.symbol,
-        &candles_selection.symbol_minutes.minutes,
-    );
+    let symbol_minutes = SymbolMinutes::new(&candles_selection.symbol_minutes.symbol, &candles_selection.symbol_minutes.minutes);
     let candles = repo.candles_default(&symbol_minutes);
 
     info!("{}", iformat!("Loading {start.elapsed():?}"));
@@ -117,14 +114,7 @@ fn plot(repo: &Repository, candles_selection: &CandlesSelection) {
     let macd_tac = MacdTac::new(candles_ref.as_slice());
 
     let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
-    plot_candles(
-        &candles_selection.symbol_minutes,
-        &candles_ref,
-        &pivots,
-        &macd_tac,
-        "out/stock.png",
-    )
-    .unwrap();
+    plot_candles(&candles_selection.symbol_minutes, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
 
     iprintln!("Plotting {start.elapsed():?}");
 }

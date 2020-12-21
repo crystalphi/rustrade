@@ -1,5 +1,5 @@
 use super::open_close::OpenClose;
-use crate::utils::{datetime_to_str, fdec, str_to_datetime};
+use crate::utils::{datetime_to_str, fdec, str_to_datetime, time_to_str};
 use chrono::{DateTime, Utc};
 use ifmt::iwrite;
 use rust_decimal::Decimal;
@@ -42,7 +42,7 @@ impl Candle {
 
 impl Display for Candle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let close_time_fmt = datetime_to_str(&self.close_time);
+        let close_time_fmt = time_to_str(&self.close_time);
         iwrite!(f, "{self.symbol} [{self.minutes} {self.open_time} {close_time_fmt}] {self.close}")
     }
 }

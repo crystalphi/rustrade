@@ -128,13 +128,6 @@ pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges:
             bail!(message);
         }
 
-        // if start == end {
-        //     let message = format!("Attempt to add equal range {}", start);
-        //     error!("{}, added invert_ranges({}):", message, inverted_ranges.len());
-        //     inverted_ranges.iter().for_each(|r| error!("{:?}", r));
-
-        //     bail!(message);
-        // }
         if start != end {
             inverted_ranges.push((start, end));
         }
@@ -142,17 +135,22 @@ pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges:
     };
     let mut inverted_ranges = Vec::new();
     let duration = Duration::minutes(*minutes as i64);
-    let mut prev_start_time = *start_time;
 
-    for range in ranges.ranges.iter() {
-        let range_dates = range.min_max_close()?;
-        let start = prev_start_time;
-        let end = range_dates.0 - duration;
-        prev_start_time = range_dates.1 + duration;
-        add_range(&ranges, &mut inverted_ranges, start, end)?;
+    let first_min = ranges.ranges.first().unwrap().min_max_close()?.0;
+    if start_time < &first_min {
+        add_range(&ranges, &mut inverted_ranges, *start_time, first_min - duration)?;
     }
 
-    add_range(&ranges, &mut inverted_ranges, prev_start_time, *end_time)?;
+    for i in 1..ranges.ranges.len() {
+        let prev = ranges.ranges.get(i - 1).unwrap().min_max_close()?.1 + duration;
+        let curr = ranges.ranges.get(i).unwrap().min_max_close()?.0 - duration;
+        add_range(&ranges, &mut inverted_ranges, prev, curr)?;
+    }
+
+    let end_max = ranges.ranges.last().unwrap().min_max_close()?.1;
+    if end_time > &end_max {
+        add_range(&ranges, &mut inverted_ranges, end_max + duration, *end_time)?;
+    }
 
     Ok(inverted_ranges)
 }
@@ -405,25 +403,15 @@ pub mod testes {
             println!("{} - {}", range.0, range.1);
         }
 
-        // assert_eq!(
-        //     *ranges_missing.get(0).unwrap(),
-        //     (str_open("2020-01-01 00:00:00"), str_open("2020-01-12 11:45:00")),
-        //     "1"
-        // );
+        assert_eq!(
+            *ranges_missing.get(0).unwrap(),
+            (str_open("2020-01-12 12:30:00"), str_open("2020-11-16 01:00:00"),),
+            "1"
+        );
         assert_eq!(
             *ranges_missing.get(1).unwrap(),
-            (str_open("2020-01-12 12:30:00"), str_open("2020-11-16 01:00:00"),),
+            (str_open("2020-11-16 01:30:00"), str_open("2020-11-20 11:00:00"),),
             "2"
         );
-        assert_eq!(
-            *ranges_missing.get(2).unwrap(),
-            (str_open("2020-11-16 01:30:00"), str_open("2020-11-20 11:00:00"),),
-            "3"
-        );
-        // assert_eq!(
-        //     *ranges_missing.get(3).unwrap(),
-        //     (str_open("2020-11-20 11:30:00"), str_open("2020-11-30 00:00:00"),),
-        //     "4"
-        // );
     }
 }

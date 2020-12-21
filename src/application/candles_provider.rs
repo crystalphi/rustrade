@@ -19,7 +19,7 @@ impl<'a> CandlesProvider<'a> {
         Self { exchange: exch, repo }
     }
 
-    pub fn candles_selection(&mut self, selection: Selection) -> anyhow::Result<Vec<Candle>> {
+    pub fn candles_selection(&mut self, selection: &Selection) -> anyhow::Result<Vec<Candle>> {
         info!("Initializing import");
 
         // Normalize default start/end date time
@@ -45,7 +45,7 @@ impl<'a> CandlesProvider<'a> {
                 &selection.candles_selection.symbol_minutes.minutes,
                 candles.iter().collect::<Vec<_>>().as_slice(),
             )?;
-
+            info!("Range {} {}. Missing candles: {}", start_time, end_time, ranges_missing.len());
             if ranges_missing.is_empty() {
                 break;
             }

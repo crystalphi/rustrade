@@ -14,6 +14,7 @@ use crate::{
 use super::{candles_provider::CandlesProvider, plot_selection::plot_from_selection};
 
 pub struct Application<'a> {
+    repo: &'a Repository,
     definition: ConfigDefinition,
     selection: Selection,
     candles_provider: CandlesProvider<'a>,
@@ -21,13 +22,9 @@ pub struct Application<'a> {
 }
 
 impl<'a> Application<'a> {
-    pub fn new(
-        repo: &'a Repository,
-        exchange: &'a Exchange,
-        synchronizer: &'a Checker<'a>,
-        candles_selection: &CandlesSelection,
-    ) -> Self {
+    pub fn new(repo: &'a Repository, exchange: &'a Exchange, synchronizer: &'a Checker<'a>, candles_selection: &'a CandlesSelection) -> Self {
         Application {
+            repo,
             synchronizer,
             candles_provider: CandlesProvider::new(repo, exchange),
             selection: Selection {
@@ -79,11 +76,11 @@ impl<'a> Application<'a> {
 
         let mut in_selection = false;
         let mut selection_buffer = String::from("");
-        loop {
+        'outer: loop {
             for line in Self::read_lines() {
                 if line == TERMINATE {
                     info!("Terminated!");
-                    break;
+                    break 'outer;
                 }
 
                 if line == GET_DEFINITION {
@@ -97,14 +94,14 @@ impl<'a> Application<'a> {
                 }
 
                 if line == SET_SELECTION {
-                    info!("set selection...");
+                    info!("Set selection...");
                     in_selection = true;
                     continue;
                 }
 
                 if line == END_SELECTION {
                     info!(
-                        "end selection... in_selection = {} selection_buffer.len() = {}",
+                        "End selection... in_selection = {} selection_buffer.len() = {}",
                         in_selection,
                         selection_buffer.len()
                     );
@@ -120,9 +117,9 @@ impl<'a> Application<'a> {
                 }
 
                 if line == IMPORT {
-                    info!("getting candles...");
-                    candles = self.candles_provider.candles_selection(self.selection.clone()).unwrap();
-                    info!("candles got");
+                    info!("Getting candles...");
+                    candles = self.candles_provider.candles_selection(&self.selection).unwrap();
+                    info!("Candles got");
                     continue;
                 }
 
@@ -130,13 +127,13 @@ impl<'a> Application<'a> {
                     info!("Plotting...");
                     let candles_ref = candles.iter().collect::<Vec<_>>();
                     plot_from_selection(&self.selection, candles_ref.as_slice());
-                    info!("plotted!");
+                    info!("Plotted!");
                     continue;
                 }
 
                 if line == CHECK {
                     info!("Checking...");
-                    self.synchronizer.check_inconsist();
+                    self.synchronizer.check_inconsist(&self.repo, &self.selection.candles_selection);
                     info!("Checked!");
                     continue;
                 }
