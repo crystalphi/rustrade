@@ -9,6 +9,14 @@
 ☐ Finish flow retrieving candles
 ☐ Gui interface
 
+missing:
+2020-10-11 10:00:00+00
+
+select * from candle 
+where open_time between '2020-10-11' and '2020-10-12'
+order by open_time
+
+
 Regra fibonnaci
 https://www.modalmais.com.br/blog/fibonacci#:~:text=No%20mercado%20financeiro%2C%20%C3%A9%20utilizada,%C3%A0%20soma%20dos%20dois%20anteriores.&text=Na%20an%C3%A1lise%20t%C3%A9cnica%20de%20investimentos,pontos%20de%20expans%C3%A3o%20ou%20retra%C3%A7%C3%A3o.
 
