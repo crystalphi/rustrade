@@ -128,9 +128,9 @@ pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges:
             bail!(message);
         }
 
-        if start != end {
-            inverted_ranges.push((start, end));
-        }
+        //if start != end {
+        inverted_ranges.push((start, end));
+        //}
         Ok(())
     };
     let mut inverted_ranges = Vec::new();
@@ -412,6 +412,26 @@ pub mod testes {
             *ranges_missing.get(1).unwrap(),
             (str_open("2020-11-16 01:30:00"), str_open("2020-11-20 11:00:00"),),
             "2"
+        );
+    }
+
+    #[test]
+    fn missing_candle_test() {
+        let candles = candles_test(&["2020-10-11 09:30:00", "2020-10-11 09:45:00", "2020-10-11 10:15:00", "2020-10-11 10:30:00"]);
+        let start_time = OpenClose::from_date(&candles.first().unwrap().open_time, &15);
+        let end_time = OpenClose::from_date(&candles.last().unwrap().open_time, &15);
+        let candles_ref = candles.iter().collect::<Vec<_>>();
+        let ranges_missing = candles_to_ranges_missing(&start_time, &end_time, &15, candles_ref.as_slice()).unwrap();
+
+        let missing_candle = OpenClose::from_str("2020-10-11 10:00:00", &15);
+
+        println!("ranges_missing ({}):", ranges_missing.len());
+        for range in ranges_missing.iter() {
+            println!("{} - {}", range.0, range.1);
+        }
+        assert_eq!(
+            (ranges_missing.first().unwrap().0, ranges_missing.first().unwrap().1),
+            (missing_candle, missing_candle)
         );
     }
 }

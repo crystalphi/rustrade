@@ -1,7 +1,7 @@
 use std::env;
 
 use binance::{api::Binance, futures::market::FuturesMarket};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
 use log::{error, info};
 
@@ -31,7 +31,18 @@ impl Exchange {
     }
 
     pub fn candles(&self, symbol_minutes: &SymbolMinutes, start_time: &Option<DateTime<Utc>>, end_time: &Option<DateTime<Utc>>) -> anyhow::Result<Vec<Candle>> {
+        let start_time = *start_time;
+        let mut end_time = *end_time;
+
         let mut candles = Vec::new();
+
+        if let Some(st) = start_time {
+            if let Some(et) = end_time {
+                if st == et {
+                    end_time = Some(et + Duration::seconds(1));
+                }
+            }
+        }
 
         let start_time = start_time.map(|d| datetime_to_timestamp(&d));
         let end_time = end_time.map(|d| datetime_to_timestamp(&d));

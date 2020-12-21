@@ -12,9 +12,17 @@
 missing:
 2020-10-11 10:00:00+00
 
+    1) Is this range in repo request?
+        yes 2020-10-01 00:00:00 UTC 2020-11-30 00:00:00 UTC
+    2) 
+
 select * from candle 
 where open_time between '2020-10-11' and '2020-10-12'
 order by open_time
+
+
+Aggregate trades list
+https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#compressedaggregate-trades-list
 
 
 Regra fibonnaci
