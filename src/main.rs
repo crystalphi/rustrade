@@ -9,11 +9,11 @@ pub mod repository;
 pub mod tac_plotters;
 pub mod technicals;
 pub mod utils;
-use application::app::Application;
+use application::{app::Application, candles_provider::CandlesProvider};
 use checker::Checker;
 use config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes};
 use exchange::Exchange;
-use ifmt::{iformat, iprintln};
+use ifmt::iformat;
 use log::{info, LevelFilter};
 use repository::Repository;
 use std::time::Instant;
@@ -33,6 +33,8 @@ enum Command {
     Fix {},
     /// List  
     List {},
+    /// Import from excange
+    Import {},
     /// Plot graph
     Plot {},
     /// Interative stream
@@ -89,10 +91,11 @@ async fn main() -> anyhow::Result<()> {
         Command::List {} => {
             repo.list_candles(&opt.symbol, &opt.minutes, &10);
         }
-        Command::Plot {} => plot(&repo, &candles_selection),
+        Command::Plot {} => plot(&repo, &exchange, &candles_selection),
         Command::Stream {} => {
             read_stream(Application::new(&repo, &exchange, &synchronizer, &candles_selection));
         }
+        Command::Import {} => {}
     };
     info!("Exiting program");
     //assert_e!(row.0, 150);
@@ -101,22 +104,29 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn plot(repo: &Repository, candles_selection: &CandlesSelection) {
+fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelection) {
     let start = Instant::now();
-    let symbol_minutes = SymbolMinutes::new(&candles_selection.symbol_minutes.symbol, &candles_selection.symbol_minutes.minutes);
-    let candles = repo.candles_default(&symbol_minutes);
+    info!("Loading...");
+    let mut candles_provider = CandlesProvider::new(repo, exchange);
 
-    info!("{}", iformat!("Loading {start.elapsed():?}"));
+    let selection = Application::selection_factory(candles_selection.clone());
+
+    let candles = candles_provider.candles_selection(&selection).unwrap();
+    let candles = candles.iter().collect::<Vec<_>>();
+    let candles = candles.as_slice();
+
+    info!("{}", iformat!("Loaded {start.elapsed():?}"));
+
     let start = Instant::now();
+    info!("Tacing...");
+    let macd_tac = MacdTac::new(candles);
+    let pivots = PivotTac::new(candles).pivots();
+    info!("{}", iformat!("Taced {start.elapsed():?}"));
 
-    let candles_ref: Vec<_> = candles.iter().collect();
-
-    let macd_tac = MacdTac::new(candles_ref.as_slice());
-
-    let pivots = PivotTac::new(candles_ref.as_slice()).pivots();
-    plot_candles(&candles_selection.symbol_minutes, &candles_ref, &pivots, &macd_tac, "out/stock.png").unwrap();
-
-    iprintln!("Plotting {start.elapsed():?}");
+    let start = Instant::now();
+    info!("Plotting...");
+    plot_candles(&candles_selection.symbol_minutes, &candles, &pivots, &macd_tac, "out/stock.png").unwrap();
+    info!("{}", iformat!("Plotted {start.elapsed():?}"));
 }
 
 fn read_stream(mut app: Application) {

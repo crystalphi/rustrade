@@ -1,8 +1,6 @@
 use super::technical::Technical;
 use crate::{config::definition::TacDefinition, model::candle::Candle};
 use chrono::{DateTime, Utc};
-use ifmt::iformat;
-use log::debug;
 use rust_decimal::Decimal;
 use std::{cmp::Ordering, collections::HashSet};
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash)]
@@ -26,11 +24,7 @@ pub struct Pivot<'a> {
 
 impl<'a> Pivot<'a> {
     pub fn new(type_p: PivotType, close_time: &'a DateTime<Utc>, price: &'a Decimal) -> Self {
-        Self {
-            close_time,
-            type_p,
-            price,
-        }
+        Self { close_time, type_p, price }
     }
 }
 
@@ -77,23 +71,11 @@ impl<'a> PivotTac<'a> {
 
             let l_min = self.candles[i..i + 7].iter().map(|c| c.low).min().unwrap_or(pivot.low);
 
-            let l_max = self.candles[i..i + 7]
-                .iter()
-                .map(|c| c.high)
-                .max()
-                .unwrap_or(pivot.high);
+            let l_max = self.candles[i..i + 7].iter().map(|c| c.high).max().unwrap_or(pivot.high);
 
-            let r_min = self.candles[i + 8..i + 15]
-                .iter()
-                .map(|c| c.low)
-                .min()
-                .unwrap_or(pivot.low);
+            let r_min = self.candles[i + 8..i + 15].iter().map(|c| c.low).min().unwrap_or(pivot.low);
 
-            let r_max = self.candles[i + 8..i + 15]
-                .iter()
-                .map(|c| c.high)
-                .max()
-                .unwrap_or(pivot.high);
+            let r_max = self.candles[i + 8..i + 15].iter().map(|c| c.high).max().unwrap_or(pivot.high);
 
             if pivot.low < l_min && pivot.low < r_min {
                 result.push(Pivot::new(PivotType::Low, &pivot.close_time, &pivot.low));
@@ -124,14 +106,14 @@ fn normalize_pivots<'a>(pivots: &mut Vec<Pivot<'a>>) {
         match pivots_iter.next() {
             None => break,
             Some(current) => {
-                debug!("{}", iformat!("pivots {current:?}"));
+                //debug!("{}", iformat!("pivots {current:?}"));
                 if current.type_p == previous.type_p {
                     if current.type_p == PivotType::Low {
                         delete.insert(max_price(previous, current));
                     } else {
                         delete.insert(min_price(previous, current));
                     }
-                    debug!(" *");
+                    //debug!(" *");
                 }
                 previous = current;
             }
@@ -388,9 +370,7 @@ pub mod tests {
             volume: dec!(100.0),
         };
 
-        let candles = [
-            &c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16, &c17,
-        ];
+        let candles = [&c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16, &c17];
 
         let pivot_tac = PivotTac::new(&candles);
 

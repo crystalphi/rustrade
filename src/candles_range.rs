@@ -155,18 +155,6 @@ pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges:
     Ok(inverted_ranges)
 }
 
-fn minutes_close_trunc(start_time: &DateTime<Utc>, minutes: &u32) -> DateTime<Utc> {
-    let mut start_time = *start_time;
-
-    if start_time.second() == 59 {
-        start_time = start_time + Duration::seconds(1);
-    };
-    let minute = start_time.minute() - (start_time.minute() % minutes);
-    start_time = start_time.with_minute(minute).unwrap();
-    start_time = start_time - Duration::seconds(1);
-    start_time
-}
-
 pub fn minutes_open_trunc(start_time: &DateTime<Utc>, minutes: &u32) -> DateTime<Utc> {
     let mut start_time = *start_time;
     let minute = start_time.minute() - (start_time.minute() % minutes);
@@ -315,23 +303,6 @@ pub mod testes {
             (str_close("2020-11-16 01:44:59"), str_close("2020-11-20 11:14:59"))
         );
         assert_eq!(*inverted_ranges.get(3).unwrap(), (str_close("2020-11-20 11:44:59"), end_time));
-    }
-
-    #[test]
-    fn minutes_close_trunc_test() {
-        let truncated = minutes_close_trunc(&str_d("2020-01-01 00:00:00"), &15);
-        assert_eq!(truncated, str_d("2019-12-31 23:59:59"));
-
-        let truncated = minutes_close_trunc(&str_d("2020-01-01 00:15:00"), &15);
-        assert_eq!(truncated, str_d("2020-01-01 00:14:59"));
-
-        let truncated = minutes_close_trunc(&str_d("2020-01-01 00:20:00"), &15);
-        assert_eq!(truncated, str_d("2020-01-01 00:14:59"));
-
-        let truncated = minutes_close_trunc(&str_d("2020-01-01 00:31:00"), &15);
-        assert_eq!(truncated, str_d("2020-01-01 00:29:59"));
-
-        println!("{}", truncated);
     }
 
     #[test]

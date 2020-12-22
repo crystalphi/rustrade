@@ -8,6 +8,11 @@
 ☐ Delete last candle from repo before reinsert
 ☐ Finish flow retrieving candles
 ☐ Gui interface
+☐ Create load command (load from database without read from expo)
+☐ There is a bug when import a single candle/range, try delete 2020-10-11 10:00:00+00 candle then run Import
+☐ Normalize App x Stream x Main
+☐ Not working minutes 60 from Exchange
+☐ Slow 3s to plot 14 days 15 m
 
 missing:
 2020-10-11 10:00:00+00
