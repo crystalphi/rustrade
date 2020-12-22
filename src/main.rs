@@ -2,13 +2,14 @@ pub mod analyzers;
 pub mod application;
 pub mod candles_range;
 pub mod checker;
-pub mod config;
-pub mod exchange;
-pub mod model;
-pub mod repository;
-pub mod tac_plotters;
-pub mod technicals;
-pub mod utils;
+mod config;
+mod exchange;
+mod model;
+mod repository;
+mod strategy;
+mod tac_plotters;
+mod technicals;
+mod utils;
 use application::{app::Application, candles_provider::CandlesProvider};
 use checker::Checker;
 use config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes};
@@ -17,11 +18,11 @@ use ifmt::iformat;
 use log::{info, LevelFilter};
 use repository::Repository;
 use std::time::Instant;
+use strategy::pivots_triangle::pivots_triangle;
 use structopt::StructOpt;
 use tac_plotters::plotter::plot_candles;
 use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac};
 use utils::str_to_datetime;
-
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Commands")]
 enum Command {
@@ -37,6 +38,8 @@ enum Command {
     Import {},
     /// Plot graph
     Plot {},
+    /// Triangle
+    Triangle {},
     /// Interative stream
     Stream {},
 }
@@ -96,6 +99,7 @@ async fn main() -> anyhow::Result<()> {
             read_stream(Application::new(&repo, &exchange, &synchronizer, &candles_selection));
         }
         Command::Import {} => {}
+        Command::Triangle {} => triangle(&repo, &exchange, &candles_selection),
     };
     info!("Exiting program");
     //assert_e!(row.0, 150);
@@ -108,13 +112,10 @@ fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelec
     let start = Instant::now();
     info!("Loading...");
     let mut candles_provider = CandlesProvider::new(repo, exchange);
-
     let selection = Application::selection_factory(candles_selection.clone());
-
     let candles = candles_provider.candles_selection(&selection).unwrap();
     let candles = candles.iter().collect::<Vec<_>>();
     let candles = candles.as_slice();
-
     info!("{}", iformat!("Loaded {start.elapsed():?}"));
 
     let start = Instant::now();
@@ -131,4 +132,18 @@ fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelec
 
 fn read_stream(mut app: Application) {
     app.run_stream();
+}
+
+fn triangle(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelection) {
+    let start = Instant::now();
+    info!("Loading...");
+    let mut candles_provider = CandlesProvider::new(repo, exchange);
+    let selection = Application::selection_factory(candles_selection.clone());
+    let candles = candles_provider.candles_selection(&selection).unwrap();
+    let candles = candles.iter().collect::<Vec<_>>();
+    let candles = candles.as_slice();
+    info!("{}", iformat!("Loaded {start.elapsed():?}"));
+
+    let pivots = PivotTac::new(candles).pivots();
+    pivots_triangle(&pivots);
 }
