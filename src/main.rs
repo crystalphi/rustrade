@@ -145,5 +145,5 @@ fn triangle(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesS
     info!("{}", iformat!("Loaded {start.elapsed():?}"));
 
     let pivots = PivotTac::new(candles).pivots();
-    pivots_triangle(&pivots);
+    pivots_triangle(&pivots, &candles_selection.symbol_minutes.minutes);
 }

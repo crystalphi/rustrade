@@ -11,23 +11,13 @@ pub struct CandlesSelection {
 }
 
 impl CandlesSelection {
-    pub fn new(
-        symbol: &str,
-        minutes: &u32,
-        start_time: Option<&DateTime<Utc>>,
-        end_time: Option<&DateTime<Utc>>,
-    ) -> Self {
+    pub fn new(symbol: &str, minutes: &u32, start_time: Option<&DateTime<Utc>>, end_time: Option<&DateTime<Utc>>) -> Self {
         Self {
             symbol_minutes: SymbolMinutes::new(symbol, minutes),
             start_time: start_time.map(|s| s.to_owned()),
             end_time: end_time.map(|s| s.to_owned()),
         }
     }
-}
-
-pub struct DatesSelection {
-    pub start_time: Option<String>,
-    pub end_time: Option<String>,
 }
 
 mod my_date_format {

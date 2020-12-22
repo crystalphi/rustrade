@@ -107,6 +107,12 @@ impl OpenClose {
         OpenClose::OpenClose(open, close)
     }
 
+    pub fn from_date_close(close: &DateTime<Utc>, minutes: &u32) -> OpenClose {
+        let close = *close;
+        let open = close + Duration::seconds(1) - Duration::minutes(*minutes as i64);
+        OpenClose::OpenClose(open, close)
+    }
+
     pub fn from_str(date_time: &str, minutes: &u32) -> OpenClose {
         let open = minutes_open_trunc(&str_d(date_time), minutes);
         let close = open + Duration::minutes(*minutes as i64) - Duration::seconds(1);
