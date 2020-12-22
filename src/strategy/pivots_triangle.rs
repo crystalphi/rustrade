@@ -1,6 +1,6 @@
 use crate::technicals::pivots::{Pivot, PivotType};
 
-pub fn pivots_triangle<'a>(pivots: &Vec<Pivot<'a>>) {
+pub fn pivots_triangle<'a>(pivots: &[Pivot<'a>]) {
     for i in 0..pivots.len() - 6 {
         let p = [
             pivots.get(i).unwrap(),

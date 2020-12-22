@@ -108,7 +108,7 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
 
     if !error.is_empty() {
         error!("{}", error);
-        candles.iter().for_each(|c| error!("{}", c.to_string()));
+        //candles.iter().for_each(|c| error!("candles_ranges: {}", c.to_string()));
         bail!(error);
     }
 
@@ -120,10 +120,13 @@ pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges:
         if start > end {
             let message = format!("Attempt to add range start {} > end {}", start, end);
             error!("{}, added invert_ranges({}):", message, inverted_ranges.len());
-            inverted_ranges.iter().for_each(|r| error!("{:?}", r));
+            inverted_ranges.iter().for_each(|r| error!("invert_ranges_close: {:?}", r));
 
             error!("Ranges ({}):", ranges.ranges.len());
-            ranges.ranges.iter().for_each(|r| error!("{:?}", r.min_max_close().unwrap()));
+            ranges
+                .ranges
+                .iter()
+                .for_each(|r| error!("invert_ranges ranges: {:?}", r.min_max_close().unwrap()));
 
             bail!(message);
         }
@@ -181,7 +184,11 @@ pub fn candles_to_ranges_missing(
     // let start_time = minutes_close_trunc(start_time, minutes);
     // let end_time = minutes_close_trunc(end_time, minutes);
 
-    let candles_ranges = candles_ranges(candles, minutes)?;
+    let candles_ranges = match candles_ranges(candles, minutes) {
+        Ok(candles) => candles,
+        Err(e) => bail!("candles_to_ranges_missing: {} {} {}", start_time, end_time, e),
+    };
+
     match invert_ranges_close(&start_time, &end_time, &candles_ranges, minutes) {
         Ok(result) => Ok(result),
         Err(e) => {
@@ -192,7 +199,7 @@ pub fn candles_to_ranges_missing(
                 candles_ranges.ranges.len(),
             );
             candles_ranges.ranges.iter().for_each(|c| error!("{:?}", c.min_max_close().unwrap()));
-            Err(anyhow!("{}", e))
+            Err(anyhow!("candles_to_ranges_missing: {} {} {}", start_time, end_time, e))
         }
     }
 }
