@@ -64,6 +64,8 @@ impl<'a> CandlesProvider<'a> {
                 self.repo.add_candles(&mut candles_exch)?;
                 // Insert candles on buffer
                 candles.append(&mut candles_exch);
+
+                candles.sort();
             }
         }
         info!("Finished import");
