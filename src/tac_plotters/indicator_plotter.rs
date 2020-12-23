@@ -15,15 +15,15 @@ pub trait IndicatorPlotter {
         to_date: &DateTime<Utc>,
         upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
         lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+    ) -> anyhow::Result<()>;
 }
 
 pub trait PlotterIndicatorContext {
     fn plot(
         &self,
-        chart_context: &mut ChartContext<
-            BitMapBackend<RGBPixel>,
-            Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>,
-        >,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+        from_date: &DateTime<Utc>,
+        to_date: &DateTime<Utc>,
+
+        chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
+    ) -> anyhow::Result<()>;
 }

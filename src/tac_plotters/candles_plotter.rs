@@ -21,19 +21,15 @@ impl<'a> CandlePlotter<'a> {
 impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
     fn plot(
         &self,
-        chart_context: &mut ChartContext<
-            BitMapBackend<RGBPixel>,
-            Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>,
-        >,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+        from_date: &DateTime<Utc>,
+        to_date: &DateTime<Utc>,
+
+        chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
+    ) -> anyhow::Result<()> {
         let red = RGBColor(164, 16, 64);
         let green = RGBColor(16, 196, 64);
 
-        chart_context
-            .configure_mesh()
-            .x_labels(12)
-            .light_line_style(&WHITE)
-            .draw()?;
+        chart_context.configure_mesh().x_labels(12).light_line_style(&WHITE).draw()?;
 
         let candle_series = self.candles.iter().map(|x| {
             CandleStick::new(

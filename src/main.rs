@@ -10,7 +10,7 @@ mod strategy;
 mod tac_plotters;
 mod technicals;
 mod utils;
-use application::{app::Application, candles_provider::CandlesProvider};
+use application::{app::Application, candles_provider::CandlesProvider, streamer::Streamer};
 use checker::Checker;
 use config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes};
 use exchange::Exchange;
@@ -96,10 +96,15 @@ async fn main() -> anyhow::Result<()> {
         }
         Command::Plot {} => plot(&repo, &exchange, &candles_selection),
         Command::Stream {} => {
-            read_stream(Application::new(&repo, &exchange, &synchronizer, &candles_selection));
+            let mut app = Application::new(&repo, &exchange, &synchronizer, &candles_selection);
+            let mut streamer = Streamer::new(&mut app);
+            streamer.run();
         }
         Command::Import {} => {}
-        Command::Triangle {} => triangle(&repo, &exchange, &candles_selection),
+        Command::Triangle {} => {
+            let mut app = Application::new(&repo, &exchange, &synchronizer, &candles_selection);
+            app.plot_triangles();
+        }
     };
     info!("Exiting program");
     //assert_e!(row.0, 150);
@@ -126,24 +131,15 @@ fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelec
 
     let start = Instant::now();
     info!("Plotting...");
-    plot_candles(&candles_selection.symbol_minutes, &candles, &pivots, &macd_tac, "out/stock.png").unwrap();
+    plot_candles(
+        &candles_selection.start_time.unwrap(),
+        &candles_selection.end_time.unwrap(),
+        &candles_selection.symbol_minutes,
+        &candles,
+        &pivots,
+        &macd_tac,
+        "out/stock.png",
+    )
+    .unwrap();
     info!("{}", iformat!("Plotted {start.elapsed():?}"));
-}
-
-fn read_stream(mut app: Application) {
-    app.run_stream();
-}
-
-fn triangle(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelection) {
-    let start = Instant::now();
-    info!("Loading...");
-    let mut candles_provider = CandlesProvider::new(repo, exchange);
-    let selection = Application::selection_factory(candles_selection.clone());
-    let candles = candles_provider.candles_selection(&selection).unwrap();
-    let candles = candles.iter().collect::<Vec<_>>();
-    let candles = candles.as_slice();
-    info!("{}", iformat!("Loaded {start.elapsed():?}"));
-
-    let pivots = PivotTac::new(candles).pivots();
-    pivots_triangle(&pivots, &candles_selection.symbol_minutes.minutes);
 }

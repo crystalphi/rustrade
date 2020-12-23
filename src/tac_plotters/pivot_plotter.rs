@@ -25,11 +25,11 @@ impl<'a> PivotPlotter<'a> {
 impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
     fn plot(
         &self,
-        chart_context: &mut ChartContext<
-            BitMapBackend<RGBPixel>,
-            Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>,
-        >,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+        from_date: &DateTime<Utc>,
+        to_date: &DateTime<Utc>,
+
+        chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
+    ) -> anyhow::Result<()> {
         let red = RGBColor(164, 16, 64);
         let green = RGBColor(16, 196, 64);
 

@@ -62,6 +62,10 @@ pub fn datetime_to_str(date_time: &DateTime<Utc>) -> String {
     date_time.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
+pub fn datetime_to_filename(date_time: &DateTime<Utc>) -> String {
+    date_time.format("%Y-%m-%d_%H-%M-%S").to_string()
+}
+
 pub fn time_to_str(date_time: &DateTime<Utc>) -> String {
     date_time.format("%H:%M:%S").to_string()
 }

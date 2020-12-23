@@ -11,20 +11,30 @@ use rust_decimal_macros::dec;
 use std::path::Path;
 
 use super::{
-    candles_plotter::CandlePlotter, indicator_plotter::IndicatorPlotter, indicator_plotter::PlotterIndicatorContext,
-    macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter,
+    candles_plotter::CandlePlotter, indicator_plotter::IndicatorPlotter, indicator_plotter::PlotterIndicatorContext, macd_plotter::MacdPlotter,
+    pivot_plotter::PivotPlotter,
 };
 
 pub struct Plotter<'a> {
-    candles: &'a [&'a Candle],
+    from_date: DateTime<Utc>,
+    to_date: DateTime<Utc>,
+    candles: Vec<&'a Candle>,
     plotters_ind: Vec<&'a dyn IndicatorPlotter>,
     plotters_ind_upper: Vec<&'a dyn PlotterIndicatorContext>,
     plotters_ind_lower: Vec<&'a dyn PlotterIndicatorContext>,
 }
 
 impl<'a> Plotter<'a> {
-    pub fn new(candles: &'a [&'a Candle]) -> Self {
+    pub fn new(from_date: DateTime<Utc>, to_date: DateTime<Utc>, candles: &'a [&'a Candle]) -> Self {
+        let candles = candles
+            .iter()
+            .filter(|c| c.open_time >= from_date && c.open_time <= to_date)
+            .copied()
+            .collect::<Vec<&Candle>>();
+
         Plotter {
+            from_date,
+            to_date,
             candles,
             plotters_ind: vec![],
             plotters_ind_upper: vec![],
@@ -44,13 +54,10 @@ impl<'a> Plotter<'a> {
         self.plotters_ind_lower.push(plotter_ind);
     }
 
-    pub fn plot<P: AsRef<Path>>(
-        &self,
-        symbol_minutes: &SymbolMinutes,
-        image_path: P,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn plot<P: AsRef<Path>>(&self, symbol_minutes: &SymbolMinutes, image_path: P) -> anyhow::Result<()> {
         let (min_price, max_price) = prices_range_from_candles(&self.candles);
-        let (from_date, to_date) = date_time_range_from_candles(&self.candles, &symbol_minutes.minutes);
+
+        //let (from_date, to_date) = date_time_range_from_candles(&self.candles, &symbol_minutes.minutes);
 
         let (upper, lower) = {
             let root = BitMapBackend::new(&image_path, (1920, 1080)).into_drawing_area();
@@ -66,26 +73,19 @@ impl<'a> Plotter<'a> {
             .set_label_area_size(LabelAreaPosition::Right, 80)
             .y_label_area_size(80)
             .x_label_area_size(30)
-            .caption(
-                iformat!("{symbol_minutes.symbol} price"),
-                ("sans-serif", 20.0).into_font(),
-            )
-            .build_cartesian_2d(from_date..to_date, min_price..max_price)?;
+            .caption(iformat!("{symbol_minutes.symbol} price"), ("sans-serif", 20.0).into_font())
+            .build_cartesian_2d(self.from_date..self.to_date, min_price..max_price)?;
 
-        chart_context_upper
-            .configure_mesh()
-            .x_labels(12)
-            .light_line_style(&WHITE)
-            .draw()?;
+        chart_context_upper.configure_mesh().x_labels(12).light_line_style(&WHITE).draw()?;
 
         for plotter_upper_ind in self.plotters_ind_upper.iter() {
-            plotter_upper_ind.plot(&mut chart_context_upper)?;
+            plotter_upper_ind.plot(&self.from_date, &self.to_date, &mut chart_context_upper)?;
         }
 
         lower.fill(&WHITE)?;
 
         for plotter_ind in self.plotters_ind.iter() {
-            plotter_ind.plot(&symbol_minutes, &from_date, &to_date, &upper, &lower)?;
+            plotter_ind.plot(&symbol_minutes, &self.from_date, &self.to_date, &upper, &lower)?;
         }
 
         // for plotters_ind_upper_ind in self.plotters_ind_lower.iter() {
@@ -109,13 +109,15 @@ pub fn prices_range_from_candles(candles: &[&Candle]) -> (Decimal, Decimal) {
 }
 
 pub fn plot_candles<'a>(
+    from_date: &DateTime<Utc>,
+    to_date: &DateTime<Utc>,
     symbol_minutes: &SymbolMinutes,
     candles: &'a [&'a Candle],
     pivots: &'a [Pivot],
     macd_tac: &'a MacdTac,
     image_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut plotter = Plotter::new(candles);
+    let mut plotter = Plotter::new(*from_date, *to_date, candles);
     let candle_plotter = CandlePlotter::new(candles);
     let pivot_plotter = PivotPlotter::new(pivots);
     let macd_plotter = MacdPlotter::new(macd_tac);
@@ -128,127 +130,3 @@ pub fn plot_candles<'a>(
 
     Ok(())
 }
-
-// pub fn plot_candles(
-//     symbol: &str,
-//     minutes: &u32,
-//     candles: &[&Candle],
-//     pivots: &[Pivot],
-// ) -> Result<(), Box<dyn std::error::Error>> {
-//     let red = RGBColor(164, 16, 64);
-//     let green = RGBColor(16, 196, 64);
-
-//     let start = Instant::now();
-
-//     let (upper, lower) = {
-//         let root = BitMapBackend::new("out/stock.png", (1920, 1080)).into_drawing_area();
-//         root.split_vertically((80).percent())
-//     };
-//     let from_date = str_to_datetime(&candles[0].close_time) - Duration::minutes(*minutes as i64);
-
-//     let to_date = str_to_datetime(&candles[candles.len() - 1].close_time)
-//         + Duration::minutes(*minutes as i64);
-
-//     {
-//         upper.fill(&WHITE)?;
-
-//         let max_price = candles.iter().fold(dec!(0), |acc, x| acc.max(x.high));
-//         let min_price = candles.iter().fold(max_price, |acc, x| acc.min(x.low));
-
-//         let min_price = min_price.to_f32().unwrap();
-//         let max_price = max_price.to_f32().unwrap();
-
-//         let mut chart_context = ChartBuilder::on(&upper)
-//             .set_label_area_size(LabelAreaPosition::Left, 30)
-//             .set_label_area_size(LabelAreaPosition::Right, 80)
-//             .y_label_area_size(80)
-//             .x_label_area_size(30)
-//             .caption(iformat!("{symbol} price"), ("sans-serif", 20.0).into_font())
-//             .build_cartesian_2d(from_date..to_date, min_price..max_price)?;
-
-//         chart_context
-//             .configure_mesh()
-//             .x_labels(12)
-//             .light_line_style(&WHITE)
-//             .draw()?;
-
-//         let candle_series = candles.iter().map(|x| {
-//             CandleStick::new(
-//                 str_to_datetime(&x.close_time),
-//                 x.open.to_f32().unwrap(),
-//                 x.high.to_f32().unwrap(),
-//                 x.low.to_f32().unwrap(),
-//                 x.close.to_f32().unwrap(),
-//                 &green,
-//                 &red,
-//                 2,
-//             )
-//         });
-//         chart_context.draw_series(candle_series)?;
-
-//         let low_pivots = PointSeries::of_element(
-//             pivots
-//                 .iter()
-//                 .filter(|p| p.type_p == PivotType::Low)
-//                 .map(|c| (str_to_datetime(&c.close_time), c.price.to_f32().unwrap())),
-//             3,
-//             ShapeStyle::from(&red).filled(),
-//             &|coord, size, style| {
-//                 EmptyElement::at(coord) + Circle::new((0, 0), size, style)
-//                 //+ Text::new(format!("{:?}", coord), (0, 15), ("sans-serif", 15))
-//             },
-//         );
-//         chart_context.draw_series(low_pivots)?;
-
-//         let high_pivots = PointSeries::of_element(
-//             pivots
-//                 .iter()
-//                 .filter(|p| p.type_p == PivotType::High)
-//                 .map(|c| (str_to_datetime(&c.close_time), c.price.to_f32().unwrap())),
-//             3,
-//             ShapeStyle::from(&green).filled(),
-//             &|coord, size, style| {
-//                 EmptyElement::at(coord) + Circle::new((0, 0), size, style)
-//                 //+ Text::new(format!("{:?}", coord), (0, 15), ("sans-serif", 15))
-//             },
-//         );
-
-//         chart_context.draw_series(high_pivots)?;
-//     };
-
-//     {
-//         lower.fill(&WHITE)?;
-
-//         let max_macd = candles.iter().fold(0f64, |acc, t| acc.max(t.macd));
-//         let min_macd = candles.iter().fold(max_macd, |acc, t| acc.min(t.macd));
-//         let min_macd = min_macd.to_f32().unwrap();
-//         let max_macd = max_macd.to_f32().unwrap();
-
-//         iprintln!("min_macd: {min_macd} max_macd: {max_macd}");
-
-//         let mut cart_context = ChartBuilder::on(&lower)
-//             .set_label_area_size(LabelAreaPosition::Left, 30)
-//             .set_label_area_size(LabelAreaPosition::Right, 80)
-//             .y_label_area_size(80)
-//             .x_label_area_size(30)
-//             //   .caption(iformat!("{symbol} price"), ("sans-serif", 50.0).into_font())
-//             .build_cartesian_2d(from_date..to_date, min_macd..max_macd)?;
-
-//         cart_context
-//             .configure_mesh()
-//             .light_line_style(&WHITE)
-//             .draw()?;
-
-//         let macd_fast_series = LineSeries::new(
-//             candles
-//                 .iter()
-//                 .map(|t| (str_to_datetime(&t.candle.close_time), t.macd as f32)),
-//             &BLACK,
-//         );
-
-//         cart_context.draw_series(macd_fast_series)?;
-//     }
-//     //iprintln!("Plotting {macd_tacs.len()} pivots {pivots.len()} : {start.elapsed():?}");
-
-//     Ok(())
-// }

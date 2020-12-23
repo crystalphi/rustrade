@@ -3,7 +3,7 @@ use crate::{
     technicals::pivots::{Pivot, PivotType},
 };
 
-pub fn pivots_triangle<'a>(pivots: &[Pivot<'a>], minutes: &u32) -> Vec<OpenClose> {
+pub fn pivots_triangle<'a>(pivots: &[&Pivot<'a>], minutes: &u32) -> Vec<OpenClose> {
     let mut triangles = Vec::new();
     for i in 0..pivots.len() - 6 {
         let p = [

@@ -1,13 +1,13 @@
+use super::indicator_plotter::IndicatorPlotter;
 use crate::{config::symbol_minutes::SymbolMinutes, technicals::macd::macd_tac::MacdTac};
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
+use plotters::prelude::*;
 use plotters::{
     coord::Shift,
     prelude::{ChartBuilder, LabelAreaPosition, LineSeries},
     style::{BLACK, WHITE},
 };
-
-use super::indicator_plotter::IndicatorPlotter;
-use plotters::prelude::*;
 use plotters_bitmap::{self, bitmap_pixel::RGBPixel};
 pub struct MacdPlotter<'a> {
     macd_tac: &'a MacdTac<'a>,
@@ -27,18 +27,13 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
         to_date: &DateTime<Utc>,
         _upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
         lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> anyhow::Result<()> {
         let max_macd = self.macd_tac.macd.series.iter().fold(0f64, |acc, t| acc.max(t.value));
 
-        let min_macd = self
-            .macd_tac
-            .macd
-            .series
-            .iter()
-            .fold(max_macd, |acc, t| acc.min(t.value));
+        let min_macd = self.macd_tac.macd.series.iter().fold(max_macd, |acc, t| acc.min(t.value));
 
         if min_macd == 0. && max_macd == 0. {
-            return Err("Valores estão zerado!".into());
+            return Err(anyhow!("Valores estão zerado!"));
         }
 
         let mut cart_context_lower = ChartBuilder::on(&lower)
@@ -51,10 +46,7 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
 
         cart_context_lower.configure_mesh().light_line_style(&WHITE).draw()?;
 
-        let macd_fast_series = LineSeries::new(
-            self.macd_tac.macd.series.iter().map(|t| (*t.date_time, t.value)),
-            &BLACK,
-        );
+        let macd_fast_series = LineSeries::new(self.macd_tac.macd.series.iter().map(|t| (*t.date_time, t.value)), &BLACK);
 
         cart_context_lower.draw_series(macd_fast_series)?;
 
