@@ -78,30 +78,30 @@ async fn main() -> anyhow::Result<()> {
         Some(&str_to_datetime(&opt.end_time)),
     );
     let symbol_minutes = SymbolMinutes::new(&opt.symbol, &opt.minutes);
-    let synchronizer = Checker::new(&symbol_minutes, &repo, &exchange);
+    let checker = Checker::new(&symbol_minutes, &repo, &exchange);
 
     match opt.command {
         Command::Check {} => {
-            synchronizer.check_inconsist(&repo, &candles_selection);
+            checker.check_inconsist(&repo, &candles_selection);
         }
         Command::Sync {} => {
-            synchronizer.synchronize().unwrap();
+            checker.synchronize().unwrap();
         }
         Command::Fix {} => {
-            synchronizer.delete_inconsist();
+            checker.delete_inconsist();
         }
         Command::List {} => {
             repo.list_candles(&opt.symbol, &opt.minutes, &10);
         }
         Command::Plot {} => plot(&repo, &exchange, &candles_selection),
         Command::Stream {} => {
-            let mut app = Application::new(&repo, &exchange, &synchronizer, &candles_selection);
+            let mut app = Application::new(&repo, &exchange, &checker, &candles_selection);
             let mut streamer = Streamer::new(&mut app);
             streamer.run();
         }
         Command::Import {} => {}
         Command::Triangle {} => {
-            let mut app = Application::new(&repo, &exchange, &synchronizer, &candles_selection);
+            let mut app = Application::new(&repo, &exchange, &checker, &candles_selection);
             app.plot_triangles();
         }
     };

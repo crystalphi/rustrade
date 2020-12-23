@@ -6,6 +6,8 @@
 ✔ Assume default candles selection from struct ops @done(20-12-21 23:23)
 ✔ Find cause of integrity problem @done(20-12-21 23:23)
 ✔ Finish flow retrieving candles @done(20-12-21 23:24)
+☐ Resolve confusion checker x synchronizer
+☐ Appers not working 30 min
 ☐ Apply candles selection in all commands
 ☐ Delete last candle from repo before reinsert
 ☐ Gui interface
