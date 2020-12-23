@@ -9,7 +9,6 @@ use crate::{
     repository::Repository,
     strategy::pivots_triangle::pivots_triangle,
     tac_plotters::plotter::plot_candles,
-    technicals::pivots::Pivot,
     technicals::pivots::PivotTac,
     technicals::{macd::macd_tac::MacdTac, technical::Technical},
     utils::datetime_to_filename,
@@ -17,6 +16,8 @@ use crate::{
 use chrono::Duration;
 use ifmt::iformat;
 use log::info;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::prelude::*;
 
 pub struct Application<'a> {
     pub repo: &'a Repository,
@@ -60,14 +61,21 @@ impl<'a> Application<'a> {
     }
 
     pub fn plot_selection(selection: &Selection, candles: &[&Candle]) {
+        let start_time = selection.candles_selection.start_time.unwrap();
+        let end_time = selection.candles_selection.end_time.unwrap();
+        let candles = candles
+            .par_iter()
+            .filter(|c| c.open_time >= start_time && c.open_time <= end_time)
+            .copied()
+            .collect::<Vec<_>>();
         info!(
             "Plotting selection {:?} {:?} candles.len {}",
             selection.candles_selection.start_time,
             selection.candles_selection.end_time,
             candles.len()
         );
-        let macd_tac = MacdTac::new(candles);
-        let pivots = PivotTac::new(candles).pivots();
+        let macd_tac = MacdTac::new(&candles);
+        let pivots = PivotTac::new(&candles).pivots();
         plot_candles(
             &selection.candles_selection.start_time.unwrap(),
             &selection.candles_selection.end_time.unwrap(),
@@ -97,16 +105,18 @@ impl<'a> Application<'a> {
         let minutes = self.selection.candles_selection.symbol_minutes.minutes;
 
         let triangles = pivots_triangle(pivots_ref, &minutes);
-        for triangle in triangles {
+        // let triangles = triangles.iter().collect::<Vec<_>>();
+        // let triangles = triangles.as_slice();
+        triangles.par_iter().for_each(|triangle| {
             let mut selection = self.selection.clone();
             let open_time = triangle.open(&minutes);
-            let margin = Duration::minutes(minutes as i64 * 16);
+            let margin = Duration::minutes(minutes as i64 * 100);
             selection.candles_selection.start_time = Some(open_time - margin);
             selection.candles_selection.end_time = Some(open_time + margin);
             selection.image_name = format!("out/triangle_{}.png", datetime_to_filename(&open_time));
             info!("Plotting triangle {}", selection.image_name);
             Self::plot_selection(&selection, candles_ref);
-        }
+        });
     }
 
     pub fn run_stream(&'a mut self) {

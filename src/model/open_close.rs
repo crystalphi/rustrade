@@ -148,7 +148,7 @@ pub fn str_open(date_time: &str) -> OpenClose {
     OpenClose::Open(str_to_datetime(date_time))
 }
 
-pub fn str_close(date_time: &str) -> OpenClose {
+pub fn _str_close(date_time: &str) -> OpenClose {
     OpenClose::Close(str_to_datetime(date_time))
 }
 

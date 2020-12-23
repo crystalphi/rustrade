@@ -1,14 +1,13 @@
 use std::str::FromStr;
 
+use crate::model::{candle::Candle, open_close::OpenClose};
 use binance::model::KlineSummary;
 use chrono::{DateTime, Duration, NaiveDateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use ta::DataItem;
 
-use crate::model::{candle::Candle, open_close::OpenClose};
-
 /// Convert binance Kline to TA DataItem
-pub fn kline_to_data_item(summary: &KlineSummary) -> DataItem {
+pub fn _kline_to_data_item(summary: &KlineSummary) -> DataItem {
     DataItem::builder()
         .open(summary.open)
         .high(summary.high)
@@ -49,7 +48,7 @@ pub fn timestamp_to_datetime(timestamp: &u64) -> DateTime<Utc> {
 }
 
 /// Convert numeric date to String iso formatted
-pub fn timestamp_to_str(timestamp: &u64) -> String {
+pub fn _timestamp_to_str(timestamp: &u64) -> String {
     let date_time: DateTime<Utc> = timestamp_to_datetime(timestamp);
     date_time.format("%Y-%m-%d %H:%M:%S").to_string()
 }
@@ -58,7 +57,7 @@ pub fn datetime_to_timestamp(date_time: &DateTime<Utc>) -> u64 {
     date_time.timestamp_millis() as u64
 }
 
-pub fn datetime_to_str(date_time: &DateTime<Utc>) -> String {
+pub fn _datetime_to_str(date_time: &DateTime<Utc>) -> String {
     date_time.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
@@ -79,7 +78,7 @@ pub fn str_d(string: &str) -> DateTime<Utc> {
 }
 
 /// If candles are sorted ok
-pub fn candles_sorted_ok(candles: &[&Candle]) -> bool {
+pub fn _candles_sorted_ok(candles: &[&Candle]) -> bool {
     let sort_ok = candles.iter().map(Some).fold((true, None::<&&Candle>), |previous, current| {
         let result = if let Some(previous_c) = previous.1 {
             if let Some(current_c) = current {
@@ -135,10 +134,10 @@ pub mod tests {
     fn timestamp_to_str_test() {
         let dtu = Utc.ymd(1979, 1, 13).and_hms(11, 30, 0);
         let dts = "1979-01-13 11:30:00";
-        assert_eq!(datetime_to_str(&dtu), dts);
+        assert_eq!(_datetime_to_str(&dtu), dts);
         assert_eq!(str_to_datetime(&dts), dtu);
         let dtm = datetime_to_timestamp(&dtu);
-        assert_eq!(timestamp_to_str(&dtm), dts);
+        assert_eq!(_timestamp_to_str(&dtm), dts);
     }
 
     #[test]
@@ -174,10 +173,10 @@ pub mod tests {
         let d15m = Duration::minutes(15);
         assert_eq!(d2 - d1, d15m);
 
-        assert_eq!(candles_sorted_ok(&[&c1, &c2]), true);
-        assert_eq!(candles_sorted_ok(&[&c2, &c1]), false);
-        assert_eq!(candles_sorted_ok(&[&c1, &c1]), false);
-        assert_eq!(candles_sorted_ok(&[&c2, &c2]), false);
+        assert_eq!(_candles_sorted_ok(&[&c1, &c2]), true);
+        assert_eq!(_candles_sorted_ok(&[&c2, &c1]), false);
+        assert_eq!(_candles_sorted_ok(&[&c1, &c1]), false);
+        assert_eq!(_candles_sorted_ok(&[&c2, &c2]), false);
 
         assert_eq!(inconsistent_candles(&[&c1, &c2], &d15m).len(), 0);
         assert_eq!(inconsistent_candles(&[&c2, &c1], &d15m).len(), 1);

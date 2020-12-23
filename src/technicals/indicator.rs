@@ -15,7 +15,7 @@ impl<'a> Indicator<'a> {
         }
     }
 
-    pub fn push(&mut self, serie: Serie<'a>) {
+    pub fn _push(&mut self, serie: Serie<'a>) {
         self.series.push(serie);
     }
 

@@ -1,12 +1,9 @@
+use super::indicator_plotter::PlotterIndicatorContext;
+use crate::model::candle::Candle;
 use chrono::{DateTime, Utc};
-
 use plotters::{coord::types::RangedCoordf32, prelude::*};
 use plotters_bitmap::bitmap_pixel::RGBPixel;
 use rust_decimal::prelude::ToPrimitive;
-
-use crate::model::candle::Candle;
-
-use super::indicator_plotter::PlotterIndicatorContext;
 
 pub struct CandlePlotter<'a> {
     candles: &'a [&'a Candle],
@@ -21,8 +18,8 @@ impl<'a> CandlePlotter<'a> {
 impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
     fn plot(
         &self,
-        from_date: &DateTime<Utc>,
-        to_date: &DateTime<Utc>,
+        _from_date: &DateTime<Utc>,
+        _to_date: &DateTime<Utc>,
 
         chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
     ) -> anyhow::Result<()> {

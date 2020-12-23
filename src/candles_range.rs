@@ -209,8 +209,8 @@ pub mod testes {
     use std::println;
 
     use crate::{
-        model::open_close::str_close,
-        utils::{datetime_to_str, str_d},
+        model::open_close::_str_close,
+        utils::{_datetime_to_str, str_d},
     };
 
     use super::*;
@@ -220,7 +220,7 @@ pub mod testes {
     }
 
     fn candle_test(start: &str) -> Candle {
-        let end = datetime_to_str(&close_time_from_open(&15, &str_d(start)));
+        let end = _datetime_to_str(&close_time_from_open(&15, &str_d(start)));
         Candle::new(0, start, &end, "BTCUSDT", 15, 100.0, 100.0, 100.0, 100.0, 100.0)
     }
 
@@ -271,16 +271,16 @@ pub mod testes {
             println!("{} - {}", inverted_range.0, inverted_range.1);
         }
 
-        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, str_close("2020-01-12 11:59:59")));
+        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, _str_close("2020-01-12 11:59:59")));
         assert_eq!(
             *inverted_ranges.get(1).unwrap(),
-            (str_close("2020-01-12 12:44:59"), str_close("2020-11-16 01:14:59"))
+            (_str_close("2020-01-12 12:44:59"), _str_close("2020-11-16 01:14:59"))
         );
         assert_eq!(
             *inverted_ranges.get(2).unwrap(),
-            (str_close("2020-11-16 01:44:59"), str_close("2020-11-20 11:14:59"))
+            (_str_close("2020-11-16 01:44:59"), _str_close("2020-11-20 11:14:59"))
         );
-        assert_eq!(*inverted_ranges.get(3).unwrap(), (str_close("2020-11-20 11:44:59"), end_time));
+        assert_eq!(*inverted_ranges.get(3).unwrap(), (_str_close("2020-11-20 11:44:59"), end_time));
     }
 
     #[test]
@@ -300,16 +300,16 @@ pub mod testes {
             println!("{} - {}", inverted_range.0, inverted_range.1);
         }
 
-        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, str_close("2020-01-12 11:59:59")));
+        assert_eq!(*inverted_ranges.get(0).unwrap(), (start_time, _str_close("2020-01-12 11:59:59")));
         assert_eq!(
             *inverted_ranges.get(1).unwrap(),
-            (str_close("2020-01-12 12:44:59"), str_close("2020-11-16 01:14:59"))
+            (_str_close("2020-01-12 12:44:59"), _str_close("2020-11-16 01:14:59"))
         );
         assert_eq!(
             *inverted_ranges.get(2).unwrap(),
-            (str_close("2020-11-16 01:44:59"), str_close("2020-11-20 11:14:59"))
+            (_str_close("2020-11-16 01:44:59"), _str_close("2020-11-20 11:14:59"))
         );
-        assert_eq!(*inverted_ranges.get(3).unwrap(), (str_close("2020-11-20 11:44:59"), end_time));
+        assert_eq!(*inverted_ranges.get(3).unwrap(), (_str_close("2020-11-20 11:44:59"), end_time));
     }
 
     #[test]

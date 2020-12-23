@@ -29,9 +29,7 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
         lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
     ) -> anyhow::Result<()> {
         let max_macd = self.macd_tac.macd.series.iter().fold(0f64, |acc, t| acc.max(t.value));
-
         let min_macd = self.macd_tac.macd.series.iter().fold(max_macd, |acc, t| acc.min(t.value));
-
         if min_macd == 0. && max_macd == 0. {
             return Err(anyhow!("Valores estão zerado!"));
         }
@@ -45,11 +43,8 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
             .build_cartesian_2d(*from_date..*to_date, min_macd..max_macd)?;
 
         cart_context_lower.configure_mesh().light_line_style(&WHITE).draw()?;
-
         let macd_fast_series = LineSeries::new(self.macd_tac.macd.series.iter().map(|t| (*t.date_time, t.value)), &BLACK);
-
         cart_context_lower.draw_series(macd_fast_series)?;
-
         Ok(())
     }
 }

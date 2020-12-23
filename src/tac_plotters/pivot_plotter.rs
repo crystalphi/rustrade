@@ -25,16 +25,24 @@ impl<'a> PivotPlotter<'a> {
 impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
     fn plot(
         &self,
-        from_date: &DateTime<Utc>,
-        to_date: &DateTime<Utc>,
+        _from_date: &DateTime<Utc>,
+        _to_date: &DateTime<Utc>,
 
         chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
     ) -> anyhow::Result<()> {
         let red = RGBColor(164, 16, 64);
         let green = RGBColor(16, 196, 64);
 
+        let pivots = self.pivots;
+
+        // let pivots = self
+        //     .pivots
+        //     .iter()
+        //     .filter(|p| p.close_time >= from_date && p.close_time <= to_date)
+        //     .collect::<Vec<_>>();
+
         let low_pivots = PointSeries::of_element(
-            self.pivots
+            pivots
                 .iter()
                 .filter(|p| p.type_p == PivotType::Low)
                 .map(|c| (*c.close_time, c.price.to_f32().unwrap())),
@@ -48,7 +56,7 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
         chart_context.draw_series(low_pivots)?;
 
         let high_pivots = PointSeries::of_element(
-            self.pivots
+            pivots
                 .iter()
                 .filter(|p| p.type_p == PivotType::High)
                 .map(|c| (*c.close_time, c.price.to_f32().unwrap())),

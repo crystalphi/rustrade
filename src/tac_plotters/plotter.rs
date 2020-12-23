@@ -5,10 +5,11 @@ use crate::{
 };
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
+use log::info;
 use plotters::prelude::*;
 use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
-use std::path::Path;
+use std::{path::Path, time::Instant};
 
 use super::{
     candles_plotter::CandlePlotter, indicator_plotter::IndicatorPlotter, indicator_plotter::PlotterIndicatorContext, macd_plotter::MacdPlotter,
@@ -21,24 +22,24 @@ pub struct Plotter<'a> {
     candles: Vec<&'a Candle>,
     plotters_ind: Vec<&'a dyn IndicatorPlotter>,
     plotters_ind_upper: Vec<&'a dyn PlotterIndicatorContext>,
-    plotters_ind_lower: Vec<&'a dyn PlotterIndicatorContext>,
+    _plotters_ind_lower: Vec<&'a dyn PlotterIndicatorContext>,
 }
 
 impl<'a> Plotter<'a> {
     pub fn new(from_date: DateTime<Utc>, to_date: DateTime<Utc>, candles: &'a [&'a Candle]) -> Self {
-        let candles = candles
-            .iter()
-            .filter(|c| c.open_time >= from_date && c.open_time <= to_date)
-            .copied()
-            .collect::<Vec<&Candle>>();
+        // let candles = candles
+        //     .iter()
+        //     .filter(|c| c.open_time >= from_date && c.open_time <= to_date)
+        //     .copied()
+        //     .collect::<Vec<&Candle>>();
 
         Plotter {
             from_date,
             to_date,
-            candles,
+            candles: candles.to_vec(),
             plotters_ind: vec![],
             plotters_ind_upper: vec![],
-            plotters_ind_lower: vec![],
+            _plotters_ind_lower: vec![],
         }
     }
 
@@ -50,15 +51,14 @@ impl<'a> Plotter<'a> {
         self.plotters_ind_upper.push(plotter_ind);
     }
 
-    pub fn add_plotter_lower_ind(&mut self, plotter_ind: &'a dyn PlotterIndicatorContext) {
-        self.plotters_ind_lower.push(plotter_ind);
+    pub fn _add_plotter_lower_ind(&mut self, plotter_ind: &'a dyn PlotterIndicatorContext) {
+        self._plotters_ind_lower.push(plotter_ind);
     }
 
     pub fn plot<P: AsRef<Path>>(&self, symbol_minutes: &SymbolMinutes, image_path: P) -> anyhow::Result<()> {
+        let start = Instant::now();
+
         let (min_price, max_price) = prices_range_from_candles(&self.candles);
-
-        //let (from_date, to_date) = date_time_range_from_candles(&self.candles, &symbol_minutes.minutes);
-
         let (upper, lower) = {
             let root = BitMapBackend::new(&image_path, (1920, 1080)).into_drawing_area();
             root.split_vertically((80).percent())
@@ -92,11 +92,12 @@ impl<'a> Plotter<'a> {
         //     plotters_ind_upper_ind.plot(&mut chart_context_lower)?;
         // }
 
+        info!("{}", iformat!("*** Plotting elapsed: {start.elapsed():?}"));
         Ok(())
     }
 }
 
-pub fn date_time_range_from_candles(candles: &[&Candle], minutes: &u32) -> (DateTime<Utc>, DateTime<Utc>) {
+pub fn _date_time_range_from_candles(candles: &[&Candle], minutes: &u32) -> (DateTime<Utc>, DateTime<Utc>) {
     let from_date = candles[0].close_time - Duration::minutes(*minutes as i64);
     let to_date = candles[candles.len() - 1].close_time + Duration::minutes(*minutes as i64);
     (from_date, to_date)
@@ -126,7 +127,9 @@ pub fn plot_candles<'a>(
     plotter.add_plotter_upper_ind(&pivot_plotter);
     plotter.add_plotter_ind(&macd_plotter);
 
+    let start = Instant::now();
     plotter.plot(symbol_minutes, image_name)?;
+    info!("{}", iformat!("### Plotting elapsed: {start.elapsed():?}"));
 
     Ok(())
 }

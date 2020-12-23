@@ -18,7 +18,6 @@ use ifmt::iformat;
 use log::{info, LevelFilter};
 use repository::Repository;
 use std::time::Instant;
-use strategy::pivots_triangle::pivots_triangle;
 use structopt::StructOpt;
 use tac_plotters::plotter::plot_candles;
 use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac};
