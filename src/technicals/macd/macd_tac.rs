@@ -3,16 +3,10 @@ use crate::{model::candle::Candle, technicals::technical::Technical};
 use ifmt::iformat;
 use log::info;
 use rust_decimal::prelude::ToPrimitive;
-use std::{
-    collections::{HashMap, HashSet},
-    time::Instant,
-};
+use std::{collections::HashMap, time::Instant};
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
 pub struct MacdTac<'a> {
-    pub macd: Indicator<'a>,
-    pub signal: Indicator<'a>,
-    pub divergence: Indicator<'a>,
     pub indicators: HashMap<String, Indicator<'a>>,
 }
 
@@ -27,33 +21,28 @@ impl<'a> MacdTac<'a> {
     pub fn new(candles: &'a [&'a Candle]) -> Self {
         let start = Instant::now();
 
-        let macd = Indicator::new("macd");
-        let signal = Indicator::new("signal");
-        let divergence = Indicator::new("divergence");
+        let mut macd = Indicator::new("macd");
+        let mut signal = Indicator::new("signal");
+        let mut divergence = Indicator::new("divergence");
         let mut indicators = HashMap::new();
 
-        indicators.insert(macd.name, &macd);
-        indicators.insert(signal.name, &signal);
-        indicators.insert(divergence.name, &divergence);
-
-        let mut mac_tac = MacdTac {
-            indicators: HashMap::new(),
-            macd,
-            signal,
-            divergence,
-        };
-
-        let mut macd = Macd::new(34, 72, 17).unwrap();
+        let mut macd_ta = Macd::new(34, 72, 17).unwrap();
         for candle in candles.iter() {
             let close = candle.close.to_f64().unwrap();
 
-            let macd_result: (f64, f64, f64) = macd.next(close).into();
-            mac_tac.macd.push_serie(&candle.close_time, macd_result.0);
-            mac_tac.signal.push_serie(&candle.close_time, macd_result.1);
-            mac_tac.divergence.push_serie(&candle.close_time, macd_result.2);
+            let macd_result: (f64, f64, f64) = macd_ta.next(close).into();
+            macd.push_serie(&candle.close_time, macd_result.0);
+            signal.push_serie(&candle.close_time, macd_result.1);
+            divergence.push_serie(&candle.close_time, macd_result.2);
         }
+
+        indicators.insert(macd.name.clone(), macd);
+        indicators.insert(signal.name.clone(), signal);
+        indicators.insert(divergence.name.clone(), divergence);
+
         info!("{}", iformat!("Technicals {candles.len()}: {start.elapsed():?}"));
-        mac_tac
+
+        MacdTac { indicators }
     }
 }
 

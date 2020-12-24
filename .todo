@@ -9,11 +9,12 @@
 ✔ Plot triangles -> create triangles plotter @done(20-12-23 22:16)
 ✘ Slow 3s to plot 14 days 15 m @cancelled(20-12-23 21:02)
 ✘ Appers not working 30 min @cancelled(20-12-23 21:02)
+☐ -> Ema indicators, colors orange x purple
+☐ -> Call back to get min/max from Indicators before call to draw series
 ☐ Normalize main::plot x Application::plot_selecion
 ☐ Plot macd inds from selected
 ☐ Get min x mac macd inds
-☐ Draw macd on same candle area
-☐ Ema indicators, colors orange x purple
+☐ Draw ema on same candle area
 ☐ Back theme
 ☐ Download tickets/trade
 ☐ Live download tickets/trade

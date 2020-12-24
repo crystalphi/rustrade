@@ -90,7 +90,7 @@ impl<'a> PivotTac<'a> {
     }
 }
 
-fn normalize_pivots<'a>(pivots: &mut Vec<Pivot<'a>>) {
+fn normalize_pivots(pivots: &mut Vec<Pivot>) {
     if pivots.is_empty() {
         return;
     }

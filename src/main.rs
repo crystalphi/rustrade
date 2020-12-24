@@ -1,3 +1,6 @@
+//#![feature(fold_first)]
+#![feature(iterator_fold_self)]
+
 pub mod analyzers;
 pub mod application;
 pub mod candles_range;
@@ -17,13 +20,10 @@ use exchange::Exchange;
 use ifmt::iformat;
 use log::{info, LevelFilter};
 use repository::Repository;
-use std::{
-    collections::{HashMap, HashSet},
-    time::Instant,
-};
+use std::{collections::HashMap, time::Instant};
 use structopt::StructOpt;
 use tac_plotters::plotter::plot_candles;
-use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac, technical::Technical};
+use technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac, technical::Technical};
 use utils::str_to_datetime;
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Commands")]
@@ -67,8 +67,8 @@ struct Opt {
 
 pub fn selection_factory(candles_selection: CandlesSelection) -> Selection {
     let mut tacs = HashMap::new();
-    for tac in vec![MacdTac::definition()] {
-        tacs.insert(tac.name, tac);
+    for tac in vec![MacdTac::definition(), EmaTac::definition()] {
+        tacs.insert(tac.name.clone(), tac);
     }
     Selection {
         tacs,

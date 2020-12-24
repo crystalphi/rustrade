@@ -3,7 +3,8 @@ use crate::{
     config::selection::Selection,
     technicals::{indicator::Indicator, macd::macd_tac::MacdTac},
 };
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
+use log::info;
 use plotters::prelude::*;
 use plotters::{
     coord::Shift,
@@ -11,6 +12,7 @@ use plotters::{
     style::{BLACK, WHITE},
 };
 use plotters_bitmap::{self, bitmap_pixel::RGBPixel};
+
 pub struct MacdPlotter<'a> {
     macd_tac: &'a MacdTac<'a>,
 }
@@ -28,22 +30,27 @@ impl<'a> IndicatorPlotter for MacdPlotter<'a> {
         upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
         lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
     ) -> anyhow::Result<()> {
-        let selected_tac = selection.tacs.get("macd").ok_or(anyhow!("Tac macd not selected!"))?;
+        let selected_tac = selection.tacs.get("macd").ok_or_else(|| anyhow!("Tac macd not selected!"))?;
         let mut selected_inds = Vec::new();
-        for sel_ind_name in selected_tac.indicators {
+
+        if self.macd_tac.indicators.is_empty() {
+            bail!("macd_tac.indicators.is_empty");
+        }
+
+        for sel_ind_name in selected_tac.indicators.iter() {
             let tac_ind = self
                 .macd_tac
                 .indicators
-                .get(&sel_ind_name)
-                .ok_or(anyhow!("Indicator {} not found!", sel_ind_name))?;
+                .get(sel_ind_name)
+                .ok_or_else(|| anyhow!("Indicator {} not found!", sel_ind_name))?;
             selected_inds.push(tac_ind);
         }
         plot_indicators(&selected_inds, selection, upper, lower)
     }
 }
-#![feature(fold_firstq)]
+
 fn plot_indicators(
-    indicators: &Vec<&Indicator>,
+    indicators: &[&Indicator],
     selection: &Selection,
     _upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
     lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
@@ -55,10 +62,10 @@ fn plot_indicators(
         .iter()
         .map(|i| i.min_max())
         .fold_first(|p, c| (p.0.min(c.0), p.1.max(c.1)))
-        .ok_or(anyhow!("plot_indicators: have no min x max"))?;
+        .ok_or_else(|| anyhow!("plot_indicators: have no min x max"))?;
 
     if min_macd == 0. && max_macd == 0. {
-        return Err(anyhow!("plot_indicators: min x max values are zeros!"));
+        bail!("plot_indicators: min x max values are zeros!");
     }
 
     let mut cart_context_lower = ChartBuilder::on(&lower)
@@ -70,7 +77,21 @@ fn plot_indicators(
         .build_cartesian_2d(from_date..to_date, min_macd..max_macd)?;
 
     cart_context_lower.configure_mesh().light_line_style(&WHITE).draw()?;
-    let macd_fast_series = LineSeries::new(indicator.series.iter().map(|t| (*t.date_time, t.value)), &BLACK);
-    cart_context_lower.draw_series(macd_fast_series)?;
+
+    for indicator in indicators {
+        info!("Plotting indicator {}", indicator.name);
+        let color = indicator_color(indicator);
+        let macd_fast_series = LineSeries::new(indicator.series.iter().map(|s| (*s.date_time, s.value)), &color);
+        cart_context_lower.draw_series(macd_fast_series)?;
+    }
+
     Ok(())
+}
+
+fn indicator_color(indicator: &Indicator) -> RGBColor {
+    match &indicator.name[..] {
+        "macd" => RGBColor(0, 0, 255),
+        "signal" => RGBColor(255, 0, 0),
+        _ => BLACK,
+    }
 }

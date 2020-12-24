@@ -4,6 +4,9 @@ edition = "2018"
 name = "rustrade"
 version = "0.1.0"
 
+[unstable]
+fold_firstq = 'yes'
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
