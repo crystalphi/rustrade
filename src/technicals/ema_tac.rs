@@ -18,13 +18,14 @@ impl<'a> Technical for EmaTac<'a> {
 }
 
 impl<'a> EmaTac<'a> {
-    pub fn new(candles: &'a [&'a Candle]) -> Self {
+    // default period is 34
+    pub fn new(candles: &'a [&'a Candle], period: usize) -> Self {
         let start = Instant::now();
 
         let mut ema = Indicator::new("ema");
         let mut indicators = HashMap::new();
 
-        let mut ema_ta = Ema::new(34).unwrap();
+        let mut ema_ta = Ema::new(period as usize).unwrap();
         for candle in candles.iter() {
             let close = candle.close.to_f64().unwrap();
 

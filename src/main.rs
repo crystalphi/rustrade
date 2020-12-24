@@ -13,17 +13,15 @@ mod strategy;
 mod tac_plotters;
 mod technicals;
 mod utils;
-use application::{app::Application, candles_provider::CandlesProvider, streamer::Streamer};
+use application::{app::Application, streamer::Streamer};
 use checker::Checker;
 use config::{candles_selection::CandlesSelection, selection::Selection, symbol_minutes::SymbolMinutes};
 use exchange::Exchange;
-use ifmt::iformat;
 use log::{info, LevelFilter};
 use repository::Repository;
-use std::{collections::HashMap, time::Instant};
+use std::collections::HashMap;
 use structopt::StructOpt;
-use tac_plotters::plotter::plot_candles;
-use technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac, technical::Technical};
+use technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, technical::Technical};
 use utils::str_to_datetime;
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Commands")]
@@ -99,7 +97,7 @@ async fn main() -> anyhow::Result<()> {
     let symbol_minutes = SymbolMinutes::new(&opt.symbol, &opt.minutes);
     let checker = Checker::new(&symbol_minutes, &repo, &exchange);
 
-    let mut app = Application::new(&repo, &exchange, &checker, selection.clone());
+    let mut app = Application::new(&repo, &exchange, &checker, selection);
 
     match opt.command {
         Command::Check {} => {
@@ -114,14 +112,14 @@ async fn main() -> anyhow::Result<()> {
         Command::List {} => {
             repo.list_candles(&opt.symbol, &opt.minutes, &10);
         }
-        Command::Plot {} => plot(&repo, &exchange, &selection),
+        Command::Plot {} => app.plot_selection().unwrap(),
         Command::Stream {} => {
             let mut streamer = Streamer::new(&mut app);
             streamer.run();
         }
         Command::Import {} => {}
         Command::Triangle {} => {
-            app.plot_triangles();
+            app.plot_triangles().unwrap();
         }
     };
     info!("Exiting program");
@@ -129,26 +127,4 @@ async fn main() -> anyhow::Result<()> {
     // https://github.com/launchbadge/sqlx/blob/master/examples/postgres/todos/src/main.rs
 
     Ok(())
-}
-
-fn plot(repo: &Repository, exchange: &Exchange, selection: &Selection) {
-    let start = Instant::now();
-    info!("Loading...");
-    let mut candles_provider = CandlesProvider::new(repo, exchange);
-    let candles = candles_provider.candles_selection(selection).unwrap();
-    let candles = candles.iter().collect::<Vec<_>>();
-    let candles = candles.as_slice();
-    info!("{}", iformat!("Loaded {start.elapsed():?}"));
-
-    let start = Instant::now();
-    info!("Tacing...");
-    let macd_tac = MacdTac::new(candles);
-    let ema_tac = EmaTac::new(&candles);
-    let pivots = PivotTac::new(candles).pivots();
-    info!("{}", iformat!("Taced {start.elapsed():?}"));
-
-    let start = Instant::now();
-    info!("Plotting...");
-    plot_candles(&selection, &candles, &pivots, &macd_tac, &ema_tac, "out/stock.png").unwrap();
-    info!("{}", iformat!("Plotted {start.elapsed():?}"));
 }

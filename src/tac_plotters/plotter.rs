@@ -1,8 +1,5 @@
-use crate::{
-    config::selection::Selection,
-    model::candle::Candle,
-    technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::Pivot},
-};
+use super::indicator_plotter::{IndicatorPlotter, PlotterIndicatorContext};
+use crate::{config::selection::Selection, model::candle::Candle};
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
 use log::info;
@@ -10,11 +7,6 @@ use plotters::prelude::*;
 use rust_decimal::{prelude::ToPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use std::{path::Path, time::Instant};
-
-use super::{
-    candles_plotter::CandlePlotter, ema_plotter::EmaPlotter, indicator_plotter::IndicatorPlotter, indicator_plotter::PlotterIndicatorContext,
-    macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter,
-};
 
 pub struct Plotter<'a> {
     selection: &'a Selection,
@@ -105,34 +97,4 @@ pub fn prices_range_from_candles(candles: &[&Candle]) -> (Decimal, Decimal) {
     let max_price = candles.iter().fold(dec!(0), |acc, x| acc.max(x.high));
     let min_price = candles.iter().fold(max_price, |acc, x| acc.min(x.low));
     (min_price, max_price)
-}
-
-pub fn plot_candles<'a>(
-    selection: &'a Selection,
-    candles: &'a [&'a Candle],
-    pivots: &'a [Pivot],
-    macd_tac: &'a MacdTac,
-    ema_tac: &'a EmaTac,
-    image_name: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut plotter = Plotter::new(selection, candles);
-
-    // Upper indicators
-    let candle_plotter = CandlePlotter::new(candles);
-    let pivot_plotter = PivotPlotter::new(pivots);
-    let ema_plotter = EmaPlotter::new(ema_tac);
-
-    plotter.add_plotter_upper_ind(&candle_plotter);
-    plotter.add_plotter_upper_ind(&pivot_plotter);
-    plotter.add_plotter_upper_ind(&ema_plotter);
-
-    // Lower indicators
-    let macd_plotter = MacdPlotter::new(macd_tac);
-    plotter.add_plotter_ind(&macd_plotter);
-
-    let start = Instant::now();
-    plotter.plot(image_name)?;
-    info!("{}", iformat!("### Plotting elapsed: {start.elapsed():?}"));
-
-    Ok(())
 }

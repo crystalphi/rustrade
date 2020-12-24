@@ -9,20 +9,19 @@
 ✔ Plot triangles -> create triangles plotter @done(20-12-23 22:16)
 ✘ Slow 3s to plot 14 days 15 m @cancelled(20-12-23 21:02)
 ✘ Appers not working 30 min @cancelled(20-12-23 21:02)
-☐ Purple Ema
-☐ White grid lines on Ema  
-☐ -> Ema indicators, colors orange x purple
-☐ -> Call back to get min/max from Indicators before call to draw series
-    PlotterIndicatorContext -> used in pivots
-☐ Normalize main::plot x Application::plot_selecion
+✔ Purple Ema @done(20-12-24 16:58)
+✔ White grid lines on Ema @done(20-12-24 16:58)
+✔ -> Ema indicators, colors orange x purple @done(20-12-24 16:58)
+✔ -> Call back to get min/max from Indicators before call to draw series @done(20-12-24 16:58)
+✔ Normalize main::plot x Application::plot_selecion @done(20-12-24 16:58)
+✔ Get min x mac macd inds @done(20-12-24 16:58)
+✔ Draw ema on same candle area @done(20-12-24 16:58)
+✔ Normalize App x Stream x Main @done(20-12-24 16:58)
 ☐ Plot macd inds from selected
-☐ Get min x mac macd inds
-☐ Draw ema on same candle area
-☐ Back theme
+☐ Black theme
 ☐ Download tickets/trade
 ☐ Live download tickets/trade
 ☐ Resolve confusion checker x synchronizer
-☐ Normalize App x Stream x Main
 ☐ Apply candles selection in all commands
 ☐ Delete last candle from repo before reinsert
 ☐ Gui interface

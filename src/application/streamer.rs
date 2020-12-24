@@ -5,7 +5,7 @@ use log::info;
 
 use crate::{config::selection::Selection, model::candle::Candle};
 
-use super::app::Application;
+use super::{app::Application, plot_selection::plot_selection};
 
 pub struct Streamer<'a> {
     app: &'a mut Application<'a>,
@@ -94,7 +94,7 @@ impl<'a> Streamer<'a> {
                 if line == PLOT {
                     info!("Plotting...");
                     let candles_ref = candles.iter().collect::<Vec<_>>();
-                    Application::plot_selection(&self.app.selection, candles_ref.as_slice());
+                    plot_selection(&self.app.selection, candles_ref.as_slice()).unwrap();
                     info!("Plotted!");
                     continue;
                 }
