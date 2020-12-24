@@ -6,17 +6,24 @@
 ✔ Assume default candles selection from struct ops @done(20-12-21 23:23)
 ✔ Find cause of integrity problem @done(20-12-21 23:23)
 ✔ Finish flow retrieving candles @done(20-12-21 23:24)
+✔ Plot triangles -> create triangles plotter @done(20-12-23 22:16)
+✘ Slow 3s to plot 14 days 15 m @cancelled(20-12-23 21:02)
+✘ Appers not working 30 min @cancelled(20-12-23 21:02)
+☐ Normalize main::plot x Application::plot_selecion
+☐ Plot macd inds from selected
+☐ Get min x mac macd inds
+☐ Draw macd on same candle area
+☐ Ema indicators, colors orange x purple
+☐ Back theme
+☐ Download tickets/trade
+☐ Live download tickets/trade
 ☐ Resolve confusion checker x synchronizer
-☐ Appers not working 30 min
+☐ Normalize App x Stream x Main
 ☐ Apply candles selection in all commands
 ☐ Delete last candle from repo before reinsert
 ☐ Gui interface
-☐ Create load command (load from database without read from expo)
-☐ Normalize App x Stream x Main
-☐ Not working minutes 60 from Exchange
-☐ Slow 3s to plot 14 days 15 m
-☐ Plot triangles -> create triangles plotter
-
+☐ Create load command (load from database without read from expo) ?
+☐ Not working minutes 60 from Exchange, fn for h, m, d
 
 select * from candle 
 where open_time between '2020-10-11' and '2020-10-12'

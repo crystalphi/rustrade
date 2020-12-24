@@ -121,6 +121,7 @@ pub fn plot_candles<'a>(
     let mut plotter = Plotter::new(*from_date, *to_date, candles);
     let candle_plotter = CandlePlotter::new(candles);
     let pivot_plotter = PivotPlotter::new(pivots);
+
     let macd_plotter = MacdPlotter::new(macd_tac);
 
     plotter.add_plotter_upper_ind(&candle_plotter);

@@ -29,22 +29,14 @@ pub struct Application<'a> {
 }
 
 impl<'a> Application<'a> {
-    pub fn new(repo: &'a Repository, exchange: &'a Exchange, synchronizer: &'a Checker<'a>, candles_selection: &'a CandlesSelection) -> Self {
+    pub fn new(repo: &'a Repository, exchange: &'a Exchange, synchronizer: &'a Checker<'a>, selection: Selection) -> Self {
         Application {
             repo,
             exchange,
             synchronizer,
             candles_provider: CandlesProvider::new(repo, exchange),
-            selection: Self::selection_factory(candles_selection.clone()),
+            selection,
             definition: ConfigDefinition::new(),
-        }
-    }
-
-    pub fn selection_factory(candles_selection: CandlesSelection) -> Selection {
-        Selection {
-            tacs: vec![MacdTac::definition()],
-            candles_selection,
-            image_name: "out/stock.png".to_string(),
         }
     }
 

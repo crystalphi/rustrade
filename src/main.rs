@@ -12,7 +12,7 @@ mod technicals;
 mod utils;
 use application::{app::Application, candles_provider::CandlesProvider, streamer::Streamer};
 use checker::Checker;
-use config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes};
+use config::{candles_selection::CandlesSelection, selection::Selection, symbol_minutes::SymbolMinutes};
 use exchange::Exchange;
 use ifmt::iformat;
 use log::{info, LevelFilter};
@@ -20,7 +20,7 @@ use repository::Repository;
 use std::time::Instant;
 use structopt::StructOpt;
 use tac_plotters::plotter::plot_candles;
-use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac};
+use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac, technical::Technical};
 use utils::str_to_datetime;
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Commands")]
@@ -62,6 +62,14 @@ struct Opt {
     command: Command,
 }
 
+pub fn selection_factory(candles_selection: CandlesSelection) -> Selection {
+    Selection {
+        tacs: vec![MacdTac::definition()],
+        candles_selection,
+        image_name: "out/stock.png".to_string(),
+    }
+}
+
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
     let opt = Opt::from_args();
@@ -71,14 +79,20 @@ async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().unwrap();
     let exchange: Exchange = Exchange::new().unwrap();
     let repo: Repository = Repository::new().unwrap();
+
     let candles_selection = CandlesSelection::new(
         &opt.symbol,
         &opt.minutes,
         Some(&str_to_datetime(&opt.start_time)),
         Some(&str_to_datetime(&opt.end_time)),
     );
+
+    let selection = selection_factory(candles_selection.clone());
+
     let symbol_minutes = SymbolMinutes::new(&opt.symbol, &opt.minutes);
     let checker = Checker::new(&symbol_minutes, &repo, &exchange);
+
+    let mut app = Application::new(&repo, &exchange, &checker, selection.clone());
 
     match opt.command {
         Command::Check {} => {
@@ -93,15 +107,13 @@ async fn main() -> anyhow::Result<()> {
         Command::List {} => {
             repo.list_candles(&opt.symbol, &opt.minutes, &10);
         }
-        Command::Plot {} => plot(&repo, &exchange, &candles_selection),
+        Command::Plot {} => plot(&repo, &exchange, &candles_selection, selection),
         Command::Stream {} => {
-            let mut app = Application::new(&repo, &exchange, &checker, &candles_selection);
             let mut streamer = Streamer::new(&mut app);
             streamer.run();
         }
         Command::Import {} => {}
         Command::Triangle {} => {
-            let mut app = Application::new(&repo, &exchange, &checker, &candles_selection);
             app.plot_triangles();
         }
     };
@@ -112,11 +124,10 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelection) {
+fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelection, selection: Selection) {
     let start = Instant::now();
     info!("Loading...");
     let mut candles_provider = CandlesProvider::new(repo, exchange);
-    let selection = Application::selection_factory(candles_selection.clone());
     let candles = candles_provider.candles_selection(&selection).unwrap();
     let candles = candles.iter().collect::<Vec<_>>();
     let candles = candles.as_slice();
