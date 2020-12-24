@@ -8,7 +8,10 @@ use plotters::{
 use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
 use rust_decimal::prelude::ToPrimitive;
 
-use crate::technicals::pivots::{Pivot, PivotType};
+use crate::{
+    config::selection::Selection,
+    technicals::pivots::{Pivot, PivotType},
+};
 
 use super::indicator_plotter::PlotterIndicatorContext;
 
@@ -25,9 +28,7 @@ impl<'a> PivotPlotter<'a> {
 impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
     fn plot(
         &self,
-        _from_date: &DateTime<Utc>,
-        _to_date: &DateTime<Utc>,
-
+        _selection: &Selection,
         chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
     ) -> anyhow::Result<()> {
         let red = RGBColor(164, 16, 64);

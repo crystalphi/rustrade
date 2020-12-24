@@ -1,10 +1,12 @@
+use std::collections::{HashMap, HashSet};
+
 use serde::{Deserialize, Serialize};
 
 use super::{candles_selection::CandlesSelection, definition::TacDefinition};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Selection {
-    pub tacs: Vec<TacDefinition>, //[{name: mcad, indicators: [ "signal", "diff" ] }]
+    pub tacs: HashMap<String, TacDefinition>, //[{name: mcad, indicators: [ "signal", "diff" ] }]
     pub candles_selection: CandlesSelection,
     pub image_name: String,
 }

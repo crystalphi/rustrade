@@ -1,5 +1,5 @@
 use super::indicator_plotter::PlotterIndicatorContext;
-use crate::model::candle::Candle;
+use crate::{config::selection::Selection, model::candle::Candle};
 use chrono::{DateTime, Utc};
 use plotters::{coord::types::RangedCoordf32, prelude::*};
 use plotters_bitmap::bitmap_pixel::RGBPixel;
@@ -18,9 +18,7 @@ impl<'a> CandlePlotter<'a> {
 impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
     fn plot(
         &self,
-        _from_date: &DateTime<Utc>,
-        _to_date: &DateTime<Utc>,
-
+        _selection: &Selection,
         chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
     ) -> anyhow::Result<()> {
         let red = RGBColor(164, 16, 64);

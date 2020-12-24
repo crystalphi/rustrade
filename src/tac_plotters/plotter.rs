@@ -1,5 +1,5 @@
 use crate::{
-    config::symbol_minutes::SymbolMinutes,
+    config::selection::Selection,
     model::candle::Candle,
     technicals::{macd::macd_tac::MacdTac, pivots::Pivot},
 };
@@ -17,8 +17,7 @@ use super::{
 };
 
 pub struct Plotter<'a> {
-    from_date: DateTime<Utc>,
-    to_date: DateTime<Utc>,
+    selection: &'a Selection,
     candles: Vec<&'a Candle>,
     plotters_ind: Vec<&'a dyn IndicatorPlotter>,
     plotters_ind_upper: Vec<&'a dyn PlotterIndicatorContext>,
@@ -26,16 +25,9 @@ pub struct Plotter<'a> {
 }
 
 impl<'a> Plotter<'a> {
-    pub fn new(from_date: DateTime<Utc>, to_date: DateTime<Utc>, candles: &'a [&'a Candle]) -> Self {
-        // let candles = candles
-        //     .iter()
-        //     .filter(|c| c.open_time >= from_date && c.open_time <= to_date)
-        //     .copied()
-        //     .collect::<Vec<&Candle>>();
-
+    pub fn new(selection: &'a Selection, candles: &'a [&'a Candle]) -> Self {
         Plotter {
-            from_date,
-            to_date,
+            selection,
             candles: candles.to_vec(),
             plotters_ind: vec![],
             plotters_ind_upper: vec![],
@@ -55,8 +47,12 @@ impl<'a> Plotter<'a> {
         self._plotters_ind_lower.push(plotter_ind);
     }
 
-    pub fn plot<P: AsRef<Path>>(&self, symbol_minutes: &SymbolMinutes, image_path: P) -> anyhow::Result<()> {
+    pub fn plot<P: AsRef<Path>>(&self, image_path: P) -> anyhow::Result<()> {
         let start = Instant::now();
+        let symbol_minutes = &self.selection.candles_selection.symbol_minutes;
+
+        let from_date = self.selection.candles_selection.start_time.unwrap();
+        let to_date = self.selection.candles_selection.end_time.unwrap();
 
         let (min_price, max_price) = prices_range_from_candles(&self.candles);
         let (upper, lower) = {
@@ -74,18 +70,18 @@ impl<'a> Plotter<'a> {
             .y_label_area_size(80)
             .x_label_area_size(30)
             .caption(iformat!("{symbol_minutes.symbol} price"), ("sans-serif", 20.0).into_font())
-            .build_cartesian_2d(self.from_date..self.to_date, min_price..max_price)?;
+            .build_cartesian_2d(from_date..to_date, min_price..max_price)?;
 
         chart_context_upper.configure_mesh().x_labels(12).light_line_style(&WHITE).draw()?;
 
         for plotter_upper_ind in self.plotters_ind_upper.iter() {
-            plotter_upper_ind.plot(&self.from_date, &self.to_date, &mut chart_context_upper)?;
+            plotter_upper_ind.plot(self.selection, &mut chart_context_upper)?;
         }
 
         lower.fill(&WHITE)?;
 
         for plotter_ind in self.plotters_ind.iter() {
-            plotter_ind.plot(&symbol_minutes, &self.from_date, &self.to_date, &upper, &lower)?;
+            plotter_ind.plot(self.selection, &upper, &lower)?;
         }
 
         // for plotters_ind_upper_ind in self.plotters_ind_lower.iter() {
@@ -110,15 +106,13 @@ pub fn prices_range_from_candles(candles: &[&Candle]) -> (Decimal, Decimal) {
 }
 
 pub fn plot_candles<'a>(
-    from_date: &DateTime<Utc>,
-    to_date: &DateTime<Utc>,
-    symbol_minutes: &SymbolMinutes,
+    selection: &'a Selection,
     candles: &'a [&'a Candle],
     pivots: &'a [Pivot],
     macd_tac: &'a MacdTac,
     image_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut plotter = Plotter::new(*from_date, *to_date, candles);
+    let mut plotter = Plotter::new(selection, candles);
     let candle_plotter = CandlePlotter::new(candles);
     let pivot_plotter = PivotPlotter::new(pivots);
 
@@ -129,7 +123,7 @@ pub fn plot_candles<'a>(
     plotter.add_plotter_ind(&macd_plotter);
 
     let start = Instant::now();
-    plotter.plot(symbol_minutes, image_name)?;
+    plotter.plot(image_name)?;
     info!("{}", iformat!("### Plotting elapsed: {start.elapsed():?}"));
 
     Ok(())

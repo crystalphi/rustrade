@@ -17,7 +17,10 @@ use exchange::Exchange;
 use ifmt::iformat;
 use log::{info, LevelFilter};
 use repository::Repository;
-use std::time::Instant;
+use std::{
+    collections::{HashMap, HashSet},
+    time::Instant,
+};
 use structopt::StructOpt;
 use tac_plotters::plotter::plot_candles;
 use technicals::{macd::macd_tac::MacdTac, pivots::PivotTac, technical::Technical};
@@ -63,8 +66,12 @@ struct Opt {
 }
 
 pub fn selection_factory(candles_selection: CandlesSelection) -> Selection {
+    let mut tacs = HashMap::new();
+    for tac in vec![MacdTac::definition()] {
+        tacs.insert(tac.name, tac);
+    }
     Selection {
-        tacs: vec![MacdTac::definition()],
+        tacs,
         candles_selection,
         image_name: "out/stock.png".to_string(),
     }
@@ -107,7 +114,7 @@ async fn main() -> anyhow::Result<()> {
         Command::List {} => {
             repo.list_candles(&opt.symbol, &opt.minutes, &10);
         }
-        Command::Plot {} => plot(&repo, &exchange, &candles_selection, selection),
+        Command::Plot {} => plot(&repo, &exchange, &selection),
         Command::Stream {} => {
             let mut streamer = Streamer::new(&mut app);
             streamer.run();
@@ -124,11 +131,11 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelection, selection: Selection) {
+fn plot(repo: &Repository, exchange: &Exchange, selection: &Selection) {
     let start = Instant::now();
     info!("Loading...");
     let mut candles_provider = CandlesProvider::new(repo, exchange);
-    let candles = candles_provider.candles_selection(&selection).unwrap();
+    let candles = candles_provider.candles_selection(selection).unwrap();
     let candles = candles.iter().collect::<Vec<_>>();
     let candles = candles.as_slice();
     info!("{}", iformat!("Loaded {start.elapsed():?}"));
@@ -141,15 +148,6 @@ fn plot(repo: &Repository, exchange: &Exchange, candles_selection: &CandlesSelec
 
     let start = Instant::now();
     info!("Plotting...");
-    plot_candles(
-        &candles_selection.start_time.unwrap(),
-        &candles_selection.end_time.unwrap(),
-        &candles_selection.symbol_minutes,
-        &candles,
-        &pivots,
-        &macd_tac,
-        "out/stock.png",
-    )
-    .unwrap();
+    plot_candles(&selection, &candles, &pivots, &macd_tac, "out/stock.png").unwrap();
     info!("{}", iformat!("Plotted {start.elapsed():?}"));
 }

@@ -22,4 +22,10 @@ impl<'a> Indicator<'a> {
     pub fn push_serie(&mut self, date_time: &'a DateTime<Utc>, value: f64) {
         self.series.push(Serie::new(date_time, value));
     }
+
+    pub fn min_max(&self) -> (f64, f64) {
+        let max = self.series.iter().fold(0f64, |acc, t| acc.max(t.value));
+        let min = self.series.iter().fold(max, |acc, t| acc.min(t.value));
+        (min, max)
+    }
 }

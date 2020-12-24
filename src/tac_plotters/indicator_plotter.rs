@@ -5,14 +5,12 @@ use plotters::{
 };
 use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
 
-use crate::config::symbol_minutes::SymbolMinutes;
+use crate::config::selection::Selection;
 
 pub trait IndicatorPlotter {
     fn plot(
         &self,
-        symbol_minutes: &SymbolMinutes,
-        from_date: &DateTime<Utc>,
-        to_date: &DateTime<Utc>,
+        selection: &Selection,
         upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
         lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
     ) -> anyhow::Result<()>;
@@ -21,8 +19,9 @@ pub trait IndicatorPlotter {
 pub trait PlotterIndicatorContext {
     fn plot(
         &self,
-        from_date: &DateTime<Utc>,
-        to_date: &DateTime<Utc>,
+        selection: &Selection,
+        // from_date: &DateTime<Utc>,
+        // to_date: &DateTime<Utc>,
         chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
     ) -> anyhow::Result<()>;
 }
