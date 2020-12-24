@@ -7,6 +7,7 @@ use plotters::{
 };
 use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
 use rust_decimal::prelude::ToPrimitive;
+use rust_decimal_macros::dec;
 
 use crate::{
     config::selection::Selection,
@@ -35,12 +36,6 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
         let green = RGBColor(16, 196, 64);
 
         let pivots = self.pivots;
-
-        // let pivots = self
-        //     .pivots
-        //     .iter()
-        //     .filter(|p| p.close_time >= from_date && p.close_time <= to_date)
-        //     .collect::<Vec<_>>();
 
         let low_pivots = PointSeries::of_element(
             pivots
@@ -71,5 +66,11 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
 
         chart_context.draw_series(high_pivots)?;
         Ok(())
+    }
+
+    fn min_max(&self) -> (f64, f64) {
+        let max = self.pivots.iter().fold(dec!(0), |acc, t| acc.max(*t.price));
+        let min = self.pivots.iter().fold(max, |acc, t| acc.min(*t.price));
+        (min.to_f64().unwrap(), max.to_f64().unwrap())
     }
 }

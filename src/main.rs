@@ -143,11 +143,12 @@ fn plot(repo: &Repository, exchange: &Exchange, selection: &Selection) {
     let start = Instant::now();
     info!("Tacing...");
     let macd_tac = MacdTac::new(candles);
+    let ema_tac = EmaTac::new(&candles);
     let pivots = PivotTac::new(candles).pivots();
     info!("{}", iformat!("Taced {start.elapsed():?}"));
 
     let start = Instant::now();
     info!("Plotting...");
-    plot_candles(&selection, &candles, &pivots, &macd_tac, "out/stock.png").unwrap();
+    plot_candles(&selection, &candles, &pivots, &macd_tac, &ema_tac, "out/stock.png").unwrap();
     info!("{}", iformat!("Plotted {start.elapsed():?}"));
 }

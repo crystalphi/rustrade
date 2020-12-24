@@ -9,6 +9,7 @@ use crate::{
     repository::Repository,
     strategy::pivots_triangle::pivots_triangle,
     tac_plotters::plotter::plot_candles,
+    technicals::ema_tac::EmaTac,
     technicals::macd::macd_tac::MacdTac,
     technicals::pivots::PivotTac,
     utils::datetime_to_filename,
@@ -67,8 +68,9 @@ impl<'a> Application<'a> {
             candles.len()
         );
         let macd_tac = MacdTac::new(&candles);
+        let ema_tac = EmaTac::new(&candles);
         let pivots = PivotTac::new(&candles).pivots();
-        plot_candles(&selection, &candles, &pivots, &macd_tac, &selection.image_name).unwrap();
+        plot_candles(&selection, &candles, &pivots, &macd_tac, &ema_tac, &selection.image_name).unwrap();
     }
 
     pub fn plot_triangles(&mut self) {

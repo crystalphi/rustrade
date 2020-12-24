@@ -1,17 +1,21 @@
 use super::indicator_plotter::PlotterIndicatorContext;
-use crate::{config::selection::Selection, model::candle::Candle};
+use crate::{
+    config::selection::Selection,
+    model::candle::Candle,
+    technicals::{ema_tac::EmaTac, indicator::Indicator},
+};
 use chrono::{DateTime, Utc};
 use plotters::{coord::types::RangedCoordf32, prelude::*};
 use plotters_bitmap::bitmap_pixel::RGBPixel;
-use rust_decimal::prelude::ToPrimitive;
 
 pub struct EmaPlotter<'a> {
-    candles: &'a [&'a Candle],
+    ema_ind: &'a Indicator<'a>,
 }
 
 impl<'a> EmaPlotter<'a> {
-    pub fn new(candles: &'a [&'a Candle]) -> Self {
-        EmaPlotter { candles }
+    pub fn new(ema_tac: &'a EmaTac<'a>) -> Self {
+        let ema_ind = ema_tac.indicators.get("ema").unwrap();
+        Self { ema_ind }
     }
 }
 
@@ -21,24 +25,17 @@ impl<'a> PlotterIndicatorContext for EmaPlotter<'a> {
         _selection: &Selection,
         chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
     ) -> anyhow::Result<()> {
-        let red = RGBColor(164, 16, 64);
-        let green = RGBColor(16, 196, 64);
+        let orange = RGBColor(255, 165, 0);
 
         chart_context.configure_mesh().x_labels(12).light_line_style(&WHITE).draw()?;
 
-        let candle_series = self.candles.iter().map(|x| {
-            CandleStick::new(
-                x.close_time,
-                x.open.to_f32().unwrap(),
-                x.high.to_f32().unwrap(),
-                x.low.to_f32().unwrap(),
-                x.close.to_f32().unwrap(),
-                &green,
-                &red,
-                2,
-            )
-        });
-        chart_context.draw_series(candle_series)?;
+        let ema_series = LineSeries::new(self.ema_ind.series.iter().map(|s| (*s.date_time, s.value as f32)), &orange);
+
+        chart_context.draw_series(ema_series)?;
         Ok(())
+    }
+
+    fn min_max(&self) -> (f64, f64) {
+        self.ema_ind.min_max()
     }
 }

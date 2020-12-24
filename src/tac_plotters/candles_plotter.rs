@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use plotters::{coord::types::RangedCoordf32, prelude::*};
 use plotters_bitmap::bitmap_pixel::RGBPixel;
 use rust_decimal::prelude::ToPrimitive;
+use rust_decimal_macros::dec;
 
 pub struct CandlePlotter<'a> {
     candles: &'a [&'a Candle],
@@ -40,5 +41,11 @@ impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
         });
         chart_context.draw_series(candle_series)?;
         Ok(())
+    }
+
+    fn min_max(&self) -> (f64, f64) {
+        let max = self.candles.iter().fold(dec!(0), |acc, t| acc.max(t.high));
+        let min = self.candles.iter().fold(max, |acc, t| acc.min(t.low));
+        (min.to_f64().unwrap(), max.to_f64().unwrap())
     }
 }

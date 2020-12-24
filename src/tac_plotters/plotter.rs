@@ -1,7 +1,7 @@
 use crate::{
     config::selection::Selection,
     model::candle::Candle,
-    technicals::{macd::macd_tac::MacdTac, pivots::Pivot},
+    technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::Pivot},
 };
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
@@ -12,8 +12,8 @@ use rust_decimal_macros::dec;
 use std::{path::Path, time::Instant};
 
 use super::{
-    candles_plotter::CandlePlotter, indicator_plotter::IndicatorPlotter, indicator_plotter::PlotterIndicatorContext, macd_plotter::MacdPlotter,
-    pivot_plotter::PivotPlotter,
+    candles_plotter::CandlePlotter, ema_plotter::EmaPlotter, indicator_plotter::IndicatorPlotter, indicator_plotter::PlotterIndicatorContext,
+    macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter,
 };
 
 pub struct Plotter<'a> {
@@ -54,7 +54,9 @@ impl<'a> Plotter<'a> {
         let from_date = self.selection.candles_selection.start_time.unwrap();
         let to_date = self.selection.candles_selection.end_time.unwrap();
 
+        // TODO here must call back top plotters
         let (min_price, max_price) = prices_range_from_candles(&self.candles);
+
         let (upper, lower) = {
             let root = BitMapBackend::new(&image_path, (1920, 1080)).into_drawing_area();
             root.split_vertically((80).percent())
@@ -110,16 +112,22 @@ pub fn plot_candles<'a>(
     candles: &'a [&'a Candle],
     pivots: &'a [Pivot],
     macd_tac: &'a MacdTac,
+    ema_tac: &'a EmaTac,
     image_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut plotter = Plotter::new(selection, candles);
+
+    // Upper indicators
     let candle_plotter = CandlePlotter::new(candles);
     let pivot_plotter = PivotPlotter::new(pivots);
-
-    let macd_plotter = MacdPlotter::new(macd_tac);
+    let ema_plotter = EmaPlotter::new(ema_tac);
 
     plotter.add_plotter_upper_ind(&candle_plotter);
     plotter.add_plotter_upper_ind(&pivot_plotter);
+    plotter.add_plotter_upper_ind(&ema_plotter);
+
+    // Lower indicators
+    let macd_plotter = MacdPlotter::new(macd_tac);
     plotter.add_plotter_ind(&macd_plotter);
 
     let start = Instant::now();

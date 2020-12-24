@@ -81,8 +81,8 @@ fn plot_indicators(
     for indicator in indicators {
         info!("Plotting indicator {}", indicator.name);
         let color = indicator_color(indicator);
-        let macd_fast_series = LineSeries::new(indicator.series.iter().map(|s| (*s.date_time, s.value)), &color);
-        cart_context_lower.draw_series(macd_fast_series)?;
+        let macd_series = LineSeries::new(indicator.series.iter().map(|s| (*s.date_time, s.value)), &color);
+        cart_context_lower.draw_series(macd_series)?;
     }
 
     Ok(())
