@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-
 pub struct Serie<'a> {
     pub date_time: &'a DateTime<Utc>,
     pub value: f64,

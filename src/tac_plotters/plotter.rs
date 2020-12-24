@@ -46,17 +46,20 @@ impl<'a> Plotter<'a> {
         let from_date = self.selection.candles_selection.start_time.unwrap();
         let to_date = self.selection.candles_selection.end_time.unwrap();
 
-        // TODO here must call back top plotters
-        let (min_price, max_price) = prices_range_from_candles(&self.candles);
+        let (min_price, max_price) = self
+            .plotters_ind_upper
+            .iter()
+            .map(|i| i.min_max())
+            .fold_first(|p, c| (p.0.min(c.0), p.1.max(c.1)))
+            .unwrap();
+        let min_price = min_price as f32;
+        let max_price = max_price as f32;
 
         let (upper, lower) = {
             let root = BitMapBackend::new(&image_path, (1920, 1080)).into_drawing_area();
             root.split_vertically((80).percent())
         };
         upper.fill(&WHITE)?;
-
-        let min_price = min_price.to_f32().unwrap();
-        let max_price = max_price.to_f32().unwrap();
 
         let mut chart_context_upper = ChartBuilder::on(&upper)
             .set_label_area_size(LabelAreaPosition::Left, 30)
