@@ -29,7 +29,7 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
     let macd_tac = MacdTac::new(&candles, 34, 72, 17);
     let ema_short_tac = EmaTac::new(&candles, 17);
     let ema_long_tac = EmaTac::new(&candles, 72);
-    let pivots = PivotTac::new(&candles).pivots();
+    let pivots = PivotTac::new(&candles, 7).pivots();
 
     let mut plotter = Plotter::new(selection);
 

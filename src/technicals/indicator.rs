@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 
 use super::serie::Serie;
-
 pub struct Indicator<'a> {
     pub name: String,
     pub series: Vec<Serie<'a>>,

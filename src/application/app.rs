@@ -59,7 +59,7 @@ impl<'a> Application<'a> {
 
         info!("{}", iformat!("Loaded {start.elapsed():?}"));
 
-        let pivots = PivotTac::new(candles_ref).pivots();
+        let pivots = PivotTac::new(candles_ref, 7).pivots();
         let pivots = pivots.iter().collect::<Vec<_>>();
         let pivots_ref = pivots.as_slice();
 

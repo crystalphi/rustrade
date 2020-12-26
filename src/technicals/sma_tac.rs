@@ -1,19 +1,31 @@
+use crate::model::candle::Candle;
 use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
-use crate::{model::candle::Candle, technicals::technical::Technical};
 use ifmt::iformat;
 use log::info;
 use rust_decimal::prelude::ToPrimitive;
 use std::{collections::HashMap, time::Instant};
 use ta::{indicators::SimpleMovingAverage as Sma, Next};
 
+use super::technical::{TechnicalDefinition, TechnicalIndicators};
+
 pub struct SmaTac<'a> {
     pub indicators: HashMap<String, Indicator<'a>>,
 }
 
-impl<'a> Technical for SmaTac<'a> {
+impl<'a> TechnicalDefinition<'a> for SmaTac<'a> {
     fn definition() -> crate::config::definition::TacDefinition {
         let indicators = vec!["sma"];
         TacDefinition::new("sma", &indicators)
+    }
+}
+
+impl<'a> TechnicalIndicators<'a> for SmaTac<'a> {
+    fn indicators(&self) -> &HashMap<String, Indicator<'a>> {
+        &self.indicators
+    }
+
+    fn main_indicator(&self) -> &Indicator {
+        self.indicators.get("sma").unwrap()
     }
 }
 
@@ -25,7 +37,7 @@ impl<'a> SmaTac<'a> {
         let mut sma = Indicator::new("sma");
         let mut indicators = HashMap::new();
 
-        let mut sma_ta = Ema::new(period as usize).unwrap();
+        let mut sma_ta = Sma::new(period as usize).unwrap();
         for candle in candles.iter() {
             let close = candle.close.to_f64().unwrap();
 
@@ -37,7 +49,7 @@ impl<'a> SmaTac<'a> {
 
         info!("{}", iformat!("Technicals {candles.len()}: {start.elapsed():?}"));
 
-        EmaTac { indicators }
+        Self { indicators }
     }
 }
 

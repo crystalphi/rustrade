@@ -1,4 +1,4 @@
-use super::technical::Technical;
+use super::technical::{TechnicalDefinition, TechnicalIndicators};
 use crate::{config::definition::TacDefinition, model::candle::Candle};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
@@ -42,13 +42,16 @@ impl<'a> Ord for Pivot<'a> {
 
 pub struct PivotTac<'a> {
     candles: &'a [&'a Candle],
+    neighbors: usize,
 }
 
-impl<'a> Technical<'a> for PivotTac<'a> {
+impl<'a> TechnicalDefinition<'a> for PivotTac<'a> {
     fn definition() -> TacDefinition {
         TacDefinition::new("pivots", &["pivots"])
     }
+}
 
+impl<'a> TechnicalIndicators<'a> for PivotTac<'a> {
     fn indicators(&self) -> &std::collections::HashMap<String, super::indicator::Indicator<'a>> {
         todo!()
     }
@@ -59,38 +62,29 @@ impl<'a> Technical<'a> for PivotTac<'a> {
 }
 
 impl<'a> PivotTac<'a> {
-    pub fn new(candles: &'a [&'a Candle]) -> Self {
-        PivotTac { candles }
+    pub fn new(candles: &'a [&'a Candle], neighbors: usize) -> Self {
+        PivotTac { candles, neighbors }
     }
 
     pub fn pivots(&self) -> Vec<Pivot<'a>> {
         let mut result = Vec::new();
-
-        let neighbors = 7;
-
-        for i in 0..self.candles.len() - (neighbors * 2 + 1) {
-            let pivot = self.candles[i + neighbors];
-
-            let l_min = self.candles[i..i + neighbors].iter().map(|c| c.low).min().unwrap_or(pivot.low);
-
-            let l_max = self.candles[i..i + neighbors].iter().map(|c| c.high).max().unwrap_or(pivot.high);
-
-            let r_min = self.candles[i + neighbors + 1..i + (neighbors * 2 + 1)]
+        for i in 0..self.candles.len() - (self.neighbors * 2 + 1) {
+            let pivot = self.candles[i + self.neighbors];
+            let l_min = self.candles[i..i + self.neighbors].iter().map(|c| c.low).min().unwrap_or(pivot.low);
+            let l_max = self.candles[i..i + self.neighbors].iter().map(|c| c.high).max().unwrap_or(pivot.high);
+            let r_min = self.candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
                 .iter()
                 .map(|c| c.low)
                 .min()
                 .unwrap_or(pivot.low);
-
-            let r_max = self.candles[i + neighbors + 1..i + (neighbors * 2 + 1)]
+            let r_max = self.candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
                 .iter()
                 .map(|c| c.high)
                 .max()
                 .unwrap_or(pivot.high);
-
             if pivot.low < l_min && pivot.low < r_min {
                 result.push(Pivot::new(PivotType::Low, &pivot.close_time, &pivot.low));
             }
-
             if pivot.high > l_max && pivot.high > r_max {
                 result.push(Pivot::new(PivotType::High, &pivot.close_time, &pivot.high));
             }
@@ -380,7 +374,7 @@ pub mod tests {
 
         let candles = [&c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16, &c17];
 
-        let pivot_tac = PivotTac::new(&candles);
+        let pivot_tac = PivotTac::new(&candles, 7);
 
         let pivots = pivot_tac.pivots();
 

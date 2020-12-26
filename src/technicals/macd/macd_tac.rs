@@ -1,5 +1,11 @@
-use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
-use crate::{model::candle::Candle, technicals::technical::Technical};
+use crate::model::candle::Candle;
+use crate::{
+    config::definition::TacDefinition,
+    technicals::{
+        indicator::Indicator,
+        technical::{TechnicalDefinition, TechnicalIndicators},
+    },
+};
 use ifmt::iformat;
 use log::info;
 use rust_decimal::prelude::ToPrimitive;
@@ -10,12 +16,13 @@ pub struct MacdTac<'a> {
     pub indicators: HashMap<String, Indicator<'a>>,
 }
 
-impl<'a> Technical<'a> for MacdTac<'a> {
+impl<'a> TechnicalDefinition<'a> for MacdTac<'a> {
     fn definition() -> crate::config::definition::TacDefinition {
         let indicators = vec!["macd", "signal", "divergence"];
         TacDefinition::new("macd", &indicators)
     }
-
+}
+impl<'a> TechnicalIndicators<'a> for MacdTac<'a> {
     fn main_indicator(&self) -> &Indicator {
         self.indicators.get("mcad").unwrap()
     }

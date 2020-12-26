@@ -21,7 +21,7 @@ use log::{info, LevelFilter};
 use repository::Repository;
 use std::collections::HashMap;
 use structopt::StructOpt;
-use technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, technical::Technical};
+use technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, technical::TechnicalDefinition};
 use utils::str_to_datetime;
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Commands")]

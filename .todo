@@ -19,6 +19,7 @@
 ✔ Normalize App x Stream x Main @done(20-12-24 16:58)
 ✔ min x max from top inds @done(20-12-24 17:24)
 ✔ Heikin Aishi @done(20-12-25 19:01)
+☐ Pivot is not a indicator, what is Pivot? Maybe renaneme Indicator to IndicatorSerrie and Indicator be a Trait
 ☐ Indicator provider, from hash map x enum
 ☐ Strategy (position, rule, etc)
 ☐ Migrate TradeBase and TradeMacd
