@@ -17,6 +17,7 @@ impl<'a> IndicatorProvider<'a> {
         }
     }
 
+    // TODO resolve this ugly match inside or_inser_with
     fn tac_indicator(&'a mut self, candles: &'a [&Candle], ind_name: &str, period: usize) -> &Indicator {
         let tac = self.tac_indicators.entry((ind_name.to_string(), period)).or_insert_with(|| match ind_name {
             "ema" => Box::new(EmaTac::new(candles, period)) as Box<dyn TechnicalIndicators<'a>>, // <= cast box<struct> as box<trait>
@@ -35,7 +36,6 @@ impl<'a> IndicatorProvider<'a> {
     }
 
     pub fn indicator(&'a mut self, candles: &'a [&Candle], i_type: &IndicatorType) -> anyhow::Result<&'a Indicator<'a>> {
-        //let ind = self.indicators.entry(*i_type).or_insert_with_key(|i_type|
         let ind = match i_type {
             IndicatorType::Macd(fast_period, slow_period, signal_period) => self.macd(candles, "mcad", *fast_period, *slow_period, *signal_period),
             IndicatorType::Macd_signal(fast_period, slow_period, signal_period) => self.macd(candles, "signal", *fast_period, *slow_period, *signal_period),
@@ -46,8 +46,6 @@ impl<'a> IndicatorProvider<'a> {
             IndicatorType::Sma(period) => self.tac_indicator(candles, "sma", *period),
             IndicatorType::Pivot(period) => self.tac_indicator(candles, "pivot", *period),
         };
-        //);
-
         Ok(ind)
     }
 }

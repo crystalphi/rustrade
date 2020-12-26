@@ -5,12 +5,7 @@ use log::info;
 use plotters::style::RGBColor;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{
-    config::selection::Selection,
-    model::candle::Candle,
-    tac_plotters::{candles_plotter::CandlePlotter, ema_plotter::EmaPlotter, macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter, plotter::Plotter},
-    technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac},
-};
+use crate::{config::selection::Selection, model::candle::Candle, technicals::ind_provider::IndicatorProvider, tac_plotters::{candles_plotter::CandlePlotter, ema_plotter::EmaPlotter, macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter, plotter::Plotter}, technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac}};
 
 pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Result<()> {
     let start_time = selection.candles_selection.start_time.unwrap();
@@ -26,6 +21,10 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
         selection.candles_selection.end_time,
         candles.len()
     );
+
+    let mut indicator_provider = IndicatorProvider::new();
+
+
     let macd_tac = MacdTac::new(&candles, 34, 72, 17);
     let ema_short_tac = EmaTac::new(&candles, 17);
     let ema_long_tac = EmaTac::new(&candles, 72);
