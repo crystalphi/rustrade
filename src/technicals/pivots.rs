@@ -44,13 +44,17 @@ pub struct PivotTac<'a> {
     candles: &'a [&'a Candle],
 }
 
-impl<'a> Technical for PivotTac<'a> {
-    // fn indicators(&'a self) -> Vec<&'a Indicator<'a>> {
-    //     todo!()
-    // }
-
+impl<'a> Technical<'a> for PivotTac<'a> {
     fn definition() -> TacDefinition {
         TacDefinition::new("pivots", &["pivots"])
+    }
+
+    fn indicators(&self) -> &std::collections::HashMap<String, super::indicator::Indicator<'a>> {
+        todo!()
+    }
+
+    fn main_indicator(&self) -> &super::indicator::Indicator {
+        todo!()
     }
 }
 
@@ -60,22 +64,28 @@ impl<'a> PivotTac<'a> {
     }
 
     pub fn pivots(&self) -> Vec<Pivot<'a>> {
-        //     0..7    8..15
-        // 012345678901234
-        //        X0123456
-
         let mut result = Vec::new();
 
-        for i in 0..self.candles.len() - 15 {
-            let pivot = self.candles[i + 7];
+        let neighbors = 7;
 
-            let l_min = self.candles[i..i + 7].iter().map(|c| c.low).min().unwrap_or(pivot.low);
+        for i in 0..self.candles.len() - (neighbors * 2 + 1) {
+            let pivot = self.candles[i + neighbors];
 
-            let l_max = self.candles[i..i + 7].iter().map(|c| c.high).max().unwrap_or(pivot.high);
+            let l_min = self.candles[i..i + neighbors].iter().map(|c| c.low).min().unwrap_or(pivot.low);
 
-            let r_min = self.candles[i + 8..i + 15].iter().map(|c| c.low).min().unwrap_or(pivot.low);
+            let l_max = self.candles[i..i + neighbors].iter().map(|c| c.high).max().unwrap_or(pivot.high);
 
-            let r_max = self.candles[i + 8..i + 15].iter().map(|c| c.high).max().unwrap_or(pivot.high);
+            let r_min = self.candles[i + neighbors + 1..i + (neighbors * 2 + 1)]
+                .iter()
+                .map(|c| c.low)
+                .min()
+                .unwrap_or(pivot.low);
+
+            let r_max = self.candles[i + neighbors + 1..i + (neighbors * 2 + 1)]
+                .iter()
+                .map(|c| c.high)
+                .max()
+                .unwrap_or(pivot.high);
 
             if pivot.low < l_min && pivot.low < r_min {
                 result.push(Pivot::new(PivotType::Low, &pivot.close_time, &pivot.low));
@@ -106,14 +116,12 @@ fn normalize_pivots(pivots: &mut Vec<Pivot>) {
         match pivots_iter.next() {
             None => break,
             Some(current) => {
-                //debug!("{}", iformat!("pivots {current:?}"));
                 if current.type_p == previous.type_p {
                     if current.type_p == PivotType::Low {
                         delete.insert(max_price(previous, current));
                     } else {
                         delete.insert(min_price(previous, current));
                     }
-                    //debug!(" *");
                 }
                 previous = current;
             }

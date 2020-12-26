@@ -1,6 +1,9 @@
+#[derive(PartialEq, Eq, Hash)]
 pub enum IndicatorType {
-    Macd(u32, u32, u32),
-    Ema(u32),
-    Sma(u32),
-    Pivot(u32),
+    Macd(usize, usize, usize),
+    Macd_signal(usize, usize, usize),
+    Macd_divergence(usize, usize, usize),
+    Ema(usize),
+    Sma(usize),
+    Pivot(usize),
 }

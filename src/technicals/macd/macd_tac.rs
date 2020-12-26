@@ -10,15 +10,23 @@ pub struct MacdTac<'a> {
     pub indicators: HashMap<String, Indicator<'a>>,
 }
 
-impl<'a> Technical for MacdTac<'a> {
+impl<'a> Technical<'a> for MacdTac<'a> {
     fn definition() -> crate::config::definition::TacDefinition {
         let indicators = vec!["macd", "signal", "divergence"];
         TacDefinition::new("macd", &indicators)
     }
+
+    fn main_indicator(&self) -> &Indicator {
+        self.indicators.get("mcad").unwrap()
+    }
+
+    fn indicators(&self) -> &HashMap<String, Indicator<'a>> {
+        &self.indicators
+    }
 }
 
 impl<'a> MacdTac<'a> {
-    pub fn new(candles: &'a [&'a Candle]) -> Self {
+    pub fn new(candles: &'a [&'a Candle], fast_period: usize, slow_period: usize, signal_period: usize) -> Self {
         let start = Instant::now();
 
         let mut macd = Indicator::new("macd");
@@ -26,7 +34,8 @@ impl<'a> MacdTac<'a> {
         let mut divergence = Indicator::new("divergence");
         let mut indicators = HashMap::new();
 
-        let mut macd_ta = Macd::new(34, 72, 17).unwrap();
+        // 34, 72, 17
+        let mut macd_ta = Macd::new(fast_period, slow_period, signal_period).unwrap();
         for candle in candles.iter() {
             let close = candle.close.to_f64().unwrap();
 

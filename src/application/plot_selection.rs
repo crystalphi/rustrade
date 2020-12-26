@@ -26,7 +26,7 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
         selection.candles_selection.end_time,
         candles.len()
     );
-    let macd_tac = MacdTac::new(&candles);
+    let macd_tac = MacdTac::new(&candles, 34, 72, 17);
     let ema_short_tac = EmaTac::new(&candles, 17);
     let ema_long_tac = EmaTac::new(&candles, 72);
     let pivots = PivotTac::new(&candles).pivots();

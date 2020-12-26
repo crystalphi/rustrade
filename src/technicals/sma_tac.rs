@@ -4,52 +4,40 @@ use ifmt::iformat;
 use log::info;
 use rust_decimal::prelude::ToPrimitive;
 use std::{collections::HashMap, time::Instant};
-use ta::{indicators::ExponentialMovingAverage as Ema, Next};
+use ta::{indicators::SimpleMovingAverage as Sma, Next};
 
-pub struct EmaTac<'a> {
+pub struct SmaTac<'a> {
     pub indicators: HashMap<String, Indicator<'a>>,
 }
 
-impl<'a> Technical<'a> for EmaTac<'a> {
+impl<'a> Technical for SmaTac<'a> {
     fn definition() -> crate::config::definition::TacDefinition {
-        let indicators = vec!["ema"];
-        TacDefinition::new("ema", &indicators)
-    }
-
-    fn indicators(&self) -> &HashMap<String, Indicator<'a>> {
-        &self.indicators
-    }
-
-    fn main_indicator(&self) -> &Indicator {
-        self.indicators.get("ema").unwrap()
+        let indicators = vec!["sma"];
+        TacDefinition::new("sma", &indicators)
     }
 }
 
-impl<'a> EmaTac<'a> {
+impl<'a> SmaTac<'a> {
     // default period is 34
     pub fn new(candles: &'a [&'a Candle], period: usize) -> Self {
         let start = Instant::now();
 
-        let mut ema = Indicator::new("ema");
+        let mut sma = Indicator::new("sma");
         let mut indicators = HashMap::new();
 
-        let mut ema_ta = Ema::new(period as usize).unwrap();
+        let mut sma_ta = Ema::new(period as usize).unwrap();
         for candle in candles.iter() {
             let close = candle.close.to_f64().unwrap();
 
-            let ema_result = ema_ta.next(close);
-            ema.push_serie(&candle.close_time, ema_result);
+            let sma_result = sma_ta.next(close);
+            sma.push_serie(&candle.close_time, sma_result);
         }
 
-        indicators.insert(ema.name.clone(), ema);
+        indicators.insert(sma.name.clone(), sma);
 
         info!("{}", iformat!("Technicals {candles.len()}: {start.elapsed():?}"));
 
         EmaTac { indicators }
-    }
-
-    pub fn indicator(&self) -> &Indicator {
-        self.indicators.get("ema").unwrap()
     }
 }
 
