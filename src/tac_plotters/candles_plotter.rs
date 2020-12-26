@@ -36,8 +36,8 @@ impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
                 x.high.to_f32().unwrap(),
                 x.low.to_f32().unwrap(),
                 x.close.to_f32().unwrap(),
-                &red,
                 &green,
+                &red,
                 4,
             )
         });

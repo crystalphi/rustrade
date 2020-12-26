@@ -70,7 +70,13 @@ impl Exchange {
             }
             Err(e) => {
                 let error = iformat!("exchange: {e}");
-                error!("{}", error);
+                error!("*** {}", error);
+                for ec in e.iter() {
+                    if let Some(source) = ec.source() {
+                        error!("### {}", source);
+                    }
+                    error!("{}", ec);
+                }
                 bail!(error)
             }
         }

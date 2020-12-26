@@ -31,7 +31,7 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
     let ema_long_tac = EmaTac::new(&candles, 72);
     let pivots = PivotTac::new(&candles).pivots();
 
-    let mut plotter = Plotter::new(selection, &candles);
+    let mut plotter = Plotter::new(selection);
 
     // ema 17 = purple
     // ema 72 = orange

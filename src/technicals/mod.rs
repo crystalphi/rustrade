@@ -1,5 +1,7 @@
 pub mod ema_tac;
 pub mod heikin_ashi;
+pub mod ind_provider;
+pub mod ind_type;
 pub mod indicator;
 pub mod macd;
 pub mod pivots;
