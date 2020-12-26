@@ -22,10 +22,12 @@ impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
         _selection: &Selection,
         chart_context: &mut ChartContext<BitMapBackend<RGBPixel>, Cartesian2d<RangedDateTime<DateTime<Utc>>, RangedCoordf32>>,
     ) -> anyhow::Result<()> {
+        chart_context.configure_mesh().x_labels(12).light_line_style(&WHITE).draw()?;
+
         let red = RGBColor(164, 16, 64);
         let green = RGBColor(16, 196, 64);
-
-        chart_context.configure_mesh().x_labels(12).light_line_style(&WHITE).draw()?;
+        // Into::<ShapeStyle>::into(&RGBColor(16, 196, 64)).filled(),
+        // Into::<ShapeStyle>::into(&RGBColor(164, 16, 64)).filled(),
 
         let candle_series = self.candles.iter().map(|x| {
             CandleStick::new(
@@ -34,9 +36,9 @@ impl<'a> PlotterIndicatorContext for CandlePlotter<'a> {
                 x.high.to_f32().unwrap(),
                 x.low.to_f32().unwrap(),
                 x.close.to_f32().unwrap(),
-                &green,
                 &red,
-                2,
+                &green,
+                4,
             )
         });
         chart_context.draw_series(candle_series)?;

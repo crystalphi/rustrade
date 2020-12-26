@@ -7,8 +7,8 @@
 ✔ Find cause of integrity problem @done(20-12-21 23:23)
 ✔ Finish flow retrieving candles @done(20-12-21 23:24)
 ✔ Plot triangles -> create triangles plotter @done(20-12-23 22:16)
-✘ Slow 3s to plot 14 days 15 m @cancelled(20-12-23 21:02)
-✘ Appers not working 30 min @cancelled(20-12-23 21:02)
+✔ Slow 3s to plot 14 days 15 m @done(20-12-25 19:54)
+✔ Appers not working 30 min @done(20-12-25 19:54)
 ✔ Purple Ema @done(20-12-24 16:58)
 ✔ White grid lines on Ema @done(20-12-24 16:58)
 ✔ -> Ema indicators, colors orange x purple @done(20-12-24 16:58)
@@ -18,8 +18,13 @@
 ✔ Draw ema on same candle area @done(20-12-24 16:58)
 ✔ Normalize App x Stream x Main @done(20-12-24 16:58)
 ✔ min x max from top inds @done(20-12-24 17:24)
+✔ Heikin Aishi @done(20-12-25 19:01)
 ☐ Strategy (position, rule, etc)
+☐ Migrate TradeBase and TradeMacd
+☐ Use close time or open time ? ema / mcad must use same
+☐ See video Heikin Aishi
 ☐ More days to split column
+☐ Candle width dinamic with selection
 ☐ Reduce plot dependency wasm x servo | slow time compilation
 ☐ Plot macd inds from selected
 ☐ Black theme

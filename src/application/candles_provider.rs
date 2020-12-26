@@ -4,6 +4,7 @@ use crate::{
     exchange::Exchange,
     model::{candle::Candle, open_close::OpenClose},
     repository::Repository,
+    technicals::heikin_ashi,
 };
 use chrono::{Duration, Utc};
 use ifmt::iformat;
@@ -69,6 +70,9 @@ impl<'a> CandlesProvider<'a> {
             }
         }
         info!("Finished import");
+
+        let candles_ref = candles.iter().collect::<Vec<_>>();
+        let candles = heikin_ashi::heikin_ashi(&candles_ref.as_slice());
 
         Ok(candles)
     }

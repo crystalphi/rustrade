@@ -4,7 +4,7 @@ use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
 use log::info;
 use plotters::prelude::*;
-use rust_decimal::{prelude::ToPrimitive, Decimal};
+use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::{path::Path, time::Instant};
 
@@ -88,16 +88,4 @@ impl<'a> Plotter<'a> {
         info!("{}", iformat!("*** Plotting elapsed: {start.elapsed():?}"));
         Ok(())
     }
-}
-
-pub fn _date_time_range_from_candles(candles: &[&Candle], minutes: &u32) -> (DateTime<Utc>, DateTime<Utc>) {
-    let from_date = candles[0].close_time - Duration::minutes(*minutes as i64);
-    let to_date = candles[candles.len() - 1].close_time + Duration::minutes(*minutes as i64);
-    (from_date, to_date)
-}
-
-pub fn prices_range_from_candles(candles: &[&Candle]) -> (Decimal, Decimal) {
-    let max_price = candles.iter().fold(dec!(0), |acc, x| acc.max(x.high));
-    let min_price = candles.iter().fold(max_price, |acc, x| acc.min(x.low));
-    (min_price, max_price)
 }
