@@ -19,10 +19,10 @@
 ✔ Normalize App x Stream x Main @done(20-12-24 16:58)
 ✔ min x max from top inds @done(20-12-24 17:24)
 ✔ Heikin Aishi @done(20-12-25 19:01)
-☐ EmaPlotter should be LinePlotter(indicator, color) 
+✔ EmaPlotter should be LinePlotter(indicator, color) @done(20-12-26 15:52)
 ☐ Pivot is not a indicator, what is Pivot? Maybe renaneme Indicator to IndicatorSerie and Indicator be a Trait
 ☐ Indicator provider, from hash map x enum
-☐ Strategy (position, rule, etc)
+☐ Strategy (trade, position, rule, etc)
 ☐ Migrate TradeBase and TradeMacd
 ☐ Use close time or open time ? ema / mcad must use same
 ☐ See video Heikin Aishi
@@ -30,7 +30,7 @@
 ☐ Candle width dinamic with selection
 ☐ Reduce plot dependency wasm x servo | slow time compilation
 ☐ Plot macd inds from selected
-☐ Black theme
+☐ Black theme (white grid lines)
 ☐ Download tickets/trade
 ☐ Live download tickets/trade
 ☐ Resolve confusion checker x synchronizer

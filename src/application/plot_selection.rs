@@ -5,7 +5,16 @@ use log::info;
 use plotters::style::RGBColor;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{config::selection::Selection, model::candle::Candle, technicals::ind_provider::IndicatorProvider, tac_plotters::{candles_plotter::CandlePlotter, ema_plotter::EmaPlotter, macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter, plotter::Plotter}, technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac}};
+use crate::{
+    config::selection::Selection,
+    model::candle::Candle,
+    tac_plotters::{
+        candles_plotter::CandlePlotter, line_ind_plotter::LineIndicatorPlotter, macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter, plotter::Plotter,
+    },
+    technicals::ind_provider::IndicatorProvider,
+    technicals::technical::TechnicalIndicators,
+    technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac},
+};
 
 pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Result<()> {
     let start_time = selection.candles_selection.start_time.unwrap();
@@ -24,7 +33,6 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
 
     let mut indicator_provider = IndicatorProvider::new();
 
-
     let macd_tac = MacdTac::new(&candles, 34, 72, 17);
     let ema_short_tac = EmaTac::new(&candles, 17);
     let ema_long_tac = EmaTac::new(&candles, 72);
@@ -40,8 +48,8 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
     // Upper indicators
     let candle_plotter = CandlePlotter::new(&candles);
     let pivot_plotter = PivotPlotter::new(&pivots);
-    let ema_short_plotter = EmaPlotter::new(&ema_short_tac, short_purple);
-    let ema_long_plotter = EmaPlotter::new(&ema_long_tac, long_orange);
+    let ema_short_plotter = LineIndicatorPlotter::new(ema_short_tac.main_indicator(), short_purple);
+    let ema_long_plotter = LineIndicatorPlotter::new(ema_long_tac.main_indicator(), long_orange);
 
     plotter.add_plotter_upper_ind(&candle_plotter);
     plotter.add_plotter_upper_ind(&pivot_plotter);
