@@ -12,7 +12,7 @@ fold_firstq = 'yes'
 [dependencies]
 anyhow = "1.0"
 async-std = {version = "1.8.0", features = ["attributes"]}
-binance = "0.11.0"
+binance = "0.11.1"
 chrono = "0.4.19"
 colored = "2.0.0"
 dotenv = "0.15.0"

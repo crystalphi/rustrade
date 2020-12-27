@@ -23,7 +23,7 @@ impl<'a> TrendProvider for MacdTrend<'a> {
 }
 
 impl<'a> TrendProviderFactory<'a, MacdTrend<'a>> for MacdTrend<'a> {
-    fn new(ind_provider: &'a IndicatorProvider<'a>) -> MacdTrend<'a> {
+    fn create(ind_provider: &'a IndicatorProvider<'a>) -> MacdTrend<'a> {
         MacdTrend::new(ind_provider)
     }
 }

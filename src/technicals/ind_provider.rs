@@ -1,4 +1,4 @@
-use super::{ema_tac::EmaTac, ind_type::IndicatorType, macd::macd_tac::MacdTac, pivots::PivotTac, sma_tac::SmaTac, technical::TechnicalIndicators};
+use super::{ema_tac::EmaTac, ind_type::IndicatorType, macd::macd_tac::MacdTac, sma_tac::SmaTac, technical::TechnicalIndicators};
 use crate::{model::candle::Candle, technicals::indicator::Indicator};
 use std::collections::HashMap;
 pub struct IndicatorProvider<'a> {

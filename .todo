@@ -8,26 +8,26 @@
 ✔ Finish flow retrieving candles @done(20-12-21 23:24)
 ✔ Plot triangles -> create triangles plotter @done(20-12-23 22:16)
 ✔ Slow 3s to plot 14 days 15 m @done(20-12-25 19:54)
-✔ Appers not working 30 min @done(20-12-25 19:54)
+✔ Appears not working 30 min @done(20-12-25 19:54)
 ✔ Purple Ema @done(20-12-24 16:58)
 ✔ White grid lines on Ema @done(20-12-24 16:58)
 ✔ -> Ema indicators, colors orange x purple @done(20-12-24 16:58)
 ✔ -> Call back to get min/max from Indicators before call to draw series @done(20-12-24 16:58)
-✔ Normalize main::plot x Application::plot_selecion @done(20-12-24 16:58)
+✔ Normalize main::plot x Application::plot_selection @done(20-12-24 16:58)
 ✔ Get min x mac macd inds @done(20-12-24 16:58)
 ✔ Draw ema on same candle area @done(20-12-24 16:58)
 ✔ Normalize App x Stream x Main @done(20-12-24 16:58)
 ✔ min x max from top inds @done(20-12-24 17:24)
 ✔ Heikin Aishi @done(20-12-25 19:01)
 ✔ EmaPlotter should be LinePlotter(indicator, color) @done(20-12-26 15:52)
-☐ Pivot is not a indicator, what is Pivot? Maybe renaneme Indicator to IndicatorSerie and Indicator be a Trait
+☐ Pivot is not a indicator, what is Pivot? Maybe rename Indicator to IndicatorSerie and Indicator be a Trait
 ☐ Indicator provider, from hash map x enum
 ☐ Strategy (trade, position, rule, etc)
 ☐ Migrate TradeBase and TradeMacd
 ☐ Use close time or open time ? ema / mcad must use same
 ☐ See video Heikin Aishi
 ☐ More days to split column
-☐ Candle width dinamic with selection
+☐ Candle width dynamic with selection
 ☐ Reduce plot dependency wasm x servo | slow time compilation
 ☐ Plot macd inds from selected
 ☐ Black theme (white grid lines)
@@ -55,19 +55,19 @@ https://www.modalmais.com.br/blog/fibonacci#:~:text=No%20mercado%20financeiro%2C
 
 https://www.youtube.com/watch?v=JnOGgsRCpHw&list=PLgXR3B3sPcIIID4weJrK-kcTI6eBdimBn
 00:08:00
-Ganho 1/3 risco ganho
+Gain 1/3 risc gain
 
 https://www.youtube.com/watch?v=VFQ-KjCzUrE&list=PLgXR3B3sPcIIID4weJrK-kcTI6eBdimBn&index=2
 1:06:00
 Pivots
 
-5 min é a maior parte do tempo
-15 min é referência
+5 min almost part time
+15 min reference
 
-1 min é ajuste fino
+1 min thin adjustment
 
-ema 72 = laranja
-ema 17 = roxo
+ema 72 = orange
+ema 17 = purple
 
 ===========
 allowed: {

@@ -1,4 +1,4 @@
-use crate::{model::candle::Candle, technicals::ind_provider::IndicatorProvider};
+use crate::model::candle::Candle;
 
 use super::trend::Trend;
 
