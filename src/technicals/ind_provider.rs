@@ -38,8 +38,8 @@ impl<'a> IndicatorProvider<'a> {
     pub fn indicator(&'a mut self, candles: &'a [&Candle], i_type: &IndicatorType) -> anyhow::Result<&'a Indicator<'a>> {
         let ind = match i_type {
             IndicatorType::Macd(fast_period, slow_period, signal_period) => self.macd(candles, "mcad", *fast_period, *slow_period, *signal_period),
-            IndicatorType::Macd_signal(fast_period, slow_period, signal_period) => self.macd(candles, "signal", *fast_period, *slow_period, *signal_period),
-            IndicatorType::Macd_divergence(fast_period, slow_period, signal_period) => {
+            IndicatorType::MacdSignal(fast_period, slow_period, signal_period) => self.macd(candles, "signal", *fast_period, *slow_period, *signal_period),
+            IndicatorType::MacdDivergence(fast_period, slow_period, signal_period) => {
                 self.macd(candles, "divergence", *fast_period, *slow_period, *signal_period)
             }
             IndicatorType::Ema(period) => self.tac_indicator(candles, "ema", *period),

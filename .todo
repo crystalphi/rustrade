@@ -20,6 +20,7 @@
 ✔ min x max from top inds @done(20-12-24 17:24)
 ✔ Heikin Aishi @done(20-12-25 19:01)
 ✔ EmaPlotter should be LinePlotter(indicator, color) @done(20-12-26 15:52)
+☐ Add new candle to indicators (or replace last)
 ☐ Pivot is not a indicator, what is Pivot? Maybe rename Indicator to IndicatorSerie and Indicator be a Trait
 ☐ Indicator provider, from hash map x enum
 ☐ Strategy (trade, position, rule, etc)
@@ -50,7 +51,7 @@ Aggregate trades list
 https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#compressedaggregate-trades-list
 
 
-Regra fibonnaci
+Regra fibonacci
 https://www.modalmais.com.br/blog/fibonacci#:~:text=No%20mercado%20financeiro%2C%20%C3%A9%20utilizada,%C3%A0%20soma%20dos%20dois%20anteriores.&text=Na%20an%C3%A1lise%20t%C3%A9cnica%20de%20investimentos,pontos%20de%20expans%C3%A3o%20ou%20retra%C3%A7%C3%A3o.
 
 https://www.youtube.com/watch?v=JnOGgsRCpHw&list=PLgXR3B3sPcIIID4weJrK-kcTI6eBdimBn

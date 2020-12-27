@@ -34,7 +34,7 @@ impl<'a> EmaTac<'a> {
     pub fn new(candles: &'a [&'a Candle], period: usize) -> Self {
         let start = Instant::now();
 
-        let mut ema = Indicator::new("ema");
+        let mut ema = Indicator::new("ema", candles.len());
         let mut indicators = HashMap::new();
 
         let mut ema_ta = Ema::new(period as usize).unwrap();

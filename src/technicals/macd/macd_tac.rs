@@ -12,19 +12,21 @@ use rust_decimal::prelude::ToPrimitive;
 use std::{collections::HashMap, time::Instant};
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
+pub const MACD_IND: &str = "macd";
+
 pub struct MacdTac<'a> {
     pub indicators: HashMap<String, Indicator<'a>>,
 }
 
 impl<'a> TechnicalDefinition<'a> for MacdTac<'a> {
     fn definition() -> crate::config::definition::TacDefinition {
-        let indicators = vec!["macd", "signal", "divergence"];
-        TacDefinition::new("macd", &indicators)
+        let indicators = vec![MACD_IND, "signal", "divergence"];
+        TacDefinition::new(MACD_IND, &indicators)
     }
 }
 impl<'a> TechnicalIndicators<'a> for MacdTac<'a> {
     fn main_indicator(&self) -> &Indicator {
-        self.indicators.get("mcad").unwrap()
+        self.indicators.get(MACD_IND).unwrap()
     }
 
     fn indicators(&self) -> &HashMap<String, Indicator<'a>> {
@@ -36,9 +38,9 @@ impl<'a> MacdTac<'a> {
     pub fn new(candles: &'a [&'a Candle], fast_period: usize, slow_period: usize, signal_period: usize) -> Self {
         let start = Instant::now();
 
-        let mut macd = Indicator::new("macd");
-        let mut signal = Indicator::new("signal");
-        let mut divergence = Indicator::new("divergence");
+        let mut macd = Indicator::new(MACD_IND, candles.len());
+        let mut signal = Indicator::new("signal", candles.len());
+        let mut divergence = Indicator::new("divergence", candles.len());
         let mut indicators = HashMap::new();
 
         // 34, 72, 17

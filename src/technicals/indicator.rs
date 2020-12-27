@@ -7,10 +7,10 @@ pub struct Indicator<'a> {
 }
 
 impl<'a> Indicator<'a> {
-    pub fn new(name: &str) -> Self {
+    pub fn new(name: &str, capacity: usize) -> Self {
         Indicator {
             name: name.into(),
-            series: vec![],
+            series: Vec::with_capacity(capacity),
         }
     }
 
