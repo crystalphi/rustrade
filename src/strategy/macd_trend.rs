@@ -1,3 +1,5 @@
+use std::collections::btree_map::VacantEntry;
+
 use super::{trend::Trend, trend_prov_factory::TrendProviderFactory, trend_provider::TrendProvider};
 use crate::{
     model::candle::Candle,
@@ -20,8 +22,8 @@ impl<'a> MacdTrend<'a> {
 }
 
 impl<'a> TrendProvider<'a> for MacdTrend<'a> {
-    fn trend(&'a self, candles: &'a [&Candle]) -> Trend {
-        let mcad = self.ind_provider.indicator(candles, &IndicatorType::Macd(34, 72, 17)).unwrap();
+    fn trend(&'a mut self, candles: &'a [&Candle]) -> Trend {
+        let _mcad = self.ind_provider.indicator(candles, &IndicatorType::Macd(34, 72, 17)).unwrap();
         todo!()
     }
 }
