@@ -55,20 +55,3 @@ impl<'a> EmaTac<'a> {
         self.indicators.get("ema").unwrap()
     }
 }
-
-/*
-    java:
-    /home/vanius/Documents/java/TradeBot/src/main/java/br/com/vanius/tradebot/trader/TraderMACD.java
-        MACDIndicator macd = new MACDIndicator(closePriceIndicator, 12, 26);
-        EMAIndicator sma = new EMAIndicator(macd, 9);
-        currentInd = currentMACD.subtract(currentSMA);
-
-    rust:
-
-                        // let ema_val = ema_9.next(&dt);
-
-                        // 17,34,72
-                        // let mut macd = Macd::new(3, 6, 4).unwrap();
-                        // macd.next(&dt);
-
-*/

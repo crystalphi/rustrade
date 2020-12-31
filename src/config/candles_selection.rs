@@ -46,8 +46,6 @@ mod my_date_format {
         }
     }
 
-    // https://stackoverflow.com/questions/44301748/how-can-i-deserialize-an-optional-field-with-custom-functions-using-serde/44303505
-
     // The signature of a deserialize_with function must follow the pattern:
     //
     //    fn deserialize<'de, D>(D) -> Result<T, D::Error>

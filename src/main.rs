@@ -125,8 +125,5 @@ async fn main() -> anyhow::Result<()> {
         }
     };
     info!("Exiting program");
-    //assert_e!(row.0, 150);
-    // https://github.com/launchbadge/sqlx/blob/master/examples/postgres/todos/src/main.rs
-
     Ok(())
 }

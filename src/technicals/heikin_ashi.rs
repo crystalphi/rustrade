@@ -47,32 +47,3 @@ fn heikin_ashi_candles(prev_ha_open: Decimal, prev_ha_close: Decimal, c: &Candle
         ..c.clone()
     }
 }
-
-// https://quantiacs.com/Blog/Intro-to-Algorithmic-Trading-with-Heikin-Ashi.aspx
-
-/*
-
-Often times Heikin-Ashi is a purely visual aid, and as you can see from the charts it smooths out the bars to emphasize trends with streaks of increasing/decreasing bars.
-To build our system, we’ll have to dive into the math behind the indicator.
-For any indicator this is usually well documented and can be found with a quick Google search. Here’s what we get for Heikin-Ashi:
-
-Heikin-Ashi Candle Calculations
-HA_Close = (Open + High + Low + Close) / 4
-HA_Open = (previous HA_Open + previous HA_Close) / 2
-HA_Low = minimum of Low, HA_Open, and HA_Close
-HA_High = maximum of High, HA_Open, and HA_Close
-
-One thing you may notice immediately is that the Heikin-Ashi Open price is a result of the previous Heikin-Ashi values.
-So when you’re first starting to calculate Heikin-Ashi, how do you obtain “previous” values? Well the standard solution is to do this on the first run:
-Heikin-Ashi Calculations on First Run
-
-HA_Close = (Open + High + Low + Close) / 4
-HA_Open = (Open + Close) / 2
-HA_Low = Low
-HA_High = High
-
-
-*/
-
-// One thing you may notice immediately is that the Heikin-Ashi Open price is a result of the previous Heikin-Ashi values. So when you’re first starting to calculate Heikin-Ashi, how do you obtain “previous” values? Well the standard solution is to do this on the first run:
-// Heikin-Ashi Calculations on First Run
