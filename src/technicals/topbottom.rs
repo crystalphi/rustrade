@@ -4,54 +4,54 @@ use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use std::{cmp::Ordering, collections::HashSet};
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash)]
-pub enum PivotType {
-    Low,
-    High,
+pub enum TopBottomType {
+    Top,
+    Bottom,
 }
 
-impl std::fmt::Display for PivotType {
+impl std::fmt::Display for TopBottomType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if *self == PivotType::Low { "Low" } else { "High" })
+        f.write_str(if *self == TopBottomType::Top { "Low" } else { "High" })
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Pivot<'a> {
+pub struct TopBottom<'a> {
     pub close_time: &'a DateTime<Utc>,
     pub price: &'a Decimal,
-    pub type_p: PivotType,
+    pub type_p: TopBottomType,
 }
 
-impl<'a> Pivot<'a> {
-    pub fn new(type_p: PivotType, close_time: &'a DateTime<Utc>, price: &'a Decimal) -> Self {
+impl<'a> TopBottom<'a> {
+    pub fn new(type_p: TopBottomType, close_time: &'a DateTime<Utc>, price: &'a Decimal) -> Self {
         Self { close_time, type_p, price }
     }
 }
 
-impl<'a> PartialOrd for Pivot<'a> {
+impl<'a> PartialOrd for TopBottom<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.close_time.cmp(other.close_time))
     }
 }
 
-impl<'a> Ord for Pivot<'a> {
+impl<'a> Ord for TopBottom<'a> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.close_time.cmp(&other.close_time)
     }
 }
 
-pub struct PivotTac<'a> {
+pub struct TopBottomTac<'a> {
     candles: &'a [&'a Candle],
     neighbors: usize,
 }
 
-impl<'a> TechnicalDefinition<'a> for PivotTac<'a> {
+impl<'a> TechnicalDefinition<'a> for TopBottomTac<'a> {
     fn definition() -> TacDefinition {
-        TacDefinition::new("pivots", &["pivots"])
+        TacDefinition::new("topbottom", &["topbottom"])
     }
 }
 
-impl<'a> TechnicalIndicators<'a> for PivotTac<'a> {
+impl<'a> TechnicalIndicators<'a> for TopBottomTac<'a> {
     fn indicators(&self) -> &std::collections::HashMap<String, super::indicator::Indicator<'a>> {
         todo!()
     }
@@ -61,57 +61,57 @@ impl<'a> TechnicalIndicators<'a> for PivotTac<'a> {
     }
 }
 
-impl<'a> PivotTac<'a> {
+impl<'a> TopBottomTac<'a> {
     pub fn new(candles: &'a [&'a Candle], neighbors: usize) -> Self {
-        PivotTac { candles, neighbors }
+        TopBottomTac { candles, neighbors }
     }
 
-    pub fn pivots(&self) -> Vec<Pivot<'a>> {
+    pub fn topbottoms(&self) -> Vec<TopBottom<'a>> {
         let mut result = Vec::new();
         for i in 0..self.candles.len() - (self.neighbors * 2 + 1) {
-            let pivot = self.candles[i + self.neighbors];
-            let l_min = self.candles[i..i + self.neighbors].iter().map(|c| c.low).min().unwrap_or(pivot.low);
-            let l_max = self.candles[i..i + self.neighbors].iter().map(|c| c.high).max().unwrap_or(pivot.high);
+            let candle = self.candles[i + self.neighbors];
+            let l_min = self.candles[i..i + self.neighbors].iter().map(|c| c.low).min().unwrap_or(candle.low);
+            let l_max = self.candles[i..i + self.neighbors].iter().map(|c| c.high).max().unwrap_or(candle.high);
             let r_min = self.candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
                 .iter()
                 .map(|c| c.low)
                 .min()
-                .unwrap_or(pivot.low);
+                .unwrap_or(candle.low);
             let r_max = self.candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
                 .iter()
                 .map(|c| c.high)
                 .max()
-                .unwrap_or(pivot.high);
-            if pivot.low < l_min && pivot.low < r_min {
-                result.push(Pivot::new(PivotType::Low, &pivot.close_time, &pivot.low));
+                .unwrap_or(candle.high);
+            if candle.low < l_min && candle.low < r_min {
+                result.push(TopBottom::new(TopBottomType::Top, &candle.close_time, &candle.low));
             }
-            if pivot.high > l_max && pivot.high > r_max {
-                result.push(Pivot::new(PivotType::High, &pivot.close_time, &pivot.high));
+            if candle.high > l_max && candle.high > r_max {
+                result.push(TopBottom::new(TopBottomType::Bottom, &candle.close_time, &candle.high));
             }
         }
-        normalize_pivots(&mut result);
+        normalize_topbottoms(&mut result);
         result
     }
 }
 
-fn normalize_pivots(pivots: &mut Vec<Pivot>) {
-    if pivots.is_empty() {
+fn normalize_topbottoms(topbottoms: &mut Vec<TopBottom>) {
+    if topbottoms.is_empty() {
         return;
     }
 
     let mut delete = HashSet::new();
-    let mut reverse = pivots.clone();
+    let mut reverse = topbottoms.clone();
     reverse.reverse();
 
-    let mut pivots_iter = reverse.iter();
+    let mut topbottoms_iter = reverse.iter();
 
-    let mut previous = pivots_iter.next().unwrap();
+    let mut previous = topbottoms_iter.next().unwrap();
     loop {
-        match pivots_iter.next() {
+        match topbottoms_iter.next() {
             None => break,
             Some(current) => {
                 if current.type_p == previous.type_p {
-                    if current.type_p == PivotType::Low {
+                    if current.type_p == TopBottomType::Top {
                         delete.insert(max_price(previous, current));
                     } else {
                         delete.insert(min_price(previous, current));
@@ -122,10 +122,10 @@ fn normalize_pivots(pivots: &mut Vec<Pivot>) {
         }
     }
 
-    pivots.retain(|p| delete.get(p).is_none());
+    topbottoms.retain(|p| delete.get(p).is_none());
 }
 
-fn max_price<'a>(previous: &'a Pivot, current: &'a Pivot) -> &'a Pivot<'a> {
+fn max_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBottom<'a> {
     if previous.price > current.price {
         previous
     } else {
@@ -133,7 +133,7 @@ fn max_price<'a>(previous: &'a Pivot, current: &'a Pivot) -> &'a Pivot<'a> {
     }
 }
 
-fn min_price<'a>(previous: &'a Pivot, current: &'a Pivot) -> &'a Pivot<'a> {
+fn min_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBottom<'a> {
     if previous.price < current.price {
         previous
     } else {
@@ -150,7 +150,7 @@ pub mod tests {
     use rust_decimal_macros::dec;
 
     #[test]
-    fn pivot_test() {
+    fn topbottom_test() {
         let c1 = Candle {
             id: dec!(0),
             open_time: str_to_datetime("2020-01-12 12:00:00"),
@@ -374,13 +374,13 @@ pub mod tests {
 
         let candles = [&c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16, &c17];
 
-        let pivot_tac = PivotTac::new(&candles, 7);
+        let topbottom_tac = TopBottomTac::new(&candles, 7);
 
-        let pivots = pivot_tac.pivots();
+        let topbottoms = topbottom_tac.topbottoms();
 
-        iprintln!("{pivots.len()}");
-        for pivot in pivots.iter() {
-            iprintln!("{pivot:?}");
+        iprintln!("{topbottoms.len()}");
+        for topbottom in topbottoms.iter() {
+            iprintln!("{topbottom:?}");
         }
     }
 }

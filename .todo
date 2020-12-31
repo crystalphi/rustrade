@@ -24,7 +24,7 @@
 ☐ remove .env and docker using bfg 
 ☐ became public project
 ☐ Add new candle to indicators (or replace last)
-☐ Pivot is not a indicator, what is Pivot? Maybe rename Indicator to IndicatorSerie and Indicator be a Trait
+☐ TopBottom is not a indicator, what is TopBottom? Maybe rename Indicator to IndicatorSerie and Indicator be a Trait
 ☐ Indicator provider, from hash map x enum
 ☐ Strategy (trade, position, rule, etc)
 ☐ Migrate TradeBase and TradeMacd

@@ -2,11 +2,12 @@ use crate::{
     config::selection::Selection,
     model::candle::Candle,
     tac_plotters::{
-        candles_plotter::CandlePlotter, line_ind_plotter::LineIndicatorPlotter, macd_plotter::MacdPlotter, pivot_plotter::PivotPlotter, plotter::Plotter,
+        candles_plotter::CandlePlotter, line_ind_plotter::LineIndicatorPlotter, macd_plotter::MacdPlotter, plotter::Plotter,
+        topbottom_plotter::TopBottomPlotter,
     },
     technicals::ind_provider::IndicatorProvider,
     technicals::technical::TechnicalIndicators,
-    technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac},
+    technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, topbottom::TopBottomTac},
 };
 use ifmt::iformat;
 use log::info;
@@ -34,7 +35,7 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
     let macd_tac = MacdTac::new(&candles, 34, 72, 17);
     let ema_short_tac = EmaTac::new(&candles, 17);
     let ema_long_tac = EmaTac::new(&candles, 72);
-    let pivots = PivotTac::new(&candles, 7).pivots();
+    let topbottoms = TopBottomTac::new(&candles, 7).topbottoms();
 
     let mut plotter = Plotter::new(selection);
 
@@ -45,12 +46,12 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
     let long_orange = RGBColor(255, 165, 0);
     // Upper indicators
     let candle_plotter = CandlePlotter::new(&candles);
-    let pivot_plotter = PivotPlotter::new(&pivots);
+    let topbottom_plotter = TopBottomPlotter::new(&topbottoms);
     let ema_short_plotter = LineIndicatorPlotter::new(ema_short_tac.main_indicator(), short_purple);
     let ema_long_plotter = LineIndicatorPlotter::new(ema_long_tac.main_indicator(), long_orange);
 
     plotter.add_plotter_upper_ind(&candle_plotter);
-    plotter.add_plotter_upper_ind(&pivot_plotter);
+    plotter.add_plotter_upper_ind(&topbottom_plotter);
     plotter.add_plotter_upper_ind(&ema_short_plotter);
     plotter.add_plotter_upper_ind(&ema_long_plotter);
 

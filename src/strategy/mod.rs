@@ -1,6 +1,6 @@
 pub mod macd_trend;
 pub mod model;
-pub mod pivots_triangle;
+pub mod topbottom_triangle;
 pub mod trader;
 pub mod trend;
 pub mod trend_prov_factory;

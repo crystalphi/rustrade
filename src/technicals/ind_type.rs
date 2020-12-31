@@ -5,5 +5,5 @@ pub enum IndicatorType {
     MacdDivergence(usize, usize, usize),
     Ema(usize),
     Sma(usize),
-    Pivot(usize),
+    TopBottom(usize),
 }

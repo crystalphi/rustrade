@@ -4,8 +4,8 @@ use crate::{
     config::{definition::ConfigDefinition, selection::Selection},
     exchange::Exchange,
     repository::Repository,
-    strategy::pivots_triangle::pivots_triangle,
-    technicals::pivots::PivotTac,
+    strategy::topbottom_triangle::topbottom_triangle,
+    technicals::topbottom::TopBottomTac,
     utils::datetime_to_filename,
 };
 use chrono::Duration;
@@ -58,13 +58,13 @@ impl<'a> Application<'a> {
 
         info!("{}", iformat!("Loaded {start.elapsed():?}"));
 
-        let pivots = PivotTac::new(candles_ref, 7).pivots();
-        let pivots = pivots.iter().collect::<Vec<_>>();
-        let pivots_ref = pivots.as_slice();
+        let topbottoms = TopBottomTac::new(candles_ref, 7).topbottoms();
+        let topbottoms = topbottoms.iter().collect::<Vec<_>>();
+        let topbottoms_ref = topbottoms.as_slice();
 
         let minutes = self.selection.candles_selection.symbol_minutes.minutes;
 
-        let triangles = pivots_triangle(pivots_ref, &minutes);
+        let triangles = topbottom_triangle(topbottoms_ref, &minutes);
         triangles.par_iter().for_each(|triangle| {
             let mut selection = self.selection.clone();
             let open_time = triangle.open(&minutes);

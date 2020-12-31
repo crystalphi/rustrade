@@ -1,7 +1,7 @@
 use super::indicator_plotter::PlotterIndicatorContext;
 use crate::{
     config::selection::Selection,
-    technicals::pivots::{Pivot, PivotType},
+    technicals::topbottom::{TopBottom, TopBottomType},
 };
 use chrono::{DateTime, Utc};
 use plotters::{
@@ -14,17 +14,17 @@ use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
 
-pub struct PivotPlotter<'a> {
-    pivots: &'a [Pivot<'a>],
+pub struct TopBottomPlotter<'a> {
+    topbottoms: &'a [TopBottom<'a>],
 }
 
-impl<'a> PivotPlotter<'a> {
-    pub fn new(pivots: &'a [Pivot<'a>]) -> Self {
-        PivotPlotter { pivots }
+impl<'a> TopBottomPlotter<'a> {
+    pub fn new(topbottoms: &'a [TopBottom<'a>]) -> Self {
+        TopBottomPlotter { topbottoms }
     }
 }
 
-impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
+impl<'a> PlotterIndicatorContext for TopBottomPlotter<'a> {
     fn plot(
         &self,
         _selection: &Selection,
@@ -33,12 +33,12 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
         let red = RGBColor(164, 16, 64);
         let green = RGBColor(16, 196, 64);
 
-        let pivots = self.pivots;
+        let topbottoms = self.topbottoms;
 
-        let low_pivots = PointSeries::of_element(
-            pivots
+        let lows = PointSeries::of_element(
+            topbottoms
                 .iter()
-                .filter(|p| p.type_p == PivotType::Low)
+                .filter(|p| p.type_p == TopBottomType::Top)
                 .map(|c| (*c.close_time, c.price.to_f32().unwrap())),
             3,
             ShapeStyle::from(&red).filled(),
@@ -47,12 +47,12 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
                 //+ Text::new(format!("{:?}", coord), (0, 15), ("sans-serif", 15))
             },
         );
-        chart_context.draw_series(low_pivots)?;
+        chart_context.draw_series(lows)?;
 
-        let high_pivots = PointSeries::of_element(
-            pivots
+        let tops = PointSeries::of_element(
+            topbottoms
                 .iter()
-                .filter(|p| p.type_p == PivotType::High)
+                .filter(|p| p.type_p == TopBottomType::Bottom)
                 .map(|c| (*c.close_time, c.price.to_f32().unwrap())),
             3,
             ShapeStyle::from(&green).filled(),
@@ -62,13 +62,13 @@ impl<'a> PlotterIndicatorContext for PivotPlotter<'a> {
             },
         );
 
-        chart_context.draw_series(high_pivots)?;
+        chart_context.draw_series(tops)?;
         Ok(())
     }
 
     fn min_max(&self) -> (f64, f64) {
-        let max = self.pivots.iter().fold(dec!(0), |acc, t| acc.max(*t.price));
-        let min = self.pivots.iter().fold(max, |acc, t| acc.min(*t.price));
+        let max = self.topbottoms.iter().fold(dec!(0), |acc, t| acc.max(*t.price));
+        let min = self.topbottoms.iter().fold(max, |acc, t| acc.min(*t.price));
         (min.to_f64().unwrap(), max.to_f64().unwrap())
     }
 }

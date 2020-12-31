@@ -41,7 +41,7 @@ impl<'a, 'b> IndicatorProvider<'a> {
             }
             IndicatorType::Ema(period) => self.tac_indicator(candles, "ema", *period),
             IndicatorType::Sma(period) => self.tac_indicator(candles, "sma", *period),
-            IndicatorType::Pivot(period) => self.tac_indicator(candles, "pivot", *period),
+            IndicatorType::TopBottom(period) => self.tac_indicator(candles, "topbottom", *period),
         };
         Ok(ind)
     }
