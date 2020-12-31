@@ -11,8 +11,20 @@ impl<'a> Trader<'a> {
         Self { tend_provider }
     }
 
-    pub fn check(&'a mut self, candles: &'a [&Candle]) {
-        let _trend = self.tend_provider.trend(candles);
+    pub fn check(&mut self, candles: &'a [&Candle]) {
+        self.tend_provider.trend(candles);
+    }
+}
+
+pub struct TraderS {}
+
+impl<'a, 'b> TraderS {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn check(&mut self, candles: &'b [&Candle]) {
+        //self.tend_provider.trend(candles);
     }
 }
 
@@ -22,12 +34,16 @@ pub fn run_trader(mut app: Application) -> anyhow::Result<()> {
     let candles = candles.iter().collect::<Vec<_>>();
     let candles_ref = candles.as_slice();
 
-    let mcad_trend = MacdTrend::new(IndicatorProvider::new());
-    
+    let indicator_provider = IndicatorProvider::new();
+
+    let mut trader_s = TraderS::new();
+    trader_s.check(candles_ref);
+
+    let mcad_trend = MacdTrend::new(indicator_provider);
     let mut trader = Trader::new(Box::new(mcad_trend));
 
     trader.check(candles_ref);
 
-    //Trader::run(&mcad_trend);
+    // Trader::run(&mcad_trend);
     Ok(())
 }

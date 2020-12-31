@@ -31,7 +31,7 @@ pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Res
         candles.len()
     );
 
-    let mut indicator_provider = IndicatorProvider::new();
+    let mut _indicator_provider = IndicatorProvider::new();
 
     let macd_tac = MacdTac::new(&candles, 34, 72, 17);
     let ema_short_tac = EmaTac::new(&candles, 17);
