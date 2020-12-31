@@ -1,11 +1,10 @@
+use crate::config::selection::Selection;
 use chrono::{DateTime, Utc};
 use plotters::{
     coord::{types::RangedCoordf32, Shift},
     prelude::{Cartesian2d, ChartContext, DrawingArea, RangedDateTime},
 };
 use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
-
-use crate::config::selection::Selection;
 
 pub trait IndicatorPlotter {
     fn plot(

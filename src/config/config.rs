@@ -1,5 +1,3 @@
-
-
 pub struct Configuration {
     selection: Selection,
 }

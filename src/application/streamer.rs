@@ -1,11 +1,8 @@
-use core::time;
-use std::thread;
-
-use log::info;
-
-use crate::{config::selection::Selection, model::candle::Candle};
-
 use super::{app::Application, plot_selection::plot_selection};
+use crate::{config::selection::Selection, model::candle::Candle};
+use core::time;
+use log::info;
+use std::thread;
 
 pub struct Streamer<'a> {
     app: &'a mut Application<'a>,

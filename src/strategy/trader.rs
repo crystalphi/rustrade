@@ -1,6 +1,5 @@
-use crate::{application::app::Application, model::candle::Candle, technicals::ind_provider::IndicatorProvider};
-
 use super::{macd_trend::MacdTrend, trend_provider::TrendProvider};
+use crate::{application::app::Application, model::candle::Candle, technicals::ind_provider::IndicatorProvider};
 
 pub struct Trader<'a> {
     tend_provider: Box<dyn TrendProvider<'a> + 'a>,

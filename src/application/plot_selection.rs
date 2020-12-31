@@ -1,10 +1,3 @@
-use std::time::Instant;
-
-use ifmt::iformat;
-use log::info;
-use plotters::style::RGBColor;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-
 use crate::{
     config::selection::Selection,
     model::candle::Candle,
@@ -15,6 +8,11 @@ use crate::{
     technicals::technical::TechnicalIndicators,
     technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, pivots::PivotTac},
 };
+use ifmt::iformat;
+use log::info;
+use plotters::style::RGBColor;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use std::time::Instant;
 
 pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Result<()> {
     let start_time = selection.candles_selection.start_time.unwrap();

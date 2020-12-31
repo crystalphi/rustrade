@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use super::{candles_provider::CandlesProvider, plot_selection::plot_selection, streamer::Streamer};
 use crate::{
     checker::Checker,
@@ -15,6 +13,7 @@ use ifmt::iformat;
 use log::info;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::prelude::*;
+use std::time::Instant;
 
 pub struct Application<'a> {
     pub repo: &'a Repository,

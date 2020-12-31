@@ -1,3 +1,4 @@
+use super::technical::{TechnicalDefinition, TechnicalIndicators};
 use crate::model::candle::Candle;
 use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
 use ifmt::iformat;
@@ -5,8 +6,6 @@ use log::info;
 use rust_decimal::prelude::ToPrimitive;
 use std::{collections::HashMap, time::Instant};
 use ta::{indicators::ExponentialMovingAverage as Ema, Next};
-
-use super::technical::{TechnicalDefinition, TechnicalIndicators};
 
 pub struct EmaTac<'a> {
     pub indicators: HashMap<String, Indicator<'a>>,

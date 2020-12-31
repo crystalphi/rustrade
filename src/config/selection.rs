@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
-
 use super::{candles_selection::CandlesSelection, definition::TacDefinition};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Selection {

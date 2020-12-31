@@ -1,3 +1,8 @@
+use super::indicator_plotter::PlotterIndicatorContext;
+use crate::{
+    config::selection::Selection,
+    technicals::pivots::{Pivot, PivotType},
+};
 use chrono::{DateTime, Utc};
 use plotters::{
     coord::types::RangedCoordf32,
@@ -8,13 +13,6 @@ use plotters::{
 use plotters_bitmap::{bitmap_pixel::RGBPixel, BitMapBackend};
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
-
-use crate::{
-    config::selection::Selection,
-    technicals::pivots::{Pivot, PivotType},
-};
-
-use super::indicator_plotter::PlotterIndicatorContext;
 
 pub struct PivotPlotter<'a> {
     pivots: &'a [Pivot<'a>],
