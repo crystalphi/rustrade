@@ -1,5 +1,7 @@
 use super::serie::Serie;
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
+
 pub struct Indicator<'a> {
     pub name: String,
     pub series: Vec<Serie<'a>>,
@@ -25,5 +27,9 @@ impl<'a> Indicator<'a> {
         let max = self.series.iter().fold(0f64, |acc, t| acc.max(t.value));
         let min = self.series.iter().fold(max, |acc, t| acc.min(t.value));
         (min, max)
+    }
+
+    pub fn value(&self) -> anyhow::Result<f64> {
+        Ok(self.series.last().ok_or(anyhow!("No last candle!"))?.value)
     }
 }

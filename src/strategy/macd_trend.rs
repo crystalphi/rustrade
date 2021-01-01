@@ -20,9 +20,10 @@ impl<'a> MacdTrend<'a> {
 }
 
 impl<'a> TrendProvider<'a> for MacdTrend<'a> {
-    fn trend(&mut self, candles: &'a [&Candle]) -> Trend {
-        let _mcad = self.indicator_provider.indicator(candles, &IndicatorType::Macd(34, 72, 17)).unwrap();
-        todo!()
+    fn trend(&mut self, candles: &'a [&Candle]) -> anyhow::Result<Trend> {
+        let mcad = self.indicator_provider.indicator(candles, &IndicatorType::Macd(34, 72, 17))?.value()?;
+        let mcad_signal = self.indicator_provider.indicator(candles, &IndicatorType::MacdSignal(34, 72, 17))?.value()?;
+        Ok(if mcad > mcad_signal { Trend::Bought } else { Trend::Sold })
     }
 }
 

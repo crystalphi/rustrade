@@ -20,6 +20,7 @@
 ✔ min x max from top inds @done(20-12-24 17:24)
 ✔ Heikin Aishi @done(20-12-25 19:01)
 ✔ EmaPlotter should be LinePlotter(indicator, color) @done(20-12-26 15:52)
+☐ Indicator process only last period candles, but on plotting need process all
 ☐ Remove annotations and url, move to google doc
 ☐ Remove .env and docker pass using bfg 
 ☐ Create docker compose
