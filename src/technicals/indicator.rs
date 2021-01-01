@@ -30,6 +30,6 @@ impl<'a> Indicator<'a> {
     }
 
     pub fn value(&self) -> anyhow::Result<f64> {
-        Ok(self.series.last().ok_or(anyhow!("No last candle!"))?.value)
+        Ok(self.series.last().ok_or_else(|| anyhow!("No last candle!"))?.value)
     }
 }

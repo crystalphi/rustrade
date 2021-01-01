@@ -135,7 +135,7 @@ pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges:
         inverted_ranges.push((start, end));
         //}
         Ok(())
-    };
+    }
     let mut inverted_ranges = Vec::new();
     let duration = Duration::minutes(*minutes as i64);
 

@@ -4,7 +4,7 @@ use crate::{
     config::{definition::ConfigDefinition, selection::Selection},
     exchange::Exchange,
     repository::Repository,
-    strategy::topbottom_triangle::topbottom_triangle,
+    strategy::{topbottom_triangle::topbottom_triangle, trader::run_trader_back_test},
     technicals::topbottom::TopBottomTac,
     utils::datetime_to_filename,
 };
@@ -48,11 +48,16 @@ impl<'a> Application<'a> {
         self.selection = selection;
     }
 
+    pub fn run_back_test(&mut self) -> anyhow::Result<()> {
+        run_trader_back_test(self)?;
+        Ok(())
+    }
+
     pub fn plot_triangles(&mut self) -> anyhow::Result<()> {
         let start = Instant::now();
         info!("Loading...");
 
-        let candles = self.candles_provider.candles_selection(&self.selection).unwrap();
+        let candles = self.candles_provider.candles_selection(&self.selection)?;
         let candles = candles.iter().collect::<Vec<_>>();
         let candles_ref = candles.as_slice();
 
@@ -78,9 +83,9 @@ impl<'a> Application<'a> {
         Ok(())
     }
 
-    pub fn run_stream(&'a mut self) {
+    pub fn run_stream(&'a mut self) -> anyhow::Result<()> {
         let mut streamer = Streamer::new(self);
-        streamer.run();
+        streamer.run()
     }
 
     pub fn plot_selection(&mut self) -> anyhow::Result<()> {

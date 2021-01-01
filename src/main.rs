@@ -44,6 +44,8 @@ enum Command {
     Triangle {},
     /// Interative stream
     Stream {},
+    /// Run trader bot back test
+    BackTest {},
 }
 
 #[derive(Debug, StructOpt)]
@@ -83,9 +85,9 @@ async fn main() -> anyhow::Result<()> {
 
     ri_lib_log_utils::setup_log(LevelFilter::Debug);
 
-    dotenv::dotenv().unwrap();
-    let exchange: Exchange = Exchange::new().unwrap();
-    let repo: Repository = Repository::new().unwrap();
+    dotenv::dotenv()?;
+    let exchange: Exchange = Exchange::new()?;
+    let repo: Repository = Repository::new()?;
 
     let candles_selection = CandlesSelection::new(
         &opt.symbol,
@@ -106,7 +108,7 @@ async fn main() -> anyhow::Result<()> {
             checker.check_inconsist(&repo, &candles_selection);
         }
         Command::Sync {} => {
-            checker.synchronize().unwrap();
+            checker.synchronize()?;
         }
         Command::Fix {} => {
             checker.delete_inconsist();
@@ -114,15 +116,16 @@ async fn main() -> anyhow::Result<()> {
         Command::List {} => {
             repo.list_candles(&opt.symbol, &opt.minutes, &10);
         }
-        Command::Plot {} => app.plot_selection().unwrap(),
+        Command::Plot {} => app.plot_selection()?,
         Command::Stream {} => {
             let mut streamer = Streamer::new(&mut app);
-            streamer.run();
+            streamer.run()?;
         }
         Command::Import {} => {}
         Command::Triangle {} => {
-            app.plot_triangles().unwrap();
+            app.plot_triangles()?;
         }
+        Command::BackTest {} => app.run_back_test()?,
     };
     info!("Exiting program");
     Ok(())

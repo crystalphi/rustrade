@@ -1,5 +1,6 @@
 pub mod macd_trend;
 pub mod model;
+pub mod order_executor;
 pub mod topbottom_triangle;
 pub mod trader;
 pub mod trend;

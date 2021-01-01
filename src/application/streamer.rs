@@ -13,19 +13,19 @@ impl<'a> Streamer<'a> {
         Self { app }
     }
 
-    fn read_lines() -> Vec<String> {
+    fn read_lines() -> anyhow::Result<Vec<String>> {
         loop {
             let mut line = String::new();
-            std::io::stdin().read_line(&mut line).unwrap();
+            std::io::stdin().read_line(&mut line)?;
             let result = line.trim_end_matches('\n').to_string();
             if !result.is_empty() {
-                break result.lines().map(|l| l.to_string()).collect();
+                break Ok(result.lines().map(|l| l.to_string()).collect());
             }
             thread::sleep(time::Duration::from_millis(500));
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> anyhow::Result<()> {
         const GET_DEFINITION: &str = "GetDefinition";
         const GET_SELECTION: &str = "GetSelection";
         const SET_SELECTION: &str = "SetSelection";
@@ -42,7 +42,7 @@ impl<'a> Streamer<'a> {
         let mut in_selection = false;
         let mut selection_buffer = String::from("");
         'outer: loop {
-            for line in Self::read_lines() {
+            for line in Self::read_lines()? {
                 if line == TERMINATE {
                     info!("Terminated!");
                     break 'outer;
@@ -83,7 +83,7 @@ impl<'a> Streamer<'a> {
 
                 if line == IMPORT {
                     info!("Getting candles...");
-                    candles = self.app.candles_provider.candles_selection(&self.app.selection).unwrap();
+                    candles = self.app.candles_provider.candles_selection(&self.app.selection)?;
                     info!("Candles got");
                     continue;
                 }
@@ -91,7 +91,7 @@ impl<'a> Streamer<'a> {
                 if line == PLOT {
                     info!("Plotting...");
                     let candles_ref = candles.iter().collect::<Vec<_>>();
-                    plot_selection(&self.app.selection, candles_ref.as_slice()).unwrap();
+                    plot_selection(&self.app.selection, candles_ref.as_slice())?;
                     info!("Plotted!");
                     continue;
                 }
@@ -106,5 +106,6 @@ impl<'a> Streamer<'a> {
                 info!("Unknown command \"{}\"", line);
             }
         }
+        Ok(())
     }
 }
