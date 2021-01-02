@@ -9,19 +9,19 @@ use ta::{indicators::SimpleMovingAverage as Sma, Next};
 use super::technical::{TechnicalDefinition, TechnicalIndicators};
 
 pub const SMA_IND: &str = "sma";
-pub struct SmaTac<'a> {
-    pub indicators: HashMap<String, Indicator<'a>>,
+pub struct SmaTac {
+    pub indicators: HashMap<String, Indicator>,
 }
 
-impl<'a> TechnicalDefinition<'a> for SmaTac<'a> {
+impl TechnicalDefinition for SmaTac {
     fn definition() -> crate::config::definition::TacDefinition {
         let indicators = vec![SMA_IND];
         TacDefinition::new(SMA_IND, &indicators)
     }
 }
 
-impl<'a> TechnicalIndicators<'a> for SmaTac<'a> {
-    fn indicators(&self) -> &HashMap<String, Indicator<'a>> {
+impl TechnicalIndicators for SmaTac {
+    fn indicators(&self) -> &HashMap<String, Indicator> {
         &self.indicators
     }
 
@@ -30,7 +30,7 @@ impl<'a> TechnicalIndicators<'a> for SmaTac<'a> {
     }
 }
 
-impl<'a> SmaTac<'a> {
+impl<'a> SmaTac {
     // default period is 34
     pub fn new(candles: &'a [&'a Candle], period: usize) -> Self {
         let start = Instant::now();
@@ -42,7 +42,7 @@ impl<'a> SmaTac<'a> {
         for candle in candles.iter() {
             let close = candle.close.to_f64().unwrap();
             let sma_result = sma_ta.next(close);
-            sma.push_serie(&candle.close_time, sma_result);
+            sma.push_serie(candle.close_time, sma_result);
         }
 
         indicators.insert(sma.name.clone(), sma);

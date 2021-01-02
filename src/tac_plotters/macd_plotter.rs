@@ -14,11 +14,11 @@ use plotters::{
 use plotters_bitmap::{self, bitmap_pixel::RGBPixel};
 
 pub struct MacdPlotter<'a> {
-    macd_tac: &'a MacdTac<'a>,
+    macd_tac: &'a MacdTac,
 }
 
 impl<'a> MacdPlotter<'a> {
-    pub fn new(macd_tac: &'a MacdTac<'a>) -> Self {
+    pub fn new(macd_tac: &'a MacdTac) -> Self {
         MacdPlotter { macd_tac }
     }
 }
@@ -81,7 +81,7 @@ fn plot_indicators(
     for indicator in indicators {
         info!("Plotting indicator {}", indicator.name);
         let color = indicator_color(indicator);
-        let macd_series = LineSeries::new(indicator.series.iter().map(|s| (*s.date_time, s.value)), &color);
+        let macd_series = LineSeries::new(indicator.series.iter().map(|s| (s.date_time, s.value)), &color);
         cart_context_lower.draw_series(macd_series)?;
     }
 

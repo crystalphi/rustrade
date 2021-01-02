@@ -4,11 +4,11 @@ use crate::config::definition::TacDefinition;
 
 use super::indicator::Indicator;
 
-pub trait TechnicalDefinition<'a> {
+pub trait TechnicalDefinition {
     fn definition() -> TacDefinition;
 }
 
-pub trait TechnicalIndicators<'a> {
-    fn indicators(&self) -> &HashMap<String, Indicator<'a>>;
+pub trait TechnicalIndicators {
+    fn indicators(&self) -> &HashMap<String, Indicator>;
     fn main_indicator(&self) -> &Indicator;
 }

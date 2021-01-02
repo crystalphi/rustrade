@@ -2,12 +2,12 @@ use super::serie::Serie;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 
-pub struct Indicator<'a> {
+pub struct Indicator {
     pub name: String,
-    pub series: Vec<Serie<'a>>,
+    pub series: Vec<Serie>,
 }
 
-impl<'a> Indicator<'a> {
+impl Indicator {
     pub fn new(name: &str, capacity: usize) -> Self {
         Indicator {
             name: name.into(),
@@ -15,11 +15,11 @@ impl<'a> Indicator<'a> {
         }
     }
 
-    pub fn _push(&mut self, serie: Serie<'a>) {
+    pub fn _push(&mut self, serie: Serie) {
         self.series.push(serie);
     }
 
-    pub fn push_serie(&mut self, date_time: &'a DateTime<Utc>, value: f64) {
+    pub fn push_serie(&mut self, date_time: DateTime<Utc>, value: f64) {
         self.series.push(Serie::new(date_time, value));
     }
 

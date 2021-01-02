@@ -2,8 +2,8 @@ use super::{ema_tac::EmaTac, ind_type::IndicatorType, macd::macd_tac::MacdTac, s
 use crate::{model::candle::Candle, technicals::indicator::Indicator};
 use std::collections::HashMap;
 pub struct IndicatorProvider<'a> {
-    mcads: HashMap<(usize, usize, usize), MacdTac<'a>>,
-    tac_indicators: HashMap<(String, usize), Box<dyn TechnicalIndicators<'a> + 'a>>, // <= to allow trait with different timelife
+    mcads: HashMap<(usize, usize, usize), MacdTac>,
+    tac_indicators: HashMap<(String, usize), Box<dyn TechnicalIndicators + 'a>>, // <= to allow trait with different timelife
 }
 
 impl<'a, 'b> IndicatorProvider<'a> {
@@ -17,8 +17,8 @@ impl<'a, 'b> IndicatorProvider<'a> {
     // TODO resolve this ugly match inside or_inser_with
     fn tac_indicator(&mut self, candles: &'a [&Candle], ind_name: &str, period: usize) -> &Indicator {
         let tac = self.tac_indicators.entry((ind_name.to_string(), period)).or_insert_with(|| match ind_name {
-            "ema" => Box::new(EmaTac::new(candles, period)) as Box<dyn TechnicalIndicators<'a>>, // <= cast box<struct> as box<trait>
-            _/*"sma"*/ => Box::new(SmaTac::new(candles, period)) as Box<dyn TechnicalIndicators<'a>>,
+            "ema" => Box::new(EmaTac::new(candles, period)) as Box<dyn TechnicalIndicators>, // <= cast box<struct> as box<trait>
+            _/*"sma"*/ => Box::new(SmaTac::new(candles, period)) as Box<dyn TechnicalIndicators>,
         });
         tac.main_indicator()
     }

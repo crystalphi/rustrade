@@ -45,14 +45,14 @@ pub struct TopBottomTac<'a> {
     neighbors: usize,
 }
 
-impl<'a> TechnicalDefinition<'a> for TopBottomTac<'a> {
+impl<'a> TechnicalDefinition for TopBottomTac<'a> {
     fn definition() -> TacDefinition {
         TacDefinition::new("topbottom", &["topbottom"])
     }
 }
 
-impl<'a> TechnicalIndicators<'a> for TopBottomTac<'a> {
-    fn indicators(&self) -> &std::collections::HashMap<String, super::indicator::Indicator<'a>> {
+impl<'a> TechnicalIndicators for TopBottomTac<'a> {
+    fn indicators(&self) -> &std::collections::HashMap<String, super::indicator::Indicator> {
         todo!()
     }
 

@@ -27,7 +27,7 @@ impl<'a> CandlesProvider<'a> {
         }
     }
 
-    pub fn candles_selection(&mut self, candles_selection: &CandlesSelection) -> anyhow::Result<Vec<Candle>> {
+    pub fn candles_selection(&mut self, candles_selection: &CandlesSelection) -> anyhow::Result<Vec<&Candle>> {
         info!("Initializing import");
 
         fn candles_to_buf(heikin_ashi: bool, candles: &mut Vec<Candle>, buff: &mut Vec<Candle>) {
@@ -103,8 +103,9 @@ impl<'a> CandlesProvider<'a> {
 
         info!("Finished import");
 
-        //let candles_ref = candles.iter().collect::<Vec<_>>();
+        let candles_ref = candles_buf.iter().collect::<Vec<_>>();
+        Ok(candles_ref.as_slice())
 
-        Ok(candles_buf.clone())
+        //Ok(candles_buf.clone())
     }
 }

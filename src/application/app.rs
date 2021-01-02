@@ -57,9 +57,9 @@ impl<'a> Application<'a> {
         let start = Instant::now();
         info!("Loading...");
 
-        let candles = self.candles_provider.candles_selection(&self.selection.candles_selection)?;
-        let candles = candles.iter().collect::<Vec<_>>();
-        let candles_ref = candles.as_slice();
+        let candles_ref = self.candles_provider.candles_selection(&self.selection.candles_selection)?;
+        // let candles = candles.iter().collect::<Vec<_>>();
+        // let candles_ref = candles.as_slice();
 
         info!("{}", iformat!("Loaded {start.elapsed():?}"));
 
@@ -89,9 +89,9 @@ impl<'a> Application<'a> {
     }
 
     pub fn plot_selection(&mut self) -> anyhow::Result<()> {
-        let candles = self.candles_provider.candles_selection(&self.selection.candles_selection).unwrap();
-        let candles = candles.iter().collect::<Vec<_>>();
-        let candles_ref = candles.as_slice();
+        let candles_ref = self.candles_provider.candles_selection(&self.selection.candles_selection).unwrap();
+        // let candles = candles.iter().collect::<Vec<_>>();
+        // let candles_ref = candles.as_slice();
 
         plot_selection(&self.selection, candles_ref)
     }

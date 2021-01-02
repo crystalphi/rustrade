@@ -14,27 +14,27 @@ use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
 pub const MACD_IND: &str = "macd";
 
-pub struct MacdTac<'a> {
-    pub indicators: HashMap<String, Indicator<'a>>,
+pub struct MacdTac {
+    pub indicators: HashMap<String, Indicator>,
 }
 
-impl<'a> TechnicalDefinition<'a> for MacdTac<'a> {
+impl TechnicalDefinition for MacdTac {
     fn definition() -> crate::config::definition::TacDefinition {
         let indicators = vec![MACD_IND, "signal", "divergence"];
         TacDefinition::new(MACD_IND, &indicators)
     }
 }
-impl<'a> TechnicalIndicators<'a> for MacdTac<'a> {
+impl TechnicalIndicators for MacdTac {
     fn main_indicator(&self) -> &Indicator {
         self.indicators.get(MACD_IND).unwrap()
     }
 
-    fn indicators(&self) -> &HashMap<String, Indicator<'a>> {
+    fn indicators(&self) -> &HashMap<String, Indicator> {
         &self.indicators
     }
 }
 
-impl<'a> MacdTac<'a> {
+impl<'a> MacdTac {
     pub fn new(candles: &'a [&'a Candle], fast_period: usize, slow_period: usize, signal_period: usize) -> Self {
         let start = Instant::now();
 
@@ -49,9 +49,9 @@ impl<'a> MacdTac<'a> {
             let close = candle.close.to_f64().unwrap();
 
             let macd_result: (f64, f64, f64) = macd_ta.next(close).into();
-            macd.push_serie(&candle.close_time, macd_result.0);
-            signal.push_serie(&candle.close_time, macd_result.1);
-            divergence.push_serie(&candle.close_time, macd_result.2);
+            macd.push_serie(candle.close_time, macd_result.0);
+            signal.push_serie(candle.close_time, macd_result.1);
+            divergence.push_serie(candle.close_time, macd_result.2);
         }
 
         indicators.insert(macd.name.clone(), macd);

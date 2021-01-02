@@ -1,17 +1,14 @@
-use std::env;
-
-use binance::{api::Binance, futures::market::FuturesMarket};
-use chrono::{DateTime, Duration, Utc};
-use ifmt::iformat;
-use log::{error, info};
-
 use crate::{
     config::symbol_minutes::SymbolMinutes,
     model::candle::Candle,
     utils::{datetime_to_timestamp, kline_to_candle},
 };
-
 use anyhow::{bail, Result};
+use binance::{api::Binance, futures::market::FuturesMarket};
+use chrono::{DateTime, Duration, Utc};
+use ifmt::iformat;
+use log::{error, info};
+use std::env;
 
 pub struct Exchange {
     api_key: String,

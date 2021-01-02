@@ -7,19 +7,19 @@ use rust_decimal::prelude::ToPrimitive;
 use std::{collections::HashMap, time::Instant};
 use ta::{indicators::ExponentialMovingAverage as Ema, Next};
 
-pub struct EmaTac<'a> {
-    pub indicators: HashMap<String, Indicator<'a>>,
+pub struct EmaTac {
+    pub indicators: HashMap<String, Indicator>,
 }
 
-impl<'a> TechnicalDefinition<'a> for EmaTac<'a> {
+impl TechnicalDefinition for EmaTac {
     fn definition() -> crate::config::definition::TacDefinition {
         let indicators = vec!["ema"];
         TacDefinition::new("ema", &indicators)
     }
 }
 
-impl<'a> TechnicalIndicators<'a> for EmaTac<'a> {
-    fn indicators(&self) -> &HashMap<String, Indicator<'a>> {
+impl TechnicalIndicators for EmaTac {
+    fn indicators(&self) -> &HashMap<String, Indicator> {
         &self.indicators
     }
 
@@ -28,7 +28,7 @@ impl<'a> TechnicalIndicators<'a> for EmaTac<'a> {
     }
 }
 
-impl<'a> EmaTac<'a> {
+impl<'a> EmaTac {
     // default period is 34
     pub fn new(candles: &'a [&'a Candle], period: usize) -> Self {
         let start = Instant::now();
@@ -41,7 +41,7 @@ impl<'a> EmaTac<'a> {
             let close = candle.close.to_f64().unwrap();
 
             let ema_result = ema_ta.next(close);
-            ema.push_serie(&candle.close_time, ema_result);
+            ema.push_serie(candle.close_time, ema_result);
         }
 
         indicators.insert(ema.name.clone(), ema);

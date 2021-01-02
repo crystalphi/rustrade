@@ -15,7 +15,7 @@ impl MacdTrend {
 }
 
 impl<'a> TrendProvider<'a> for MacdTrend {
-    fn trend(&mut self, mut trend_context_provider: TradeContextProvider<'a>) -> anyhow::Result<Trend> {
+    fn trend(&mut self, trend_context_provider: &'a mut TradeContextProvider<'a>) -> anyhow::Result<Trend> {
         let mcad = trend_context_provider.indicator(15, &IndicatorType::Macd(34, 72, 17))?.value()?;
         let mcad_signal = trend_context_provider.indicator(15, &IndicatorType::MacdSignal(34, 72, 17))?.value()?;
         Ok(if mcad > mcad_signal { Trend::Bought } else { Trend::Sold })

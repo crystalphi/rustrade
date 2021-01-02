@@ -37,7 +37,7 @@ impl<'a> Streamer<'a> {
 
         const TERMINATE: &str = "Terminate";
 
-        let mut candles: Vec<Candle> = Vec::new();
+        let mut candles_opt = None;
 
         let mut in_selection = false;
         let mut selection_buffer = String::from("");
@@ -83,15 +83,16 @@ impl<'a> Streamer<'a> {
 
                 if line == IMPORT {
                     info!("Getting candles...");
-                    candles = self.app.candles_provider.candles_selection(&self.app.selection.candles_selection)?;
+                    candles_opt = Some(self.app.candles_provider.candles_selection(&self.app.selection.candles_selection)?);
                     info!("Candles got");
                     continue;
                 }
 
                 if line == PLOT {
                     info!("Plotting...");
-                    let candles_ref = candles.iter().collect::<Vec<_>>();
-                    plot_selection(&self.app.selection, candles_ref.as_slice())?;
+                    if let Some(candles_ref) = candles_opt {
+                        plot_selection(&self.app.selection, candles_ref)?;
+                    }
                     info!("Plotted!");
                     continue;
                 }
