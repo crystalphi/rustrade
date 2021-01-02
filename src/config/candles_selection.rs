@@ -1,5 +1,5 @@
-use super::symbol_minutes::SymbolMinutes;
-use chrono::{DateTime, Utc};
+use super::{now_provider::NowProvider, symbol_minutes::SymbolMinutes};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Hash, Eq, PartialEq, PartialOrd, Debug, Clone)]
 pub struct CandlesSelection {
@@ -8,14 +8,28 @@ pub struct CandlesSelection {
     pub start_time: Option<DateTime<Utc>>,
     #[serde(with = "my_date_format")]
     pub end_time: Option<DateTime<Utc>>,
+    pub heikin_ashi: bool,
 }
 
 impl CandlesSelection {
+    pub fn last_n(symbol: &str, minutes: &u32, last: u32, now_provider: &dyn NowProvider) -> Self {
+        let end_time = now_provider.now();
+        let start_time = end_time - (Duration::minutes((minutes * last) as i64));
+
+        Self {
+            symbol_minutes: SymbolMinutes::new(symbol, minutes),
+            start_time: Some(start_time),
+            end_time: Some(end_time),
+            heikin_ashi: true,
+        }
+    }
+
     pub fn new(symbol: &str, minutes: &u32, start_time: Option<&DateTime<Utc>>, end_time: Option<&DateTime<Utc>>) -> Self {
         Self {
             symbol_minutes: SymbolMinutes::new(symbol, minutes),
             start_time: start_time.map(|s| s.to_owned()),
             end_time: end_time.map(|s| s.to_owned()),
+            heikin_ashi: true,
         }
     }
 }

@@ -83,7 +83,7 @@ impl<'a> Streamer<'a> {
 
                 if line == IMPORT {
                     info!("Getting candles...");
-                    candles = self.app.candles_provider.candles_selection(&self.app.selection)?;
+                    candles = self.app.candles_provider.candles_selection(&self.app.selection.candles_selection)?;
                     info!("Candles got");
                     continue;
                 }

@@ -4,5 +4,6 @@ pub mod order_executor;
 pub mod topbottom_triangle;
 pub mod trader;
 pub mod trend;
+pub mod trade_context_provider;
 pub mod trend_prov_factory;
 pub mod trend_provider;
