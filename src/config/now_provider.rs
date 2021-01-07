@@ -13,7 +13,7 @@ impl MockNowProvider {
         Self { now: Utc::now() }
     }
 
-    pub fn set_now(&mut self, now: DateTime<Utc>) {
+    pub fn _set_now(&mut self, now: DateTime<Utc>) {
         self.now = now;
     }
 }

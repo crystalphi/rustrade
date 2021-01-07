@@ -79,7 +79,7 @@ impl<'a> Application<'a> {
     }
 }
 
-pub fn plot_triangles<'a>(selection: Selection, candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
+pub fn plot_triangles(selection: Selection, candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
     let mut topbottom_tac = TopBottomTac::new(candles_provider.clone_provider(), 7);
     let topbottoms = topbottom_tac.topbottoms()?;
 

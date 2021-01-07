@@ -30,6 +30,4 @@ impl<'a> TradeContextProvider {
 
         self.indicator_provider.indicator(candles_provider, i_type)
     }
-
-    pub fn last_candle(&self) {}
 }

@@ -16,7 +16,7 @@ use std::time::Instant;
 
 use super::candles_provider::CandlesProvider;
 
-pub fn plot_selection<'a>(selection: Selection, mut candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
+pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
     let candles_provider_clone = candles_provider.clone_provider();
 
     let candles = candles_provider.candles()?;

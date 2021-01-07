@@ -25,7 +25,7 @@ pub struct CandlesProviderBufferSingleton {
     buffer: HashMap<SymbolMinutes, Vec<Candle>>,
 }
 
-impl<'a> CandlesProviderBufferSingleton {
+impl CandlesProviderBufferSingleton {
     pub fn new(repository: Repository, exchange: Exchange) -> Self {
         Self {
             exchange,
@@ -110,7 +110,7 @@ impl<'a> CandlesProviderBufferSingleton {
 
         info!("Finished import");
         // candles_buf.iter().collect::<Vec<_>>()
-        Ok(candles_buf.iter().cloned().collect::<Vec<_>>())
+        Ok(candles_buf.to_vec())
     }
 }
 
@@ -137,10 +137,9 @@ impl CandlesProvider for CandlesProviderBuffer {
         let candles_selection = self
             .candles_selection_opt
             .as_ref()
-            .map(|c| c.clone())
-            .ok_or(anyhow!("candles_selection not definied!"))?;
-        let mut candles_provider_singleton_mut = self.candles_provider_singleton.borrow_mut();
-        candles_provider_singleton_mut.candles(candles_selection)
+            .cloned()
+            .ok_or_else(|| -> anyhow::Error { anyhow!("candles_selection not definied!") })?;
+        self.candles_provider_singleton.borrow_mut().candles(candles_selection)
     }
 
     fn clone_provider(&self) -> Box<dyn CandlesProvider> {
@@ -189,7 +188,7 @@ impl CandlesProviderVec {
 
 impl CandlesProvider for CandlesProviderVec {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
-        Ok(self.candles.iter().cloned().collect())
+        Ok(self.candles.to_vec())
     }
 
     fn clone_provider(&self) -> Box<dyn CandlesProvider> {

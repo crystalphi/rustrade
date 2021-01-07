@@ -17,7 +17,7 @@ chrono = "0.4.19"
 colored = "2.0.0"
 dotenv = "0.15.0"
 futures = "0.3"
-ifmt = "0.3.2"
+ifmt = "0.3.3"
 log = "0.4.11"
 plotters = {version = "0.3.0"}
 ri-lib-log-utils = {path = "../ri-lib-log-utils"}
@@ -25,11 +25,11 @@ structopt = "0.3"
 # plotters = {Version = "0.3.0", default_features = false, features = ["datetime", "candlestick", "point_series", "line_series", "ttf", "bitmap_encoder"]}
 # plotters-bitmap = {version = "0.3.0", default-features = true, features = ["image_encoder"]}
 plotters-bitmap = "0.3.0"
-postgres = {version = "0.18.1", features = ["with-chrono-0_4"]}
+postgres = {version = "0.19.0", features = ["with-chrono-0_4"]}
 rayon = "1.5.0"
-rust_decimal = {version = "1.8.1"}
-rust_decimal_macros = "1.8.1"
+rust_decimal = {version = "1.9.0"}
+rust_decimal_macros = "1.9.0"
 serde = {version = "1.0.118", features = ["derive"]}
 serde_json = "1.0"
-sqlx = {version = "0.4.1", features = ["runtime-async-std-native-tls", "postgres", "macros", "decimal", "chrono"]}
+sqlx = {version = "0.4.2", features = ["runtime-async-std-native-tls", "postgres", "macros", "decimal", "chrono"]}
 ta = "0.4.0"

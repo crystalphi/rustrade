@@ -1,10 +1,8 @@
 use super::technical::{TechnicalDefinition, TechnicalIndicators};
 use crate::application::candles_provider::CandlesProvider;
 use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
-use ifmt::iformat;
-use log::info;
 use rust_decimal::prelude::ToPrimitive;
-use std::{collections::HashMap, time::Instant};
+use std::collections::HashMap;
 use ta::{indicators::ExponentialMovingAverage as Ema, Next};
 
 pub struct EmaTac {
@@ -49,7 +47,7 @@ impl<'a> EmaTac {
         EmaTac { indicators }
     }
 
-    pub fn indicator(&self) -> &Indicator {
+    pub fn _indicator(&self) -> &Indicator {
         self.indicators.get("ema").unwrap()
     }
 }

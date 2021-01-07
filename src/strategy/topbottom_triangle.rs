@@ -3,7 +3,7 @@ use crate::{
     technicals::topbottom::{TopBottom, TopBottomType},
 };
 
-pub fn topbottom_triangle<'a>(topbottoms: &[&TopBottom], minutes: &u32) -> Vec<OpenClose> {
+pub fn topbottom_triangle(topbottoms: &[&TopBottom], minutes: &u32) -> Vec<OpenClose> {
     let mut triangles = Vec::new();
     for i in 0..topbottoms.len() - 6 {
         let p = [

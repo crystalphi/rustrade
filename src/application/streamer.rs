@@ -1,8 +1,4 @@
-use super::{
-    app::Application,
-    candles_provider::{CandlesProvider, CandlesProviderBuffer},
-    plot_selection::plot_selection,
-};
+use super::{app::Application, candles_provider::CandlesProvider};
 use crate::config::selection::Selection;
 use core::time;
 use log::info;
@@ -93,7 +89,7 @@ impl<'a> Streamer<'a> {
 
                 if line == PLOT {
                     info!("Plotting...");
-                    self.app.plot_selection();
+                    self.app.plot_selection()?;
                     info!("Plotted!");
                     continue;
                 }
