@@ -1,4 +1,8 @@
-use super::{candles_provider::CandlesProvider, plot_selection::plot_selection, streamer::Streamer};
+use super::{
+    candles_provider::{CandlesProvider, CandlesProviderBuffer, CandlesProviderBufferSingleton, CandlesProviderSelection},
+    plot_selection::plot_selection,
+    streamer::Streamer,
+};
 use crate::{
     checker::Checker,
     config::{definition::ConfigDefinition, selection::Selection},
@@ -6,31 +10,27 @@ use crate::{
     repository::Repository,
     strategy::{topbottom_triangle::topbottom_triangle, trader::run_trader_back_test},
     technicals::topbottom::TopBottomTac,
-    utils::datetime_to_filename,
 };
 use chrono::Duration;
-use ifmt::iformat;
-use log::info;
-use rayon::iter::IntoParallelRefIterator;
-use rayon::prelude::*;
-use std::time::Instant;
+use std::{cell::RefCell, rc::Rc};
 
 pub struct Application<'a> {
-    pub repo: &'a Repository,
-    pub exchange: &'a Exchange,
+    // pub repo: &'a Repository,
+    // pub exchange: &'a Exchange,
     pub definition: ConfigDefinition,
     pub selection: Selection,
-    pub candles_provider: CandlesProvider<'a>,
+    pub candles_provider: CandlesProviderBuffer,
     pub synchronizer: &'a Checker<'a>,
 }
 
 impl<'a> Application<'a> {
-    pub fn new(repo: &'a Repository, exchange: &'a Exchange, synchronizer: &'a Checker<'a>, selection: Selection) -> Self {
+    pub fn new(repository: Repository, exchange: Exchange, synchronizer: &'a Checker<'a>, selection: Selection) -> Self {
+        let candles_provider_singleton = CandlesProviderBufferSingleton::new(repository, exchange);
         Application {
-            repo,
-            exchange,
+            // repo,
+            // exchange,
             synchronizer,
-            candles_provider: CandlesProvider::new(repo, exchange),
+            candles_provider: CandlesProviderBuffer::new(Rc::new(RefCell::new(candles_provider_singleton))),
             selection,
             definition: ConfigDefinition::new(),
         }
@@ -54,33 +54,15 @@ impl<'a> Application<'a> {
     }
 
     pub fn plot_triangles(&mut self) -> anyhow::Result<()> {
-        let start = Instant::now();
-        info!("Loading...");
+        let selection = self.selection.clone();
 
-        let candles_ref = self.candles_provider.candles_selection(&self.selection.candles_selection)?;
-        // let candles = candles.iter().collect::<Vec<_>>();
-        // let candles_ref = candles.as_slice();
+        let candles_selection = selection.candles_selection.clone();
+        let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), candles_selection);
+        //let mut candles_provider = Box::new(&mut candles_provider_selection as &mut dyn CandlesProvider);
 
-        info!("{}", iformat!("Loaded {start.elapsed():?}"));
+        let candles_provider = Box::new(candles_provider_selection);
 
-        let topbottoms = TopBottomTac::new(candles_ref, 7).topbottoms();
-        let topbottoms = topbottoms.iter().collect::<Vec<_>>();
-        let topbottoms_ref = topbottoms.as_slice();
-
-        let minutes = self.selection.candles_selection.symbol_minutes.minutes;
-
-        let triangles = topbottom_triangle(topbottoms_ref, &minutes);
-        triangles.par_iter().for_each(|triangle| {
-            let mut selection = self.selection.clone();
-            let open_time = triangle.open(&minutes);
-            let margin = Duration::minutes(minutes as i64 * 100);
-            selection.candles_selection.start_time = Some(open_time - margin);
-            selection.candles_selection.end_time = Some(open_time + margin);
-            selection.image_name = format!("out/triangle_{}.png", datetime_to_filename(&open_time));
-            info!("Plotting triangle {}", selection.image_name);
-            plot_selection(&selection, candles_ref).unwrap();
-        });
-        Ok(())
+        plot_triangles(selection, candles_provider)
     }
 
     pub fn run_stream(&'a mut self) -> anyhow::Result<()> {
@@ -89,10 +71,34 @@ impl<'a> Application<'a> {
     }
 
     pub fn plot_selection(&mut self) -> anyhow::Result<()> {
-        let candles_ref = self.candles_provider.candles_selection(&self.selection.candles_selection).unwrap();
-        // let candles = candles.iter().collect::<Vec<_>>();
-        // let candles_ref = candles.as_slice();
-
-        plot_selection(&self.selection, candles_ref)
+        let selection = self.selection.clone();
+        let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), selection.candles_selection.clone());
+        //let candles_provider = Box::new(&mut candles_provider_selection as &mut dyn CandlesProvider);
+        let candles_provider = Box::new(candles_provider_selection);
+        plot_selection(selection, candles_provider)
     }
+}
+
+pub fn plot_triangles<'a>(selection: Selection, candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
+    let mut topbottom_tac = TopBottomTac::new(candles_provider.clone_provider(), 7);
+    let topbottoms = topbottom_tac.topbottoms()?;
+
+    let topbottoms = topbottoms.iter().collect::<Vec<_>>();
+    let topbottoms_ref = topbottoms.as_slice();
+
+    let minutes = selection.candles_selection.symbol_minutes.minutes;
+
+    let triangles = topbottom_triangle(topbottoms_ref, &minutes);
+    triangles.iter().for_each(|triangle| {
+        let mut selection_par = selection.clone();
+        let open_time = triangle.open(&minutes);
+        let margin = Duration::minutes(minutes as i64 * 100);
+        selection_par.candles_selection.start_time = Some(open_time - margin);
+        selection_par.candles_selection.end_time = Some(open_time + margin);
+        //selection.image_name = format!("out/triangle_{}.png", datetime_to_filename(&open_time));
+        //info!("Plotting triangle {}", selection.image_name);
+
+        plot_selection(selection_par, candles_provider.clone_provider()).unwrap();
+    });
+    Ok(())
 }

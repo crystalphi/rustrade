@@ -1,5 +1,9 @@
-use super::{app::Application, plot_selection::plot_selection};
-use crate::{config::selection::Selection, model::candle::Candle};
+use super::{
+    app::Application,
+    candles_provider::{CandlesProvider, CandlesProviderBuffer},
+    plot_selection::plot_selection,
+};
+use crate::config::selection::Selection;
 use core::time;
 use log::info;
 use std::thread;
@@ -36,8 +40,6 @@ impl<'a> Streamer<'a> {
         const PLOT: &str = "Plot";
 
         const TERMINATE: &str = "Terminate";
-
-        let mut candles_opt = None;
 
         let mut in_selection = false;
         let mut selection_buffer = String::from("");
@@ -83,23 +85,23 @@ impl<'a> Streamer<'a> {
 
                 if line == IMPORT {
                     info!("Getting candles...");
-                    candles_opt = Some(self.app.candles_provider.candles_selection(&self.app.selection.candles_selection)?);
+                    self.app.candles_provider.set_candles_selection(self.app.selection.candles_selection.clone());
+                    let _candles = self.app.candles_provider.candles()?;
                     info!("Candles got");
                     continue;
                 }
 
                 if line == PLOT {
                     info!("Plotting...");
-                    if let Some(candles_ref) = candles_opt {
-                        plot_selection(&self.app.selection, candles_ref)?;
-                    }
+                    self.app.plot_selection();
                     info!("Plotted!");
                     continue;
                 }
 
                 if line == CHECK {
                     info!("Checking...");
-                    self.app.synchronizer.check_inconsist(&self.app.repo, &self.app.selection.candles_selection);
+                    // TODO
+                    //self.app.synchronizer.check_inconsist(&self.app.repo, &self.app.selection.candles_selection);
                     info!("Checked!");
                     continue;
                 }

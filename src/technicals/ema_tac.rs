@@ -1,5 +1,5 @@
 use super::technical::{TechnicalDefinition, TechnicalIndicators};
-use crate::model::candle::Candle;
+use crate::application::candles_provider::CandlesProvider;
 use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
 use ifmt::iformat;
 use log::info;
@@ -30,8 +30,8 @@ impl TechnicalIndicators for EmaTac {
 
 impl<'a> EmaTac {
     // default period is 34
-    pub fn new(candles: &'a [&'a Candle], period: usize) -> Self {
-        let start = Instant::now();
+    pub fn new(mut candles_provider: Box<dyn CandlesProvider>, period: usize) -> Self {
+        let candles = candles_provider.candles().unwrap();
 
         let mut ema = Indicator::new("ema", candles.len());
         let mut indicators = HashMap::new();
@@ -45,8 +45,6 @@ impl<'a> EmaTac {
         }
 
         indicators.insert(ema.name.clone(), ema);
-
-        info!("{}", iformat!("Technicals {candles.len()}: {start.elapsed():?}"));
 
         EmaTac { indicators }
     }

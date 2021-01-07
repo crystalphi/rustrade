@@ -3,7 +3,7 @@ use crate::{
     technicals::topbottom::{TopBottom, TopBottomType},
 };
 
-pub fn topbottom_triangle<'a>(topbottoms: &[&TopBottom<'a>], minutes: &u32) -> Vec<OpenClose> {
+pub fn topbottom_triangle<'a>(topbottoms: &[&TopBottom], minutes: &u32) -> Vec<OpenClose> {
     let mut triangles = Vec::new();
     for i in 0..topbottoms.len() - 6 {
         let p = [
@@ -16,7 +16,7 @@ pub fn topbottom_triangle<'a>(topbottoms: &[&TopBottom<'a>], minutes: &u32) -> V
         ];
         if p[0].type_p == TopBottomType::Bottom && p[0].price > p[2].price && p[2].price > p[4].price && p[1].price < p[3].price && p[3].price < p[5].price {
             println!("{}", p[5].close_time);
-            triangles.push(OpenClose::from_date_close(p[5].close_time, minutes));
+            triangles.push(OpenClose::from_date_close(&p[5].close_time, minutes));
         };
     }
     triangles

@@ -1,6 +1,5 @@
 use crate::{
     config::selection::Selection,
-    model::candle::Candle,
     tac_plotters::{
         candles_plotter::CandlePlotter, line_ind_plotter::LineIndicatorPlotter, macd_plotter::MacdPlotter, plotter::Plotter,
         topbottom_plotter::TopBottomPlotter,
@@ -15,29 +14,40 @@ use plotters::style::RGBColor;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::time::Instant;
 
-pub fn plot_selection(selection: &Selection, candles: &[&Candle]) -> anyhow::Result<()> {
+use super::candles_provider::CandlesProvider;
+
+pub fn plot_selection<'a>(selection: Selection, mut candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
+    let candles_provider_clone = candles_provider.clone_provider();
+
+    let candles = candles_provider.candles()?;
+
     let start_time = selection.candles_selection.start_time.unwrap();
     let end_time = selection.candles_selection.end_time.unwrap();
     let candles = candles
         .par_iter()
         .filter(|c| c.open_time >= start_time && c.open_time <= end_time)
-        .copied()
+        //.copied()
         .collect::<Vec<_>>();
-    info!(
-        "Plotting selection {:?} {:?} candles.len {}",
-        selection.candles_selection.start_time,
-        selection.candles_selection.end_time,
-        candles.len()
-    );
+    // info!(
+    //     "Plotting selection {:?} {:?} candles.len {}",
+    //     selection.candles_selection.start_time,
+    //     selection.candles_selection.end_time,
+    //     candles.len()
+    // );
 
     let mut _indicator_provider = IndicatorProvider::new();
 
-    let macd_tac = MacdTac::new(&candles, 34, 72, 17);
-    let ema_short_tac = EmaTac::new(&candles, 17);
-    let ema_long_tac = EmaTac::new(&candles, 72);
-    let topbottoms = TopBottomTac::new(&candles, 7).topbottoms();
+    let macd_tac = MacdTac::new(candles_provider_clone.clone_provider(), 34, 72, 17);
 
-    let mut plotter = Plotter::new(selection);
+    let ema_short_tac = EmaTac::new(candles_provider_clone.clone_provider(), 17);
+
+    let ema_long_tac = EmaTac::new(candles_provider_clone.clone_provider(), 72);
+
+    let mut topbottom_tac = TopBottomTac::new(candles_provider_clone, 7);
+
+    let topbottoms = topbottom_tac.topbottoms()?;
+
+    let mut plotter = Plotter::new(selection.clone());
 
     // ema 17 = purple
     // ema 72 = orange

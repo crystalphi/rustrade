@@ -101,7 +101,7 @@ async fn main() -> anyhow::Result<()> {
     let symbol_minutes = SymbolMinutes::new(&opt.symbol, &opt.minutes);
     let checker = Checker::new(&symbol_minutes, &repo, &exchange);
 
-    let mut app = Application::new(&repo, &exchange, &checker, selection);
+    let mut app = Application::new(Repository::new()?, Exchange::new()?, &checker, selection);
 
     match opt.command {
         Command::Check {} => {

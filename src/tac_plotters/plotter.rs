@@ -9,14 +9,14 @@ use plotters::prelude::*;
 use std::{path::Path, time::Instant};
 
 pub struct Plotter<'a> {
-    selection: &'a Selection,
+    selection: Selection,
     plotters_ind: Vec<&'a dyn IndicatorPlotter>,
     plotters_ind_upper: Vec<&'a dyn PlotterIndicatorContext>,
     _plotters_ind_lower: Vec<&'a dyn PlotterIndicatorContext>,
 }
 
 impl<'a> Plotter<'a> {
-    pub fn new(selection: &'a Selection) -> Self {
+    pub fn new(selection: Selection) -> Self {
         Plotter {
             selection,
             plotters_ind: vec![],
@@ -74,13 +74,13 @@ impl<'a> Plotter<'a> {
         chart_context_upper.configure_mesh().x_labels(12).light_line_style(&bg_color).draw()?;
 
         for plotter_upper_ind in self.plotters_ind_upper.iter() {
-            plotter_upper_ind.plot(self.selection, &mut chart_context_upper)?;
+            plotter_upper_ind.plot(&self.selection, &mut chart_context_upper)?;
         }
 
         lower.fill(&bg_color)?;
 
         for plotter_ind in self.plotters_ind.iter() {
-            plotter_ind.plot(self.selection, &upper, &lower)?;
+            plotter_ind.plot(&self.selection, &upper, &lower)?;
         }
 
         // for plotters_ind_upper_ind in self.plotters_ind_lower.iter() {

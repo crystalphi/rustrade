@@ -1,4 +1,4 @@
-use crate::model::candle::Candle;
+use crate::application::candles_provider::CandlesProvider;
 use crate::{
     config::definition::TacDefinition,
     technicals::{
@@ -35,8 +35,10 @@ impl TechnicalIndicators for MacdTac {
 }
 
 impl<'a> MacdTac {
-    pub fn new(candles: &'a [&'a Candle], fast_period: usize, slow_period: usize, signal_period: usize) -> Self {
+    pub fn new(mut candles_provider: Box<dyn CandlesProvider>, fast_period: usize, slow_period: usize, signal_period: usize) -> Self {
         let start = Instant::now();
+
+        let candles = candles_provider.candles().unwrap();
 
         let mut macd = Indicator::new(MACD_IND, candles.len());
         let mut signal = Indicator::new("signal", candles.len());

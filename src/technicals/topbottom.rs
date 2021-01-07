@@ -1,5 +1,5 @@
 use super::technical::{TechnicalDefinition, TechnicalIndicators};
-use crate::{config::definition::TacDefinition, model::candle::Candle};
+use crate::{application::candles_provider::CandlesProvider, config::definition::TacDefinition};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use std::{cmp::Ordering, collections::HashSet};
@@ -16,42 +16,42 @@ impl std::fmt::Display for TopBottomType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TopBottom<'a> {
-    pub close_time: &'a DateTime<Utc>,
-    pub price: &'a Decimal,
+pub struct TopBottom {
+    pub close_time: DateTime<Utc>,
+    pub price: Decimal,
     pub type_p: TopBottomType,
 }
 
-impl<'a> TopBottom<'a> {
-    pub fn new(type_p: TopBottomType, close_time: &'a DateTime<Utc>, price: &'a Decimal) -> Self {
+impl TopBottom {
+    pub fn new(type_p: TopBottomType, close_time: DateTime<Utc>, price: Decimal) -> Self {
         Self { close_time, type_p, price }
     }
 }
 
-impl<'a> PartialOrd for TopBottom<'a> {
+impl PartialOrd for TopBottom {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.close_time.cmp(other.close_time))
+        Some(self.close_time.cmp(&other.close_time))
     }
 }
 
-impl<'a> Ord for TopBottom<'a> {
+impl Ord for TopBottom {
     fn cmp(&self, other: &Self) -> Ordering {
         self.close_time.cmp(&other.close_time)
     }
 }
 
-pub struct TopBottomTac<'a> {
-    candles: &'a [&'a Candle],
+pub struct TopBottomTac {
+    candles_provider: Box<dyn CandlesProvider>,
     neighbors: usize,
 }
 
-impl<'a> TechnicalDefinition for TopBottomTac<'a> {
+impl TechnicalDefinition for TopBottomTac {
     fn definition() -> TacDefinition {
         TacDefinition::new("topbottom", &["topbottom"])
     }
 }
 
-impl<'a> TechnicalIndicators for TopBottomTac<'a> {
+impl TechnicalIndicators for TopBottomTac {
     fn indicators(&self) -> &std::collections::HashMap<String, super::indicator::Indicator> {
         todo!()
     }
@@ -61,36 +61,37 @@ impl<'a> TechnicalIndicators for TopBottomTac<'a> {
     }
 }
 
-impl<'a> TopBottomTac<'a> {
-    pub fn new(candles: &'a [&'a Candle], neighbors: usize) -> Self {
-        TopBottomTac { candles, neighbors }
+impl TopBottomTac {
+    pub fn new(candles_provider: Box<dyn CandlesProvider>, neighbors: usize) -> Self {
+        TopBottomTac { candles_provider, neighbors }
     }
 
-    pub fn topbottoms(&self) -> Vec<TopBottom<'a>> {
+    pub fn topbottoms(&mut self) -> anyhow::Result<Vec<TopBottom>> {
         let mut result = Vec::new();
-        for i in 0..self.candles.len() - (self.neighbors * 2 + 1) {
-            let candle = self.candles[i + self.neighbors];
-            let l_min = self.candles[i..i + self.neighbors].iter().map(|c| c.low).min().unwrap_or(candle.low);
-            let l_max = self.candles[i..i + self.neighbors].iter().map(|c| c.high).max().unwrap_or(candle.high);
-            let r_min = self.candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
+        let candles = self.candles_provider.candles()?;
+        for i in 0..candles.len() - (self.neighbors * 2 + 1) {
+            let candle = &candles[i + self.neighbors];
+            let l_min = candles[i..i + self.neighbors].iter().map(|c| c.low).min().unwrap_or(candle.low);
+            let l_max = candles[i..i + self.neighbors].iter().map(|c| c.high).max().unwrap_or(candle.high);
+            let r_min = candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
                 .iter()
                 .map(|c| c.low)
                 .min()
                 .unwrap_or(candle.low);
-            let r_max = self.candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
+            let r_max = candles[i + self.neighbors + 1..i + (self.neighbors * 2 + 1)]
                 .iter()
                 .map(|c| c.high)
                 .max()
                 .unwrap_or(candle.high);
             if candle.low < l_min && candle.low < r_min {
-                result.push(TopBottom::new(TopBottomType::Top, &candle.close_time, &candle.low));
+                result.push(TopBottom::new(TopBottomType::Top, candle.close_time, candle.low));
             }
             if candle.high > l_max && candle.high > r_max {
-                result.push(TopBottom::new(TopBottomType::Bottom, &candle.close_time, &candle.high));
+                result.push(TopBottom::new(TopBottomType::Bottom, candle.close_time, candle.high));
             }
         }
         normalize_topbottoms(&mut result);
-        result
+        Ok(result)
     }
 }
 
@@ -125,7 +126,7 @@ fn normalize_topbottoms(topbottoms: &mut Vec<TopBottom>) {
     topbottoms.retain(|p| delete.get(p).is_none());
 }
 
-fn max_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBottom<'a> {
+fn max_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBottom {
     if previous.price > current.price {
         previous
     } else {
@@ -133,7 +134,7 @@ fn max_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBott
     }
 }
 
-fn min_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBottom<'a> {
+fn min_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBottom {
     if previous.price < current.price {
         previous
     } else {
@@ -143,7 +144,7 @@ fn min_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBott
 
 #[cfg(test)]
 pub mod tests {
-    use crate::utils::str_to_datetime;
+    use crate::{application::candles_provider::CandlesProviderVec, model::candle::Candle, utils::str_to_datetime};
 
     use super::*;
     use ifmt::iprintln;
@@ -373,10 +374,14 @@ pub mod tests {
         };
 
         let candles = [&c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16, &c17];
+        let candles_vec = candles.iter().cloned().cloned().collect::<Vec<_>>();
+        let candles_provider_vec = CandlesProviderVec::new(candles_vec);
 
-        let topbottom_tac = TopBottomTac::new(&candles, 7);
+        let candles_provider = Box::new(candles_provider_vec);
 
-        let topbottoms = topbottom_tac.topbottoms();
+        let mut topbottom_tac = TopBottomTac::new(candles_provider, 7);
+
+        let topbottoms = topbottom_tac.topbottoms().unwrap();
 
         iprintln!("{topbottoms.len()}");
         for topbottom in topbottoms.iter() {

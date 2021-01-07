@@ -1,4 +1,4 @@
-use crate::model::candle::Candle;
+use crate::{application::candles_provider::CandlesProvider, model::candle::Candle};
 use crate::{config::definition::TacDefinition, technicals::indicator::Indicator};
 use ifmt::iformat;
 use log::info;
@@ -32,8 +32,8 @@ impl TechnicalIndicators for SmaTac {
 
 impl<'a> SmaTac {
     // default period is 34
-    pub fn new(candles: &'a [&'a Candle], period: usize) -> Self {
-        let start = Instant::now();
+    pub fn new(mut candles_provider: Box<dyn CandlesProvider>, period: usize) -> Self {
+        let candles = candles_provider.candles().unwrap();
 
         let mut sma = Indicator::new(SMA_IND, candles.len());
         let mut indicators = HashMap::new();
@@ -46,8 +46,6 @@ impl<'a> SmaTac {
         }
 
         indicators.insert(sma.name.clone(), sma);
-
-        info!("{}", iformat!("Technicals {candles.len()}: {start.elapsed():?}"));
 
         Self { indicators }
     }

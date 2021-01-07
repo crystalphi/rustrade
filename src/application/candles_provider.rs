@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     candles_range::candles_to_ranges_missing,
@@ -8,26 +8,33 @@ use crate::{
     repository::Repository,
     technicals::heikin_ashi,
 };
+use anyhow::anyhow;
 use chrono::{Duration, Utc};
 use ifmt::iformat;
 use log::{info, warn};
 
-pub struct CandlesProvider<'a> {
-    exchange: &'a Exchange,
-    repo: &'a Repository,
+pub trait CandlesProvider {
+    fn candles(&mut self) -> anyhow::Result<Vec<Candle>>;
+
+    fn clone_provider(&self) -> Box<dyn CandlesProvider>;
+}
+
+pub struct CandlesProviderBufferSingleton {
+    exchange: Exchange,
+    repository: Repository,
     buffer: HashMap<SymbolMinutes, Vec<Candle>>,
 }
 
-impl<'a> CandlesProvider<'a> {
-    pub fn new(repo: &'a Repository, exch: &'a Exchange) -> Self {
+impl<'a> CandlesProviderBufferSingleton {
+    pub fn new(repository: Repository, exchange: Exchange) -> Self {
         Self {
-            exchange: exch,
-            repo,
+            exchange,
+            repository,
             buffer: HashMap::new(),
         }
     }
 
-    pub fn candles_selection(&mut self, candles_selection: &CandlesSelection) -> anyhow::Result<Vec<&Candle>> {
+    fn candles(&mut self, candles_selection: CandlesSelection) -> anyhow::Result<Vec<Candle>> {
         info!("Initializing import");
 
         fn candles_to_buf(heikin_ashi: bool, candles: &mut Vec<Candle>, buff: &mut Vec<Candle>) {
@@ -63,7 +70,7 @@ impl<'a> CandlesProvider<'a> {
 
             // Get candles from repository
             let mut candles_repo = self
-                .repo
+                .repository
                 .candles_by_time(&candles_selection.symbol_minutes, &start_time.open(minutes), &end_time.open(minutes))
                 .unwrap_or_default();
 
@@ -93,7 +100,7 @@ impl<'a> CandlesProvider<'a> {
                     )?;
 
                     // Save news candles on repository
-                    self.repo.add_candles(&mut candles_exch)?;
+                    self.repository.add_candles(&mut candles_exch)?;
 
                     // Insert candles on buffer
                     candles_to_buf(candles_selection.heikin_ashi, &mut candles_exch, &mut candles_buf);
@@ -102,10 +109,113 @@ impl<'a> CandlesProvider<'a> {
         }
 
         info!("Finished import");
+        // candles_buf.iter().collect::<Vec<_>>()
+        Ok(candles_buf.iter().cloned().collect::<Vec<_>>())
+    }
+}
 
-        let candles_ref = candles_buf.iter().collect::<Vec<_>>();
-        Ok(candles_ref.as_slice())
+#[derive(Clone)]
+pub struct CandlesProviderBuffer {
+    candles_provider_singleton: Rc<RefCell<CandlesProviderBufferSingleton>>,
+    candles_selection_opt: Option<CandlesSelection>,
+}
 
-        //Ok(candles_buf.clone())
+impl CandlesProviderBuffer {
+    pub fn new(candles_provider_singleton: Rc<RefCell<CandlesProviderBufferSingleton>>) -> Self {
+        Self {
+            candles_provider_singleton,
+            candles_selection_opt: None,
+        }
+    }
+    pub fn set_candles_selection(&mut self, candles_selection: CandlesSelection) {
+        self.candles_selection_opt = Some(candles_selection);
+    }
+}
+
+impl CandlesProvider for CandlesProviderBuffer {
+    fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
+        let candles_selection = self
+            .candles_selection_opt
+            .as_ref()
+            .map(|c| c.clone())
+            .ok_or(anyhow!("candles_selection not definied!"))?;
+        let mut candles_provider_singleton_mut = self.candles_provider_singleton.borrow_mut();
+        candles_provider_singleton_mut.candles(candles_selection)
+    }
+
+    fn clone_provider(&self) -> Box<dyn CandlesProvider> {
+        todo!()
+    }
+}
+
+pub struct CandlesProviderSelection {
+    candles_provider: CandlesProviderBuffer,
+    candles_selection: CandlesSelection,
+}
+
+impl<'a> CandlesProviderSelection {
+    pub fn new(candles_provider: CandlesProviderBuffer, candles_selection: CandlesSelection) -> Self {
+        Self {
+            candles_provider,
+            candles_selection,
+        }
+    }
+
+    pub fn candles_selection(&self) -> CandlesSelection {
+        self.candles_selection.clone()
+    }
+}
+
+impl<'a> CandlesProvider for CandlesProviderSelection {
+    fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
+        self.candles_provider.set_candles_selection(self.candles_selection.clone());
+        self.candles_provider.candles()
+    }
+
+    fn clone_provider(&self) -> Box<dyn CandlesProvider> {
+        Box::new(Self::new(self.candles_provider.clone(), self.candles_selection.clone()))
+    }
+}
+
+pub struct CandlesProviderVec {
+    candles: Vec<Candle>,
+}
+
+impl CandlesProviderVec {
+    pub fn new(candles: Vec<Candle>) -> Self {
+        Self { candles }
+    }
+}
+
+impl CandlesProvider for CandlesProviderVec {
+    fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
+        Ok(self.candles.iter().cloned().collect())
+    }
+
+    fn clone_provider(&self) -> Box<dyn CandlesProvider> {
+        Box::new(Self::new(self.candles.clone()))
+    }
+}
+
+pub struct CandlesProviderClosure<'a, F>
+where
+    F: FnMut(CandlesSelection) -> anyhow::Result<Vec<&'a Candle>>,
+{
+    call_back: F,
+}
+
+impl<'a, F> CandlesProviderClosure<'a, F>
+where
+    F: FnMut(CandlesSelection) -> anyhow::Result<Vec<&'a Candle>>,
+{
+    pub fn new(call_back: F) -> Self
+    where
+        F: FnMut(CandlesSelection) -> anyhow::Result<Vec<&'a Candle>>,
+    {
+        Self { call_back }
+    }
+
+    pub fn candles(&mut self, candles_selection: CandlesSelection) -> anyhow::Result<Vec<&'a Candle>> {
+        (self.call_back)(candles_selection)
     }
 }
