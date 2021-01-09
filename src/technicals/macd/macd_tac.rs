@@ -13,6 +13,8 @@ use std::{collections::HashMap, time::Instant};
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
 
 pub const MACD_IND: &str = "macd";
+pub const MACD_SIG_IND: &str = "signal";
+pub const MACD_DIV_IND: &str = "divergence";
 
 pub struct MacdTac {
     pub indicators: HashMap<String, Indicator>,
@@ -20,7 +22,7 @@ pub struct MacdTac {
 
 impl TechnicalDefinition for MacdTac {
     fn definition() -> crate::config::definition::TacDefinition {
-        let indicators = vec![MACD_IND, "signal", "divergence"];
+        let indicators = vec![MACD_IND, MACD_SIG_IND, MACD_DIV_IND];
         TacDefinition::new(MACD_IND, &indicators)
     }
 }
@@ -41,8 +43,8 @@ impl<'a> MacdTac {
         let candles = candles_provider.candles().unwrap();
 
         let mut macd = Indicator::new(MACD_IND, candles.len());
-        let mut signal = Indicator::new("signal", candles.len());
-        let mut divergence = Indicator::new("divergence", candles.len());
+        let mut signal = Indicator::new(MACD_SIG_IND, candles.len());
+        let mut divergence = Indicator::new(MACD_DIV_IND, candles.len());
         let mut indicators = HashMap::new();
 
         // 34, 72, 17

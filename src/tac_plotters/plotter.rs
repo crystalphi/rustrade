@@ -41,8 +41,8 @@ impl<'a> Plotter<'a> {
         let start = Instant::now();
         let symbol_minutes = &self.selection.candles_selection.symbol_minutes;
 
-        let from_date = self.selection.candles_selection.start_time.unwrap();
-        let to_date = self.selection.candles_selection.end_time.unwrap();
+        let from_date = self.selection.candles_selection.start_time;
+        let to_date = self.selection.candles_selection.end_time;
 
         let (min_price, max_price) = self
             .plotters_ind_upper

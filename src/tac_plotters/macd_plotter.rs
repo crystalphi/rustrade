@@ -55,8 +55,8 @@ fn plot_indicators(
     _upper: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
     lower: &DrawingArea<BitMapBackend<RGBPixel>, Shift>,
 ) -> anyhow::Result<()> {
-    let from_date = selection.candles_selection.start_time.unwrap();
-    let to_date = selection.candles_selection.end_time.unwrap();
+    let from_date = selection.candles_selection.start_time;
+    let to_date = selection.candles_selection.end_time;
 
     let (min_macd, max_macd) = indicators
         .iter()

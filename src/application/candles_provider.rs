@@ -9,9 +9,9 @@ use crate::{
     technicals::heikin_ashi,
 };
 use anyhow::anyhow;
-use chrono::{Duration, Utc};
 use ifmt::iformat;
 use log::info;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 pub trait CandlesProvider {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>>;
@@ -51,8 +51,8 @@ impl CandlesProviderBufferSingleton {
         }
 
         // Normalize default start/end date time
-        let start_time = &candles_selection.start_time.unwrap_or_else(|| Utc::now() - Duration::days(180));
-        let end_time = &candles_selection.end_time.unwrap_or_else(Utc::now);
+        let start_time = &candles_selection.start_time;
+        let end_time = &candles_selection.end_time;
         let minutes = &candles_selection.symbol_minutes.minutes;
         let symbol_minutes = &candles_selection.symbol_minutes;
 
@@ -116,10 +116,17 @@ impl CandlesProviderBufferSingleton {
                 }
             }
         }
-        info!("{}", iformat!("Finished import count: {candles_buf.len()} elapsed: {start.elapsed():?}"));
+
+        let candles = candles_buf
+            .par_iter()
+            .filter(|c| &c.open_time >= start_time && &c.open_time <= end_time)
+            .cloned()
+            .collect::<Vec<_>>();
+
+        info!("{}", iformat!("Finished candles retrieve count: {candles.len()} elapsed: {start.elapsed():?}"));
 
         // candles_buf.iter().collect::<Vec<_>>()
-        Ok(candles_buf.to_vec())
+        Ok(candles)
     }
 }
 

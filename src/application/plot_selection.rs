@@ -21,8 +21,8 @@ pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn Candle
     let candles_provider_clone = candles_provider.clone_provider();
     let candles = candles_provider.candles()?;
 
-    let start_time = selection.candles_selection.start_time.unwrap();
-    let end_time = selection.candles_selection.end_time.unwrap();
+    let start_time = selection.candles_selection.start_time;
+    let end_time = selection.candles_selection.end_time;
     let candles = candles
         .par_iter()
         .filter(|c| c.open_time >= start_time && c.open_time <= end_time)

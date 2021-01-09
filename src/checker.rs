@@ -71,8 +71,8 @@ impl<'a> Checker<'a> {
 
     pub fn check_inconsist(&self, repo: &Repository, selection: &CandlesSelection) {
         let start = Instant::now();
-        let start_time = selection.start_time.unwrap();
-        let end_time = selection.end_time.unwrap();
+        let start_time = selection.start_time;
+        let end_time = selection.end_time;
         info!("{}", iformat!("Check consistent: {self.symbol_minutes:?} {start_time:?} {end_time:?}"));
 
         let candles = repo.candles_by_time(&self.symbol_minutes, &start_time, &end_time).unwrap_or_default();

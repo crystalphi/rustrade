@@ -3,7 +3,6 @@ use crate::{config::definition::TacDefinition, technicals::indicator::Indicator}
 use rust_decimal::prelude::ToPrimitive;
 use std::collections::HashMap;
 use ta::{indicators::SimpleMovingAverage as Sma, Next};
-
 use super::technical::{TechnicalDefinition, TechnicalIndicators};
 
 pub const SMA_IND: &str = "sma";

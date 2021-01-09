@@ -1,3 +1,5 @@
+use chrono::{DateTime, Utc};
+
 use crate::{
     application::candles_provider::{CandlesProvider, CandlesProviderBuffer, CandlesProviderSelection},
     config::{candles_selection::CandlesSelection, now_provider::MockNowProvider},
@@ -8,7 +10,6 @@ pub struct TradeContextProvider {
     symbol: String,
     indicator_provider: IndicatorProvider,
     candles_provider: CandlesProviderBuffer,
-    now_provider: MockNowProvider,
 }
 
 impl<'a> TradeContextProvider {
@@ -17,12 +18,11 @@ impl<'a> TradeContextProvider {
             symbol: symbol.to_string(),
             indicator_provider,
             candles_provider,
-            now_provider: MockNowProvider::new(),
         }
     }
 
-    pub fn indicator(&mut self, minutes: u32, i_type: &IndicatorType) -> anyhow::Result<&Indicator> {
-        let candles_selection = CandlesSelection::last_n(&self.symbol, &minutes, 200, &self.now_provider);
+    pub fn indicator(&mut self, minutes: u32, i_type: &IndicatorType, now: DateTime<Utc>) -> anyhow::Result<&Indicator> {
+        let candles_selection = CandlesSelection::last_n(&self.symbol, &minutes, 200, now);
 
         // TODO PROVIDER MUST PASSING SELECTION
         let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), candles_selection);

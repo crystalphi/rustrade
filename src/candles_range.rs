@@ -45,11 +45,15 @@ impl<'a> Default for CandlesRange<'a> {
 #[derive(Debug)]
 pub struct CandlesRanges<'a> {
     pub ranges: Vec<CandlesRange<'a>>,
+    last_time: Option<DateTime<Utc>>,
 }
 
 impl<'a> CandlesRanges<'a> {
     pub fn new() -> Self {
-        let mut result = Self { ranges: Vec::new() };
+        let mut result = Self {
+            ranges: Vec::new(),
+            last_time: None,
+        };
         result.new_range();
         result
     }
@@ -58,8 +62,15 @@ impl<'a> CandlesRanges<'a> {
         self.ranges.push(CandlesRange::new());
     }
 
-    pub fn push(&mut self, candle: &'a Candle) {
+    pub fn push(&mut self, candle: &'a Candle) -> anyhow::Result<()> {
+        if let Some(last_time) = self.last_time {
+            if last_time > candle.open_time {
+                bail!("Attempt to add unsorted candle {} > {}", last_time, candle.open_time);
+            }
+        }
+        self.last_time = Some(candle.open_time);
         self.ranges.last_mut().unwrap().push(candle);
+        Ok(())
     }
 }
 
@@ -97,7 +108,9 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
                         previous.0.new_range();
                     }
                 }
-                previous.0.push(current_c);
+                if let Err(e) = previous.0.push(current_c) {
+                    error = format!("{}", e);
+                }
             };
             (previous.0, current)
         })
@@ -116,7 +129,7 @@ pub fn invert_ranges_close(start_time: &OpenClose, end_time: &OpenClose, ranges:
     fn add_range(ranges: &CandlesRanges, inverted_ranges: &mut Vec<(OpenClose, OpenClose)>, start: OpenClose, end: OpenClose) -> anyhow::Result<()> {
         if start > end {
             let message = format!("Attempt to add range start {} > end {}", start, end);
-            error!("{}, added invert_ranges({}):", message, inverted_ranges.len());
+            error!("{}, inverted_ranges.len({}):", message, inverted_ranges.len());
             inverted_ranges.iter().for_each(|r| error!("invert_ranges_close: {:?}", r));
 
             error!("Ranges ({}):", ranges.ranges.len());
@@ -178,8 +191,6 @@ pub fn candles_to_ranges_missing(
     if end_time < &limit_date {
         return Err(anyhow!("End time {:?} is less than allowed!", end_time));
     }
-    // let start_time = minutes_close_trunc(start_time, minutes);
-    // let end_time = minutes_close_trunc(end_time, minutes);
 
     let candles_ranges = match candles_ranges(candles, minutes) {
         Ok(candles) => candles,

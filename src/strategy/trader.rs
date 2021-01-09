@@ -4,6 +4,7 @@ use crate::{
     technicals::ind_provider::IndicatorProvider,
 };
 use chrono::{DateTime, Utc};
+use log::info;
 use rust_decimal::Decimal;
 
 pub struct Trader {
@@ -58,7 +59,7 @@ pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
     let mcad_trend = MacdTrend::new();
     let mut trader = Trader::new(trend_context_provider, Box::new(mcad_trend));
 
-    println!("Running back test...");
+    info!("Running back test...");
     for i in 1..candles.len() {
         let candles_ref = &candles[0..=i];
         candles_ref.iter().for_each(|c| trader.check(c.close_time, c.close).unwrap());
