@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, time::Instant};
 
 use crate::{
     candles_range::candles_to_ranges_missing,
@@ -11,7 +11,7 @@ use crate::{
 use anyhow::anyhow;
 use chrono::{Duration, Utc};
 use ifmt::iformat;
-use log::{info, warn};
+use log::info;
 
 pub trait CandlesProvider {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>>;
@@ -35,7 +35,8 @@ impl CandlesProviderBufferSingleton {
     }
 
     fn candles(&mut self, candles_selection: CandlesSelection) -> anyhow::Result<Vec<Candle>> {
-        info!("Initializing import");
+        let start = Instant::now();
+        info!("Initializing import...");
 
         fn candles_to_buf(heikin_ashi: bool, candles: &mut Vec<Candle>, buff: &mut Vec<Candle>) {
             if heikin_ashi {
@@ -56,48 +57,56 @@ impl CandlesProviderBufferSingleton {
         let symbol_minutes = &candles_selection.symbol_minutes;
 
         // Get candles from buffer
+        info!("Retrieving candles buffer {:?} {:?}...", start_time, end_time);
         let mut candles_buf = self.buffer.entry(symbol_minutes.clone()).or_default();
+        info!("Candles buffer count: {}", candles_buf.len());
+
+        info!("Retrieving ranges missing...");
         let ranges_missing = candles_to_ranges_missing(
             &OpenClose::from_date(start_time, minutes),
             &OpenClose::from_date(end_time, minutes),
             &candles_selection.symbol_minutes.minutes,
             candles_buf.iter().collect::<Vec<_>>().as_slice(),
         )?;
+        info!("Buffer ranges missing count: {}", ranges_missing.len());
 
         for range_missing in ranges_missing.iter() {
-            let start_time = range_missing.0;
-            let end_time = range_missing.1;
+            let (start_time, end_time) = range_missing;
 
             // Get candles from repository
+            info!("Retrieving candles repository {:?} {:?}...", start_time, end_time);
             let mut candles_repo = self
                 .repository
                 .candles_by_time(&candles_selection.symbol_minutes, &start_time.open(minutes), &end_time.open(minutes))
                 .unwrap_or_default();
+            info!("Candles repository count: {}", candles_repo.len());
 
             candles_to_buf(candles_selection.heikin_ashi, &mut candles_repo, &mut candles_buf);
 
             loop {
                 // Get ranges missing
+                info!("Retrieving ranges missing...");
                 let ranges_missing = candles_to_ranges_missing(
                     &start_time,
                     &end_time,
                     &candles_selection.symbol_minutes.minutes,
                     candles_repo.iter().collect::<Vec<_>>().as_slice(),
                 )?;
-                info!("Range {} {}. Missing candles: {}", start_time, end_time, ranges_missing.len());
+                info!("Repository ranges missing count: {}", ranges_missing.len());
                 if ranges_missing.is_empty() {
                     break;
                 }
 
                 for range_missing in ranges_missing.iter() {
-                    let msg = iformat!("Missing range: {range_missing:?}").to_string();
-                    warn!("{}", msg);
+                    let (start_time, end_time) = range_missing;
 
+                    info!("Retrieving candles exchange {:?} {:?}...", start_time, end_time);
                     let mut candles_exch = self.exchange.candles(
                         &candles_selection.symbol_minutes,
-                        &Some(range_missing.0.open(minutes)),
-                        &Some(range_missing.1.open(minutes)),
+                        &Some(start_time.open(minutes)),
+                        &Some(end_time.open(minutes)),
                     )?;
+                    info!("Candles exchange count: {}", candles_exch.len());
 
                     // Save news candles on repository
                     self.repository.add_candles(&mut candles_exch)?;
@@ -107,8 +116,8 @@ impl CandlesProviderBufferSingleton {
                 }
             }
         }
+        info!("{}", iformat!("Finished import count: {candles_buf.len()} elapsed: {start.elapsed():?}"));
 
-        info!("Finished import");
         // candles_buf.iter().collect::<Vec<_>>()
         Ok(candles_buf.to_vec())
     }

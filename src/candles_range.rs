@@ -74,9 +74,7 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
         return Err(anyhow!("candles_ranges: Candles is empty!"));
     }
     let duration = &Duration::minutes(*minutes as i64);
-
     let mut error = String::from("");
-
     // Returns inconsistent candles
     let result = candles
         .iter()
@@ -92,7 +90,7 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
                     }
 
                     if current_d == previous_d {
-                        error = format!("Found duplicate start x end! Candles list {}:", candles.len());
+                        error = format!("Found duplicate start x end {}! Candles list len {}:", current_d, candles.len());
                     }
 
                     if current_d - previous_d != *duration {
@@ -101,17 +99,16 @@ pub fn candles_ranges<'a>(candles: &[&'a Candle], minutes: &u32) -> anyhow::Resu
                 }
                 previous.0.push(current_c);
             };
-
             (previous.0, current)
         })
         .0;
-
     if !error.is_empty() {
-        error!("{}", error);
-        //candles.iter().for_each(|c| error!("candles_ranges: {}", c.to_string()));
+        error!("{}\n first 5 candles:\n", error);
+        for c in &candles[0..5] {
+            error!("{}", c);
+        }
         bail!(error);
     }
-
     Ok(result)
 }
 

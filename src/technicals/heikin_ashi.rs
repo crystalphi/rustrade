@@ -17,7 +17,7 @@ pub fn heikin_ashi(candles: &[&Candle]) -> Vec<Candle> {
     let first_ha = heikin_ashi_first(&candles[0]);
     let mut prev_oc = add_ha(&mut ha_candles, first_ha);
 
-    for candle in candles {
+    for candle in &candles[1..] {
         let ha = heikin_ashi_candles(prev_oc.0, prev_oc.1, &candle);
         prev_oc = add_ha(&mut ha_candles, ha);
     }
