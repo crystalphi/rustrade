@@ -10,8 +10,10 @@ use crate::{
     repository::Repository,
     strategy::{topbottom_triangle::topbottom_triangle, trader::run_trader_back_test},
     technicals::topbottom::TopBottomTac,
+    utils::datetime_to_filename,
 };
 use chrono::Duration;
+use log::info;
 use std::{cell::RefCell, rc::Rc};
 
 pub struct Application<'a> {
@@ -86,8 +88,8 @@ pub fn plot_triangles(selection: Selection, candles_provider: Box<dyn CandlesPro
         let margin = Duration::minutes(minutes as i64 * 100);
         selection_par.candles_selection.start_time = Some(open_time - margin);
         selection_par.candles_selection.end_time = Some(open_time + margin);
-        //selection.image_name = format!("out/triangle_{}.png", datetime_to_filename(&open_time));
-        //info!("Plotting triangle {}", selection.image_name);
+        selection_par.image_name = format!("out/triangle_{}.png", datetime_to_filename(&open_time));
+        info!("Plotting triangle {}", selection_par.image_name);
 
         plot_selection(selection_par, candles_provider.clone_provider()).unwrap();
     });

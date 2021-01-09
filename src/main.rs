@@ -83,7 +83,7 @@ pub fn selection_factory(candles_selection: CandlesSelection) -> Selection {
 async fn main() -> anyhow::Result<()> {
     let opt = Opt::from_args();
 
-    ri_lib_log_utils::setup_log(LevelFilter::Debug);
+    ri_lib_log_utils::setup_log(LevelFilter::Debug, module_path!());
 
     dotenv::dotenv()?;
     let exchange: Exchange = Exchange::new()?;

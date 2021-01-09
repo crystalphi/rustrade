@@ -1,10 +1,10 @@
+use super::candles_provider::CandlesProvider;
 use crate::{
     config::selection::Selection,
     tac_plotters::{
         candles_plotter::CandlePlotter, line_ind_plotter::LineIndicatorPlotter, macd_plotter::MacdPlotter, plotter::Plotter,
         topbottom_plotter::TopBottomPlotter,
     },
-    technicals::ind_provider::IndicatorProvider,
     technicals::technical::TechnicalIndicators,
     technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, topbottom::TopBottomTac},
 };
@@ -14,8 +14,6 @@ use log::info;
 use plotters::style::RGBColor;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::time::Instant;
-
-use super::candles_provider::CandlesProvider;
 
 pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
     let total_start = Instant::now();
