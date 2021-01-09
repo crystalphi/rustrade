@@ -8,6 +8,7 @@ use crate::{
     technicals::technical::TechnicalIndicators,
     technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, topbottom::TopBottomTac},
 };
+use colored::Colorize;
 use ifmt::iformat;
 use log::info;
 use plotters::style::RGBColor;
@@ -17,8 +18,9 @@ use std::time::Instant;
 use super::candles_provider::CandlesProvider;
 
 pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
-    let candles_provider_clone = candles_provider.clone_provider();
+    let total_start = Instant::now();
 
+    let candles_provider_clone = candles_provider.clone_provider();
     let candles = candles_provider.candles()?;
 
     let start_time = selection.candles_selection.start_time.unwrap();
@@ -26,27 +28,20 @@ pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn Candle
     let candles = candles
         .par_iter()
         .filter(|c| c.open_time >= start_time && c.open_time <= end_time)
-        //.copied()
         .collect::<Vec<_>>();
-    // info!(
-    //     "Plotting selection {:?} {:?} candles.len {}",
-    //     selection.candles_selection.start_time,
-    //     selection.candles_selection.end_time,
-    //     candles.len()
-    // );
-
-    let mut _indicator_provider = IndicatorProvider::new();
+    info!(
+        "Plotting selection {:?} {:?} candles.len {} image {}",
+        selection.candles_selection.start_time,
+        selection.candles_selection.end_time,
+        candles.len(),
+        selection.image_name.green()
+    );
 
     let macd_tac = MacdTac::new(candles_provider_clone.clone_provider(), 34, 72, 17);
-
     let ema_short_tac = EmaTac::new(candles_provider_clone.clone_provider(), 17);
-
     let ema_long_tac = EmaTac::new(candles_provider_clone.clone_provider(), 72);
-
     let mut topbottom_tac = TopBottomTac::new(candles_provider_clone, 7);
-
     let topbottoms = topbottom_tac.topbottoms()?;
-
     let mut plotter = Plotter::new(selection.clone());
 
     // ema 17 = purple
@@ -72,6 +67,8 @@ pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn Candle
     let start = Instant::now();
     plotter.plot(&selection.image_name)?;
     info!("{}", iformat!("### Plotting elapsed: {start.elapsed():?}"));
+
+    info!("{}", iformat!("### Total plotting elapsed: {total_start.elapsed():?}"));
 
     Ok(())
 }

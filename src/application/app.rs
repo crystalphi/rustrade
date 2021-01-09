@@ -15,8 +15,6 @@ use chrono::Duration;
 use std::{cell::RefCell, rc::Rc};
 
 pub struct Application<'a> {
-    // pub repo: &'a Repository,
-    // pub exchange: &'a Exchange,
     pub definition: ConfigDefinition,
     pub selection: Selection,
     pub candles_provider: CandlesProviderBuffer,
@@ -27,8 +25,6 @@ impl<'a> Application<'a> {
     pub fn new(repository: Repository, exchange: Exchange, synchronizer: &'a Checker<'a>, selection: Selection) -> Self {
         let candles_provider_singleton = CandlesProviderBufferSingleton::new(repository, exchange);
         Application {
-            // repo,
-            // exchange,
             synchronizer,
             candles_provider: CandlesProviderBuffer::new(Rc::new(RefCell::new(candles_provider_singleton))),
             selection,
@@ -55,13 +51,9 @@ impl<'a> Application<'a> {
 
     pub fn plot_triangles(&mut self) -> anyhow::Result<()> {
         let selection = self.selection.clone();
-
         let candles_selection = selection.candles_selection.clone();
         let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), candles_selection);
-        //let mut candles_provider = Box::new(&mut candles_provider_selection as &mut dyn CandlesProvider);
-
         let candles_provider = Box::new(candles_provider_selection);
-
         plot_triangles(selection, candles_provider)
     }
 
@@ -73,7 +65,6 @@ impl<'a> Application<'a> {
     pub fn plot_selection(&mut self) -> anyhow::Result<()> {
         let selection = self.selection.clone();
         let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), selection.candles_selection.clone());
-        //let candles_provider = Box::new(&mut candles_provider_selection as &mut dyn CandlesProvider);
         let candles_provider = Box::new(candles_provider_selection);
         plot_selection(selection, candles_provider)
     }
