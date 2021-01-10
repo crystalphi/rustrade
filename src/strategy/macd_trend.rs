@@ -1,6 +1,7 @@
+use log::info;
+
 use super::{trade_context_provider::TradeContextProvider, trend::Trend, trend_provider::TrendProvider};
 use crate::technicals::ind_type::IndicatorType;
-use chrono::{DateTime, Utc};
 
 /// setup
 
@@ -16,10 +17,14 @@ impl MacdTrend {
 }
 
 impl<'a> TrendProvider for MacdTrend {
-    fn trend(&self, trend_context_provider: &mut TradeContextProvider, now: DateTime<Utc>) -> anyhow::Result<Trend> {
-        let mcad = trend_context_provider.indicator(15, &IndicatorType::Macd(34, 72, 17), now)?.value()?;
-        let mcad_signal = trend_context_provider.indicator(15, &IndicatorType::MacdSignal(34, 72, 17), now)?.value()?;
-        Ok(if mcad > mcad_signal { Trend::Bought } else { Trend::Sold })
+    fn trend(&self, trend_context_provider: &mut TradeContextProvider) -> anyhow::Result<Trend> {
+        let mcad = trend_context_provider.indicator(15, &IndicatorType::Macd(34, 72, 17))?.value()?;
+        let mcad_signal = trend_context_provider.indicator(15, &IndicatorType::MacdSignal(34, 72, 17))?.value()?;
+        let _mcad_divergence = trend_context_provider.indicator(15, &IndicatorType::MacdDivergence(34, 72, 17))?.value()?;
+        let trend = if mcad > mcad_signal { Trend::Bought } else { Trend::Sold };
+        info!("{} > {}", mcad, mcad_signal);
+
+        Ok(trend)
     }
 }
 

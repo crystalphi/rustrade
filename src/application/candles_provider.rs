@@ -196,19 +196,22 @@ pub struct CandlesProviderVec {
     candles: Vec<Candle>,
 }
 
-impl CandlesProviderVec {
-    pub fn new(candles: Vec<Candle>) -> Self {
-        Self { candles }
+impl<'a> CandlesProviderVec {
+    pub fn new(candles: &'a [Candle], last_n: usize) -> Self {
+        let start = (candles.len() - last_n).max(0);
+        Self {
+            candles: candles[start..candles.len()].to_vec(),
+        }
     }
 }
 
-impl CandlesProvider for CandlesProviderVec {
+impl<'a> CandlesProvider for CandlesProviderVec {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
         Ok(self.candles.to_vec())
     }
 
     fn clone_provider(&self) -> Box<dyn CandlesProvider> {
-        Box::new(Self::new(self.candles.clone()))
+        Box::new(Self::new(self.candles.as_ref(), 0))
     }
 }
 

@@ -22,22 +22,22 @@ pub fn fdec(value: f64) -> Decimal {
     Decimal::from_str(&value.to_string()).unwrap()
 }
 
-// Convert binance Kline to app Candle
+/// Convert binance Kline to app Candle
 pub fn kline_to_candle(summary: &KlineSummary, symbol: &str, minutes: u32, id: &Decimal) -> Candle {
-    let open_time_fmt = timestamp_to_datetime(&(summary.open_time as u64));
-    let close_time_fmt = timestamp_to_datetime(&(summary.close_time as u64));
+    let open_time = timestamp_to_datetime(&(summary.open_time as u64));
+    let close_time = timestamp_to_datetime(&(summary.close_time as u64));
 
     Candle {
         id: *id,
         symbol: symbol.into(),
         minutes: minutes.into(),
         open: fdec(summary.open),
-        open_time: open_time_fmt,
+        open_time,
         high: fdec(summary.high),
         low: fdec(summary.low),
         close: fdec(summary.close),
         volume: fdec(summary.volume),
-        close_time: close_time_fmt,
+        close_time,
     }
 }
 
@@ -148,11 +148,11 @@ pub mod tests {
             "2020-01-12 12:14:59",
             "BTCUSDT",
             15,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
         );
         let c2 = Candle::new(
             0,
@@ -160,11 +160,11 @@ pub mod tests {
             "2020-01-12 12:29:59",
             "BTCUSDT",
             15,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
         );
 
         let d1 = c1.open_time;
@@ -189,11 +189,11 @@ pub mod tests {
             "2020-11-16 01:29:59",
             "BTCUSDT",
             15,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
         );
 
         let c4 = Candle::new(
@@ -202,11 +202,11 @@ pub mod tests {
             "2020-11-20 11:29:59",
             "BTCUSDT",
             15,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
+            fdec(100.0),
         );
 
         assert_eq!(inconsistent_candles(&[&c3, &c4], &d15m).len(), 1);

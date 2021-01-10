@@ -1,6 +1,7 @@
 use super::{macd_trend::MacdTrend, trade_context_provider::TradeContextProvider, trend::Trend, trend_provider::TrendProvider};
 use crate::{
     application::{app::Application, candles_provider::CandlesProvider},
+    model::candle::Candle,
     technicals::ind_provider::IndicatorProvider,
 };
 use chrono::{DateTime, Utc};
@@ -22,11 +23,13 @@ impl<'a> Trader {
         }
     }
 
-    pub fn check(&'a mut self, now: DateTime<Utc>, price: Decimal) -> anyhow::Result<()> {
+    pub fn check(&'a mut self, candles: &[Candle], now: DateTime<Utc>, price: Decimal) -> anyhow::Result<()> {
         let trade_context_provider = &mut self.trade_context_provider;
+        trade_context_provider.set_now(now);
+
         let trend_provider = &self.trend_provider;
 
-        let trend = trend_provider.trend(trade_context_provider, now)?;
+        let trend = trend_provider.trend(trade_context_provider)?;
 
         let previous_trend = self.previous_trend.get_or_insert_with(|| trend.clone());
         if &trend != previous_trend {
@@ -39,6 +42,7 @@ impl<'a> Trader {
                 }
             }
         }
+        self.previous_trend = Some(trend);
         Ok(())
     }
 }
@@ -59,10 +63,13 @@ pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
     let mcad_trend = MacdTrend::new();
     let mut trader = Trader::new(trend_context_provider, Box::new(mcad_trend));
 
-    info!("Running back test...");
+    let msg = format!("Running back test... candles.len {}", candles.len());
+    info!("{}", msg);
     for i in 1..candles.len() {
         let candles_ref = &candles[0..=i];
-        candles_ref.iter().for_each(|c| trader.check(c.close_time, c.close).unwrap());
+        let c = candles_ref.last().unwrap();
+        //candles_ref.iter().for_each(|c| trader.check(c.close_time, c.close).unwrap());
+        trader.check(candles_ref, c.close_time, c.close).unwrap();
     }
     Ok(())
 }

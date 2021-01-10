@@ -10,6 +10,7 @@ pub struct TradeContextProvider {
     symbol: String,
     indicator_provider: IndicatorProvider,
     candles_provider: CandlesProviderBuffer,
+    now: DateTime<Utc>,
 }
 
 impl<'a> TradeContextProvider {
@@ -18,11 +19,23 @@ impl<'a> TradeContextProvider {
             symbol: symbol.to_string(),
             indicator_provider,
             candles_provider,
+            now: Utc::now(),
         }
     }
 
-    pub fn indicator(&mut self, minutes: u32, i_type: &IndicatorType, now: DateTime<Utc>) -> anyhow::Result<&Indicator> {
-        let candles_selection = CandlesSelection::last_n(&self.symbol, &minutes, 200, now);
+    pub fn set_now(&mut self, now: DateTime<Utc>) {
+        self.now = now;
+    }
+
+    pub fn set_candles() {
+    }
+
+    pub fn now(&self) -> DateTime<Utc> {
+        self.now
+    }
+
+    pub fn indicator(&mut self, minutes: u32, i_type: &IndicatorType) -> anyhow::Result<&Indicator> {
+        let candles_selection = CandlesSelection::last_n(&self.symbol, &minutes, 200, self.now);
 
         // TODO PROVIDER MUST PASSING SELECTION
         let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), candles_selection);

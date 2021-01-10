@@ -218,7 +218,7 @@ pub mod testes {
 
     use crate::{
         model::open_close::_str_close,
-        utils::{_datetime_to_str, str_d},
+        utils::{_datetime_to_str, fdec, str_d},
     };
 
     use super::*;
@@ -229,7 +229,7 @@ pub mod testes {
 
     fn candle_test(start: &str) -> Candle {
         let end = _datetime_to_str(&close_time_from_open(&15, &str_d(start)));
-        Candle::new(0, start, &end, "BTCUSDT", 15, 100.0, 100.0, 100.0, 100.0, 100.0)
+        Candle::new(0, start, &end, "BTCUSDT", 15, fdec(100.0), fdec(100.0), fdec(100.0), fdec(100.0), fdec(100.0))
     }
 
     fn candles_test(starts: &[&str]) -> Vec<Candle> {

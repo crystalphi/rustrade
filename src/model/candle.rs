@@ -1,5 +1,5 @@
 use super::open_close::OpenClose;
-use crate::utils::{fdec, str_to_datetime, time_to_str};
+use crate::utils::{str_to_datetime, time_to_str};
 use chrono::{DateTime, Utc};
 use ifmt::iwrite;
 use rust_decimal::Decimal;
@@ -20,18 +20,29 @@ pub struct Candle {
 }
 
 impl Candle {
-    pub fn new(id: u32, open_time: &str, close_time: &str, symbol: &str, minutes: u32, open: f64, high: f64, low: f64, close: f64, volume: f64) -> Self {
+    pub fn new(
+        id: u32,
+        open_time: &str,
+        close_time: &str,
+        symbol: &str,
+        minutes: u32,
+        open: Decimal,
+        high: Decimal,
+        low: Decimal,
+        close: Decimal,
+        volume: Decimal,
+    ) -> Self {
         Self {
             id: Decimal::from(id),
             open_time: str_to_datetime(open_time),
             close_time: str_to_datetime(close_time),
             symbol: symbol.into(),
             minutes: Decimal::from(minutes),
-            open: fdec(open),
-            high: fdec(high),
-            low: fdec(low),
-            close: fdec(close),
-            volume: fdec(volume),
+            open,
+            high,
+            low,
+            close,
+            volume,
         }
     }
 
