@@ -375,7 +375,7 @@ pub mod tests {
 
         let candles = [&c1, &c2, &c3, &c4, &c5, &c6, &c7, &c8, &c9, &c10, &c11, &c12, &c13, &c14, &c15, &c16, &c17];
         let candles_vec = candles.iter().cloned().cloned().collect::<Vec<_>>();
-        let candles_provider_vec = CandlesProviderVec::new(candles_vec);
+        let candles_provider_vec = CandlesProviderVec::new(&candles_vec, 100);
 
         let candles_provider = Box::new(candles_provider_vec);
 

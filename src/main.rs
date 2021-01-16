@@ -90,7 +90,6 @@ async fn main() -> anyhow::Result<()> {
     let repo: Repository = Repository::new()?;
 
     let candles_selection = CandlesSelection::new(&opt.symbol, &opt.minutes, str_to_datetime(&opt.start_time), str_to_datetime(&opt.end_time));
-
     let selection = selection_factory(candles_selection.clone());
 
     let symbol_minutes = SymbolMinutes::new(&opt.symbol, &opt.minutes);

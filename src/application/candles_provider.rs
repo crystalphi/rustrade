@@ -183,6 +183,7 @@ impl<'a> CandlesProviderSelection {
 
 impl<'a> CandlesProvider for CandlesProviderSelection {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
+        // TODO HERE SHOULD FILTER
         self.candles_provider.set_candles_selection(self.candles_selection.clone());
         self.candles_provider.candles()
     }
@@ -205,7 +206,7 @@ impl<'a> CandlesProviderVec {
     }
 }
 
-impl<'a> CandlesProvider for CandlesProviderVec {
+impl CandlesProvider for CandlesProviderVec {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
         Ok(self.candles.to_vec())
     }
@@ -215,25 +216,34 @@ impl<'a> CandlesProvider for CandlesProviderVec {
     }
 }
 
-pub struct CandlesProviderClosure<'a, F>
+pub struct CandlesProviderClosure<F>
 where
-    F: FnMut(CandlesSelection) -> anyhow::Result<Vec<&'a Candle>>,
+    F: FnMut() -> anyhow::Result<Vec<Candle>>,
 {
     call_back: F,
 }
 
-impl<'a, F> CandlesProviderClosure<'a, F>
+impl<'a, F> CandlesProviderClosure<F>
 where
-    F: FnMut(CandlesSelection) -> anyhow::Result<Vec<&'a Candle>>,
+    F: FnMut() -> anyhow::Result<Vec<Candle>>,
 {
     pub fn new(call_back: F) -> Self
     where
-        F: FnMut(CandlesSelection) -> anyhow::Result<Vec<&'a Candle>>,
+        F: FnMut() -> anyhow::Result<Vec<Candle>>,
     {
         Self { call_back }
     }
+}
 
-    pub fn candles(&mut self, candles_selection: CandlesSelection) -> anyhow::Result<Vec<&'a Candle>> {
-        (self.call_back)(candles_selection)
+impl<'a, F> CandlesProvider for CandlesProviderClosure<F>
+where
+    F: FnMut() -> anyhow::Result<Vec<Candle>>,
+{
+    fn candles(&mut self) -> anyhow::Result<Vec<Candle>> {
+        (self.call_back)()
+    }
+
+    fn clone_provider(&self) -> Box<dyn CandlesProvider> {
+        todo!()
     }
 }

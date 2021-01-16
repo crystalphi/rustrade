@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use super::{macd_trend::MacdTrend, trade_context_provider::TradeContextProvider, trend::Trend, trend_provider::TrendProvider};
 use crate::{
     application::{app::Application, candles_provider::CandlesProvider},
@@ -5,6 +7,7 @@ use crate::{
     technicals::ind_provider::IndicatorProvider,
 };
 use chrono::{DateTime, Utc};
+use ifmt::iformat;
 use log::info;
 use rust_decimal::Decimal;
 
@@ -48,6 +51,9 @@ impl<'a> Trader {
 }
 
 pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
+    let start = Instant::now();
+    info!("Initializing backtest...");
+
     let selection = &app.selection;
     app.candles_provider.set_candles_selection(selection.candles_selection.clone());
     let candles = app.candles_provider.candles()?;
@@ -68,8 +74,10 @@ pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
     for i in 1..candles.len() {
         let candles_ref = &candles[0..=i];
         let c = candles_ref.last().unwrap();
-        //candles_ref.iter().for_each(|c| trader.check(c.close_time, c.close).unwrap());
         trader.check(candles_ref, c.close_time, c.close).unwrap();
     }
+
+    info!("{}", iformat!("Finished backtest, elapsed: {start.elapsed():?}"));
+
     Ok(())
 }

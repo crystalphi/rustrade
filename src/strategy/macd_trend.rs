@@ -22,14 +22,8 @@ impl<'a> TrendProvider for MacdTrend {
         let mcad_signal = trend_context_provider.indicator(15, &IndicatorType::MacdSignal(34, 72, 17))?.value()?;
         let _mcad_divergence = trend_context_provider.indicator(15, &IndicatorType::MacdDivergence(34, 72, 17))?.value()?;
         let trend = if mcad > mcad_signal { Trend::Bought } else { Trend::Sold };
-        info!("{} > {}", mcad, mcad_signal);
 
+        info!("{:?} {} > {}", trend_context_provider.now(), mcad, mcad_signal);
         Ok(trend)
     }
 }
-
-// impl<'a> TrendProviderFactory<'a, MacdTrend<'a>> for MacdTrend<'a> {
-//     fn create(indicator_provider: IndicatorProvider<'a>) -> MacdTrend<'a> {
-//         MacdTrend::new(indicator_provider)
-//     }
-// }

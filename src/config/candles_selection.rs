@@ -32,6 +32,10 @@ impl CandlesSelection {
             heikin_ashi: true,
         }
     }
+
+    pub fn end_time(&self) -> DateTime<Utc> {
+        self.end_time
+    }
 }
 
 mod my_date_format {
