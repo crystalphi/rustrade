@@ -1,25 +1,35 @@
 use std::time::Instant;
 
-use super::{macd_trend::MacdTrend, trade_context_provider::TradeContextProvider, trend::Trend, trend_provider::TrendProvider};
+use super::{
+    macd_trend::MacdTrend,
+    trade_context_provider::TradeContextProvider,
+    trader_register::{Position, TraderRegister},
+    trend::Trend,
+    trend_provider::TrendProvider,
+};
 use crate::{
     application::{app::Application, candles_provider::CandlesProvider},
     model::candle::Candle,
     technicals::ind_provider::IndicatorProvider,
 };
 use chrono::{DateTime, Utc};
+use colored::Colorize;
 use ifmt::iformat;
 use log::info;
 use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 pub struct Trader {
+    trader_register: TraderRegister,
     trade_context_provider: TradeContextProvider,
     trend_provider: Box<dyn TrendProvider>,
     previous_trend: Option<Trend>,
 }
 
 impl<'a> Trader {
-    pub fn new(trade_context_provider: TradeContextProvider, trend_provider: Box<dyn TrendProvider>) -> Self {
+    pub fn new(trader_register: TraderRegister, trade_context_provider: TradeContextProvider, trend_provider: Box<dyn TrendProvider>) -> Self {
         Self {
+            trader_register,
             trade_context_provider,
             trend_provider,
             previous_trend: None,
@@ -35,15 +45,12 @@ impl<'a> Trader {
         let trend = trend_provider.trend(trade_context_provider)?;
 
         let previous_trend = self.previous_trend.get_or_insert_with(|| trend.clone());
-        if &trend != previous_trend {
-            match trend {
-                Trend::Bought => {
-                    println!("{} Bought {}", now, price)
-                }
-                Trend::Sold => {
-                    println!("{} Sold {}", now, price)
-                }
-            }
+        if (&trend != previous_trend) && (&trend != self.trader_register.position().state()) {
+            let message = match trend {
+                Trend::Bought => format!("{} Bought {}", now, price).green(),
+                Trend::Sold => format!("{} Sold {}", now, price).red(),
+            };
+            info!("{}", message);
         }
         self.previous_trend = Some(trend);
         Ok(())
@@ -66,8 +73,11 @@ pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
         app.candles_provider.clone(),
     );
 
+    let position = Position::new_from_usd(dec!(1000));
+    let trader_register = TraderRegister::new(position);
+
     let mcad_trend = MacdTrend::new();
-    let mut trader = Trader::new(trend_context_provider, Box::new(mcad_trend));
+    let mut trader = Trader::new(trader_register, trend_context_provider, Box::new(mcad_trend));
 
     let msg = format!("Running back test... candles.len {}", candles.len());
     info!("{}", msg);
