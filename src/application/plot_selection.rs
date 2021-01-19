@@ -2,8 +2,8 @@ use super::candles_provider::CandlesProvider;
 use crate::{
     config::selection::Selection,
     tac_plotters::{
-        candles_plotter::CandlePlotter, line_ind_plotter::LineIndicatorPlotter, macd_plotter::MacdPlotter, plotter::Plotter,
-        topbottom_plotter::TopBottomPlotter,
+        candles_plotter::CandlePlotter, indicator_plotter::PlotterIndicatorContext, line_ind_plotter::LineIndicatorPlotter, macd_plotter::MacdPlotter,
+        plotter::Plotter, topbottom_plotter::TopBottomPlotter,
     },
     technicals::technical::TechnicalIndicators,
     technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, topbottom::TopBottomTac},
@@ -15,7 +15,11 @@ use plotters::style::RGBColor;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::time::Instant;
 
-pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn CandlesProvider>) -> anyhow::Result<()> {
+pub fn plot_selection(
+    selection: Selection,
+    mut candles_provider: Box<dyn CandlesProvider>,
+    plotters: Vec<Box<dyn PlotterIndicatorContext>>,
+) -> anyhow::Result<()> {
     let total_start = Instant::now();
 
     let candles_provider_clone = candles_provider.clone_provider();
@@ -23,10 +27,12 @@ pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn Candle
 
     let start_time = selection.candles_selection.start_time;
     let end_time = selection.candles_selection.end_time;
+
     let candles = candles
         .par_iter()
         .filter(|c| c.open_time >= start_time && c.open_time <= end_time)
         .collect::<Vec<_>>();
+
     info!(
         "Plotting selection {:?} {:?} candles.len {} image {}",
         selection.candles_selection.start_time,
@@ -57,6 +63,8 @@ pub fn plot_selection(selection: Selection, mut candles_provider: Box<dyn Candle
     plotter.add_plotter_upper_ind(&topbottom_plotter);
     plotter.add_plotter_upper_ind(&ema_short_plotter);
     plotter.add_plotter_upper_ind(&ema_long_plotter);
+
+    plotters.iter().for_each(|p| plotter.add_plotter_upper_ind(&**p));
 
     // Lower indicators
     let macd_plotter = MacdPlotter::new(&macd_tac);

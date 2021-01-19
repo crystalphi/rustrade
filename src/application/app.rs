@@ -68,7 +68,7 @@ impl<'a> Application<'a> {
         let selection = self.selection.clone();
         let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), selection.candles_selection.clone());
         let candles_provider = Box::new(candles_provider_selection);
-        plot_selection(selection, candles_provider)
+        plot_selection(selection, candles_provider, Vec::new())
     }
 }
 
@@ -91,7 +91,7 @@ pub fn plot_triangles(selection: Selection, candles_provider: Box<dyn CandlesPro
         selection_par.image_name = format!("out/triangle_{}.png", datetime_to_filename(&open_time));
         info!("Plotting triangle {}", selection_par.image_name);
 
-        plot_selection(selection_par, candles_provider.clone_provider()).unwrap();
+        plot_selection(selection_par, candles_provider.clone_provider(), Vec::new()).unwrap();
     });
     Ok(())
 }

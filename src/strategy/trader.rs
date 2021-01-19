@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use super::{
     macd_trend::MacdTrend,
     trade_context_provider::TradeContextProvider,
@@ -8,16 +6,16 @@ use super::{
     trend_provider::TrendProvider,
 };
 use crate::{
-    application::{app::Application, candles_provider::CandlesProvider},
+    application::{app::Application, candles_provider::CandlesProvider, plot_selection::plot_selection},
     model::candle::Candle,
     technicals::ind_provider::IndicatorProvider,
 };
 use chrono::{DateTime, Utc};
-use colored::Colorize;
 use ifmt::iformat;
 use log::info;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
+use std::time::Instant;
 
 pub struct Trader {
     trader_register: TraderRegister,
@@ -46,11 +44,7 @@ impl<'a> Trader {
 
         let previous_trend = self.previous_trend.get_or_insert_with(|| trend.clone());
         if (&trend != previous_trend) && (&trend != self.trader_register.position().state()) {
-            let message = match trend {
-                Trend::Bought => format!("{} Bought {}", now, price).green(),
-                Trend::Sold => format!("{} Sold {}", now, price).red(),
-            };
-            info!("{}", message);
+            self.trader_register.register(now, trend.to_operation(), price);
         }
         self.previous_trend = Some(trend);
         Ok(())
@@ -87,7 +81,13 @@ pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
         trader.check(candles_ref, c.close_time, c.close).unwrap();
     }
 
+    let plotters = Vec::new();
+
+    plot_selection(selection.clone(), app.candles_provider.clone_provider(), plotters)?;
+
     info!("{}", iformat!("Finished backtest, elapsed: {start.elapsed():?}"));
+
+    // TODO use plot_selection here
 
     Ok(())
 }

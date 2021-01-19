@@ -1,5 +1,8 @@
 use super::trend::{Operation, Trend};
-use rust_decimal::Decimal;
+use chrono::{DateTime, Utc};
+use colored::Colorize;
+use log::info;
+use rust_decimal::{Decimal, RoundingStrategy};
 use rust_decimal_macros::dec;
 
 pub static STATE_BOUGHT: &str = "bought";
@@ -56,7 +59,7 @@ impl TraderRegister {
         }
     }
 
-    pub fn register(&mut self, operation: Operation, price: Decimal) {
+    pub fn register(&mut self, now: DateTime<Utc>, operation: Operation, price: Decimal) {
         match operation {
             // I have USB and must buy coin
             Operation::Buy => {
@@ -66,6 +69,7 @@ impl TraderRegister {
                 self.position.balance_coin += quantity_coin;
                 self.position.balance_usd -= quantity_usd;
             }
+            // I have USB and must buy coin
             Operation::Sell => {
                 let quantity_coin = self.position.balance_coin;
                 let quantity_usd = quantity_coin * price;
@@ -74,10 +78,26 @@ impl TraderRegister {
                 self.position.balance_usd += quantity_usd;
             }
         };
+
+        self.position.balance_coin = self.position.balance_coin.round_dp_with_strategy(8, RoundingStrategy::RoundDown);
+        self.position.balance_usd = self.position.balance_usd.round_dp_with_strategy(8, RoundingStrategy::RoundDown);
+
+        self.position.state = operation.to_trend();
+
+        let message = match self.position.state {
+            Trend::Bought => format!("{} Bought {} Balance USD {}", now, price, self.position.balance_usd).green(),
+            Trend::Sold => format!("{} Sold {} Balance USD {}", now, price, self.position.balance_usd).red(),
+        };
+        info!("{}", message);
+
         self.trades.push(Trade::new(operation, price));
     }
 
     pub fn position(&self) -> &Position {
         &self.position
+    }
+
+    pub fn trades(&self) -> &Vec<Trade> {
+        &self.trades
     }
 }
