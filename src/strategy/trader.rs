@@ -8,6 +8,7 @@ use super::{
 use crate::{
     application::{app::Application, candles_provider::CandlesProvider, plot_selection::plot_selection},
     model::candle::Candle,
+    tac_plotters::{indicator_plotter::PlotterIndicatorContext, trading_plotter::TradingPlotter},
     technicals::ind_provider::IndicatorProvider,
 };
 use chrono::{DateTime, Utc};
@@ -81,13 +82,17 @@ pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
         trader.check(candles_ref, c.close_time, c.close).unwrap();
     }
 
-    let plotters = Vec::new();
+    let trades_ref = trader_register.trades().as_slice();
 
+    let trading_plotter = TradingPlotter::new(trades_ref);
+
+    let plotters = Vec::new();
+    plotters.push(Box::new(trading_plotter) as Box<dyn PlotterIndicatorContext>);
+
+    // TODO use plot_selection here
     plot_selection(selection.clone(), app.candles_provider.clone_provider(), plotters)?;
 
     info!("{}", iformat!("Finished backtest, elapsed: {start.elapsed():?}"));
-
-    // TODO use plot_selection here
 
     Ok(())
 }

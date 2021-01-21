@@ -36,13 +36,14 @@ impl Position {
 }
 
 pub struct Trade {
-    operation: Operation,
-    price: Decimal,
+    pub operation: Operation,
+    pub now: DateTime<Utc>,
+    pub price: Decimal,
 }
 
 impl Trade {
-    pub fn new(operation: Operation, price: Decimal) -> Self {
-        Self { operation, price }
+    pub fn new(operation: Operation, now: DateTime<Utc>, price: Decimal) -> Self {
+        Self { operation, now, price }
     }
 }
 
@@ -90,7 +91,7 @@ impl TraderRegister {
         };
         info!("{}", message);
 
-        self.trades.push(Trade::new(operation, price));
+        self.trades.push(Trade::new(operation, now, price));
     }
 
     pub fn position(&self) -> &Position {
