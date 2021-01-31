@@ -15,3 +15,8 @@ Todo:
 - [ ] Bot trade runner
 - [ ] Register position, operation, profits and others
 
+
+
+
+sqlx database create
+sqlx migrate run

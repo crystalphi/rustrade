@@ -2,7 +2,6 @@ use super::indicator_plotter::PlotterIndicatorContext;
 use crate::{
     config::selection::Selection,
     strategy::{trader_register::Trade, trend::Operation},
-    technicals::topbottom::{TopBottom, TopBottomType},
 };
 use chrono::{DateTime, Utc};
 use plotters::{
