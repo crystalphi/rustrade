@@ -7,6 +7,7 @@ use ta::{indicators::ExponentialMovingAverage as Ema, Next};
 
 pub const EMA_IND: &str = "ema";
 
+#[derive(Clone)]
 pub struct EmaTac {
     pub indicators: HashMap<String, Indicator>,
 }

@@ -2,6 +2,7 @@ use super::serie::Serie;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 
+#[derive(Clone)]
 pub struct Indicator {
     pub name: String,
     pub series: Vec<Serie>,

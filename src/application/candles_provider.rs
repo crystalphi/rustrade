@@ -10,7 +10,11 @@ use anyhow::anyhow;
 use ifmt::iformat;
 use log::debug;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use std::{cell::RefCell, collections::HashMap, rc::Rc, time::Instant};
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+    time::Instant,
+};
 
 pub trait CandlesProvider {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>>;
@@ -131,12 +135,12 @@ impl CandlesProviderBufferSingleton {
 
 #[derive(Clone)]
 pub struct CandlesProviderBuffer {
-    candles_provider_singleton: Rc<RefCell<CandlesProviderBufferSingleton>>,
+    candles_provider_singleton: Arc<RwLock<CandlesProviderBufferSingleton>>,
     candles_selection_opt: Option<CandlesSelection>,
 }
 
 impl CandlesProviderBuffer {
-    pub fn new(candles_provider_singleton: Rc<RefCell<CandlesProviderBufferSingleton>>) -> Self {
+    pub fn new(candles_provider_singleton: Arc<RwLock<CandlesProviderBufferSingleton>>) -> Self {
         Self {
             candles_provider_singleton,
             candles_selection_opt: None,
@@ -154,11 +158,24 @@ impl CandlesProvider for CandlesProviderBuffer {
             .as_ref()
             .cloned()
             .ok_or_else(|| -> anyhow::Error { anyhow!("candles_selection not definied!") })?;
-        self.candles_provider_singleton.borrow_mut().candles(candles_selection)
+
+        let m = &*self.candles_provider_singleton;
+
+        let mut c = m.write().unwrap();
+
+        let c = c.candles(candles_selection);
+
+        //let m = self.candles_provider_singleton.get_mut().unwrap(); //.borrow_mut();
+        // m.candles(candles_selection)
+        c
     }
 
     fn clone_provider(&self) -> Box<dyn CandlesProvider> {
-        todo!()
+        let candles_provider = Self {
+            candles_provider_singleton: self.candles_provider_singleton.clone(),
+            candles_selection_opt: self.candles_selection_opt.clone(),
+        };
+        Box::new(candles_provider)
     }
 }
 

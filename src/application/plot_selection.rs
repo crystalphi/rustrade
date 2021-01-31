@@ -15,10 +15,10 @@ use plotters::style::RGBColor;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::time::Instant;
 
-pub fn plot_selection(
+pub fn plot_selection<'a>(
     selection: Selection,
     mut candles_provider: Box<dyn CandlesProvider>,
-    plotters: Vec<Box<dyn PlotterIndicatorContext>>,
+    plotters: Vec<Box<dyn PlotterIndicatorContext + 'a>>,
 ) -> anyhow::Result<()> {
     let total_start = Instant::now();
 

@@ -12,28 +12,37 @@ use std::collections::HashMap;
 
 pub struct IndicatorProvider {
     mcads_opt: Option<(DateTime<Utc>, usize, usize, usize, MacdTac)>,
-    tac_indicators: HashMap<(String, usize), anyhow::Result<Box<dyn TechnicalIndicators>>>, // <= to allow trait with different timelife
+    tac_indicators: HashMap<(String, usize), anyhow::Result<Box<dyn TechnicalIndicators + Send + Sync>>>, // <= to allow trait with different timelife
 }
 
-impl<'a, 'b> IndicatorProvider {
+impl Clone for IndicatorProvider {
+    fn clone(&self) -> Self {
+        Self {
+            mcads_opt: self.mcads_opt.clone(),
+            tac_indicators: HashMap::new(),
+        }
+    }
+}
+
+impl IndicatorProvider {
     pub fn new() -> Self {
         Self {
             mcads_opt: None,
             tac_indicators: HashMap::new(),
         }
     }
-
     fn tac_indicator(&mut self, candles_provider: Box<dyn CandlesProvider>, ind_name: &str, period: usize) -> anyhow::Result<&Indicator> {
         self.tac_indicators.clear();
         // TODO I shouldn't store Indicator cache, or use "now" like a key
-        let result: &mut anyhow::Result<Box<dyn TechnicalIndicators>> = self.tac_indicators.entry((ind_name.to_string(), period)).or_insert_with(|| {
-            let result: anyhow::Result<Box<dyn TechnicalIndicators>> = match ind_name {
-                EMA_IND => Ok(Box::new(EmaTac::new(candles_provider, period)) as Box<dyn TechnicalIndicators>), // <= cast box<struct> as box<trait>
-                SMA_IND => Ok(Box::new(SmaTac::new(candles_provider, period)) as Box<dyn TechnicalIndicators>),
-                other => Err(anyhow!("Not found indicator {}!", other)),
-            };
-            result
-        });
+        let result: &mut anyhow::Result<Box<dyn TechnicalIndicators + Send + Sync>> =
+            self.tac_indicators.entry((ind_name.to_string(), period)).or_insert_with(|| {
+                let result: anyhow::Result<Box<dyn TechnicalIndicators + Send + Sync>> = match ind_name {
+                    EMA_IND => Ok(Box::new(EmaTac::new(candles_provider, period)) as Box<dyn TechnicalIndicators + Send + Sync>), // <= cast box<struct> as box<trait>
+                    SMA_IND => Ok(Box::new(SmaTac::new(candles_provider, period)) as Box<dyn TechnicalIndicators + Send + Sync>),
+                    other => Err(anyhow!("Not found indicator {}!", other)),
+                };
+                result
+            });
         let tac = match result {
             Ok(tac) => tac,
             Err(e) => return Err(anyhow!("{}", e)),

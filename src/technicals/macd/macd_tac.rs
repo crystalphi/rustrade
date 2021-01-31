@@ -7,7 +7,7 @@ use crate::{
     },
 };
 use ifmt::iformat;
-use log::debug;
+use log::{debug, info};
 use rust_decimal::prelude::ToPrimitive;
 use std::{collections::HashMap, time::Instant};
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};
@@ -16,6 +16,7 @@ pub const MACD_IND: &str = "macd";
 pub const MACD_SIG_IND: &str = "signal";
 pub const MACD_DIV_IND: &str = "divergence";
 
+#[derive(Clone)]
 pub struct MacdTac {
     pub indicators: HashMap<String, Indicator>,
 }
@@ -62,7 +63,7 @@ impl<'a> MacdTac {
         indicators.insert(signal.name.clone(), signal);
         indicators.insert(divergence.name.clone(), divergence);
 
-        debug!("{}", iformat!("Technicals {candles.len()}: {start.elapsed():?}"));
+        debug!("{}", iformat!("macd load {candles.len()}: {start.elapsed():?}"));
 
         MacdTac { indicators }
     }

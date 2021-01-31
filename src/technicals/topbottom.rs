@@ -45,6 +45,15 @@ pub struct TopBottomTac {
     neighbors: usize,
 }
 
+impl Clone for TopBottomTac {
+    fn clone(&self) -> Self {
+        Self {
+            candles_provider: self.candles_provider.clone_provider(),
+            neighbors: self.neighbors,
+        }
+    }
+}
+
 impl TechnicalDefinition for TopBottomTac {
     fn definition() -> TacDefinition {
         TacDefinition::new("topbottom", &["topbottom"])

@@ -6,6 +6,7 @@ use crate::{
 };
 use chrono::{DateTime, Utc};
 
+#[derive(Clone)]
 pub struct TradeContextProvider {
     symbol: String,
     indicator_provider: IndicatorProvider,
@@ -14,7 +15,7 @@ pub struct TradeContextProvider {
     candles_opt: Option<(DateTime<Utc>, u32, Vec<Candle>)>,
 }
 
-impl<'a> TradeContextProvider {
+impl TradeContextProvider {
     pub fn new(symbol: &str, indicator_provider: IndicatorProvider, candles_provider: CandlesProviderBuffer) -> Self {
         Self {
             symbol: symbol.to_string(),

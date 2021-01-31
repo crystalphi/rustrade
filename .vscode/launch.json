@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rustrade'",
+            "name": "Debug executable 'rustrade' plot",
             "cargo": {
                 "args": [
                     "build",
@@ -29,6 +29,34 @@
                 "-e",
                 "2020-12-25 23:00:00",
                 "plot"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'rustrade' back-test",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rustrade",
+                    "--package=rustrade"
+                ],
+                "filter": {
+                    "name": "rustrade",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "-y",
+                "BTCUSDT",
+                "-m",
+                "15",
+                "-s",
+                "2020-12-21 00:00:00",
+                "-e",
+                "2020-12-25 23:00:00",
+                "back-test"
             ],
             "cwd": "${workspaceFolder}"
         },
