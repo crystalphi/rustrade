@@ -6,8 +6,8 @@ use crate::{
 use chrono::{DateTime, Utc};
 use plotters::{
     coord::types::RangedCoordf32,
-    prelude::Cross,
-    prelude::{Cartesian2d, ChartContext, EmptyElement, PointSeries, RangedDateTime},
+    prelude::Polygon,
+    prelude::{Cartesian2d, ChartContext, Circle, EmptyElement, PointSeries, RangedDateTime},
     style::RGBColor,
     style::ShapeStyle,
 };
@@ -16,11 +16,11 @@ use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
 
 pub struct TradingPlotter<'a> {
-    trades: &'a [Trade],
+    trades: &'a Vec<Trade>,
 }
 
 impl<'a> TradingPlotter<'a> {
-    pub fn new(trades: &'a [Trade]) -> Self {
+    pub fn new(trades: &'a Vec<Trade>) -> Self {
         TradingPlotter { trades }
     }
 }
@@ -34,7 +34,7 @@ impl<'a> PlotterIndicatorContext for TradingPlotter<'a> {
         let red = RGBColor(164, 16, 64);
         let green = RGBColor(16, 196, 64);
 
-        let trades = self.trades;
+        let trades = &self.trades;
 
         let lows = PointSeries::of_element(
             trades
@@ -44,7 +44,7 @@ impl<'a> PlotterIndicatorContext for TradingPlotter<'a> {
             3,
             ShapeStyle::from(&red).filled(),
             &|coord, size, style| {
-                EmptyElement::at(coord) + Cross::new((0, 0), size, style)
+                EmptyElement::at(coord) + Circle::new((0, 0), size * 3, style)
                 //+ Text::new(format!("{:?}", coord), (0, 15), ("sans-serif", 15))
             },
         );
@@ -58,7 +58,7 @@ impl<'a> PlotterIndicatorContext for TradingPlotter<'a> {
             3,
             ShapeStyle::from(&green).filled(),
             &|coord, size, style| {
-                EmptyElement::at(coord) + Cross::new((0, 0), size, style)
+                EmptyElement::at(coord) + Circle::new((0, 0), size * 3, style)
                 //+ Text::new(format!("{:?}", coord), (0, 15), ("sans-serif", 15))
             },
         );

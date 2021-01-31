@@ -3,7 +3,10 @@ use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
 use log::info;
-use rust_decimal::{prelude::FromPrimitive, prelude::ToPrimitive, Decimal};
+use rust_decimal::{
+    prelude::{FromPrimitive, ToPrimitive},
+    Decimal,
+};
 use rust_decimal_macros::dec;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, time::Instant};

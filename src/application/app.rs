@@ -3,18 +3,19 @@ use super::{
     plot_selection::plot_selection,
     streamer::Streamer,
 };
+use crate::strategy::back_test_runner::run_trader_back_test;
 use crate::{
     checker::Checker,
     config::{definition::ConfigDefinition, selection::Selection},
     exchange::Exchange,
     repository::Repository,
-    strategy::{topbottom_triangle::topbottom_triangle, trader::run_trader_back_test},
+    strategy::topbottom_triangle::topbottom_triangle,
     technicals::topbottom::TopBottomTac,
     utils::datetime_to_filename,
 };
 use chrono::Duration;
 use log::info;
-use std::{cell::RefCell, rc::Rc};
+use std::sync::{Arc, RwLock};
 
 pub struct Application<'a> {
     pub definition: ConfigDefinition,
@@ -28,7 +29,7 @@ impl<'a> Application<'a> {
         let candles_provider_singleton = CandlesProviderBufferSingleton::new(repository, exchange);
         Application {
             synchronizer,
-            candles_provider: CandlesProviderBuffer::new(Rc::new(RefCell::new(candles_provider_singleton))),
+            candles_provider: CandlesProviderBuffer::new(Arc::new(RwLock::new(candles_provider_singleton))),
             selection,
             definition: ConfigDefinition::new(),
         }

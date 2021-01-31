@@ -1,3 +1,4 @@
+pub mod back_test_runner;
 pub mod macd_trend;
 pub mod model;
 pub mod order_executor;
