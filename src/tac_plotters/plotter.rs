@@ -48,7 +48,7 @@ impl<'a> Plotter<'a> {
             .plotters_ind_upper
             .iter()
             .map(|i| i.min_max())
-            .fold_first(|p, c| (p.0.min(c.0), p.1.max(c.1)))
+            .reduce(|p, c| (p.0.min(c.0), p.1.max(c.1)))
             .unwrap();
         let min_price = min_price as f32;
         let max_price = max_price as f32;

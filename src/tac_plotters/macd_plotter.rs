@@ -61,7 +61,7 @@ fn plot_indicators(
     let (min_macd, max_macd) = indicators
         .iter()
         .map(|i| i.min_max())
-        .fold_first(|p, c| (p.0.min(c.0), p.1.max(c.1)))
+        .reduce(|p, c| (p.0.min(c.0), p.1.max(c.1)))
         .ok_or_else(|| anyhow!("plot_indicators: have no min x max"))?;
 
     if min_macd == 0. && max_macd == 0. {
