@@ -52,6 +52,9 @@ enum Command {
 #[derive(Debug, StructOpt)]
 #[structopt(name = "rustrade", about = "A Rust Bot Trade")]
 struct Opt {
+    /// Enabled debug level
+    #[structopt(short, long)]
+    debug: bool,
     /// Symbol (e.g. BTCUST)
     #[structopt(short = "y", long, default_value = "BTCUSDT")]
     symbol: String,
@@ -84,7 +87,9 @@ pub fn selection_factory(candles_selection: CandlesSelection) -> Selection {
 async fn main() -> anyhow::Result<()> {
     let opt = Opt::from_args();
 
-    ri_lib_log_utils::setup_log(LevelFilter::Info, module_path!());
+    let level = if opt.debug { LevelFilter::Debug } else { LevelFilter::Info };
+
+    ri_lib_log_utils::setup_log(level, module_path!());
 
     dotenv::dotenv()?;
     let exchange: Exchange = Exchange::new()?;

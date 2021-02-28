@@ -7,6 +7,9 @@ const DEC_4: Decimal = dec!(4);
 
 /// Heikin-Ashi Candle Calculations
 pub fn heikin_ashi(candles: &[&Candle]) -> Vec<Candle> {
+    if candles.is_empty() {
+        return Vec::new();
+    }
     let mut ha_candles = Vec::with_capacity(candles.len());
     fn add_ha(has: &mut Vec<Candle>, hac: Candle) -> (Decimal, Decimal) {
         let prev_oc = (hac.open, hac.close);
