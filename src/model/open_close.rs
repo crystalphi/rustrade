@@ -5,7 +5,7 @@ use chrono::{DateTime, Duration, Timelike, Utc};
 
 use crate::{
     candles_range::minutes_open_trunc,
-    utils::{str_d, str_to_datetime},
+    candles_utils::{str_d, str_to_datetime},
 };
 #[derive(Debug, Eq, Copy, Clone)]
 pub enum OpenClose {
@@ -142,10 +142,6 @@ impl Sub<Duration> for OpenClose {
             OpenClose::OpenClose(open, close) => OpenClose::OpenClose(open - other, close - other),
         }
     }
-}
-
-pub fn str_open(date_time: &str) -> OpenClose {
-    OpenClose::Open(str_to_datetime(date_time))
 }
 
 pub fn _str_close(date_time: &str) -> OpenClose {

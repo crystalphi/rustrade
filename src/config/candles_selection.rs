@@ -76,48 +76,48 @@ mod my_date_format {
     }
 }
 
-mod my_date_format_opt {
-    use chrono::{DateTime, TimeZone, Utc};
-    use serde::{self, Deserialize, Deserializer, Serializer};
+// mod my_date_format_opt {
+//     use chrono::{DateTime, TimeZone, Utc};
+//     use serde::{self, Deserialize, Deserializer, Serializer};
 
-    const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+// const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
-    // The signature of a serialize_with function must follow the pattern:
-    //
-    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
-    //    where
-    //        S: Serializer
-    //
-    // although it may also be generic over the input types T.
-    pub fn serialize<S>(date: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match date {
-            Some(date) => {
-                let s = format!("{}", date.format(FORMAT));
-                serializer.serialize_str(&s)
-            }
-            None => serializer.serialize_none(),
-        }
-    }
+// The signature of a serialize_with function must follow the pattern:
+//
+//    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
+//    where
+//        S: Serializer
+//
+// although it may also be generic over the input types T.
+// pub fn serialize<S>(date: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
+// where
+//     S: Serializer,
+// {
+//     match date {
+//         Some(date) => {
+//             let s = format!("{}", date.format(FORMAT));
+//             serializer.serialize_str(&s)
+//         }
+//         None => serializer.serialize_none(),
+//     }
+// }
 
-    // The signature of a deserialize_with function must follow the pattern:
-    //
-    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
-    //    where
-    //        D: Deserializer<'de>
-    //
-    // although it may also be generic over the output types T.
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<DateTime<Utc>>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s: Option<String> = Option::deserialize(deserializer)?;
-        let result = match s {
-            Some(s) => Some(Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?),
-            None => None,
-        };
-        Ok(result)
-    }
-}
+// The signature of a deserialize_with function must follow the pattern:
+//
+//    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+//    where
+//        D: Deserializer<'de>
+//
+// although it may also be generic over the output types T.
+//     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<DateTime<Utc>>, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         let s: Option<String> = Option::deserialize(deserializer)?;
+//         let result = match s {
+//             Some(s) => Some(Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?),
+//             None => None,
+//         };
+//         Ok(result)
+//     }
+// }

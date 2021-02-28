@@ -7,7 +7,7 @@ use crate::{
     },
 };
 use ifmt::iformat;
-use log::{debug, info};
+use log::debug;
 use rust_decimal::prelude::ToPrimitive;
 use std::{collections::HashMap, time::Instant};
 use ta::{indicators::MovingAverageConvergenceDivergence as Macd, Next};

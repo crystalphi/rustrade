@@ -1,9 +1,6 @@
 use crate::{
-    model::{
-        candle::Candle,
-        open_close::{str_open, OpenClose},
-    },
-    utils::min_max_close_time_from_candles,
+    candles_utils::min_max_close_time_from_candles,
+    model::{candle::Candle, open_close::OpenClose},
 };
 use anyhow::*;
 use chrono::prelude::*;
@@ -214,14 +211,16 @@ pub fn candles_to_ranges_missing(
 
 #[cfg(test)]
 pub mod testes {
+    use super::*;
+    use crate::{
+        candles_utils::{_datetime_to_str, fdec, str_d, str_to_datetime},
+        model::open_close::_str_close,
+    };
     use std::println;
 
-    use crate::{
-        model::open_close::_str_close,
-        utils::{_datetime_to_str, fdec, str_d},
-    };
-
-    use super::*;
+    pub fn str_open(date_time: &str) -> OpenClose {
+        OpenClose::Open(str_to_datetime(date_time))
+    }
 
     pub fn close_time_from_open(minutes: &u32, start: &DateTime<Utc>) -> DateTime<Utc> {
         *start + Duration::minutes(*minutes as i64) - Duration::seconds(1)

@@ -163,11 +163,7 @@ impl CandlesProvider for CandlesProviderBuffer {
 
         let mut c = m.write().unwrap();
 
-        let c = c.candles(candles_selection);
-
-        //let m = self.candles_provider_singleton.get_mut().unwrap(); //.borrow_mut();
-        // m.candles(candles_selection)
-        c
+        c.candles(candles_selection)
     }
 
     fn clone_provider(&self) -> Box<dyn CandlesProvider> {

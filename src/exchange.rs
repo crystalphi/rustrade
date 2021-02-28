@@ -1,7 +1,7 @@
 use crate::{
     config::symbol_minutes::SymbolMinutes,
     model::candle::Candle,
-    utils::{datetime_to_timestamp, kline_to_candle},
+    candles_utils::{datetime_to_timestamp, kline_to_candle},
 };
 use anyhow::{bail, Result};
 use binance::{api::Binance, futures::market::FuturesMarket};

@@ -202,7 +202,7 @@ impl Repository {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::utils::inconsistent_candles;
+    use crate::candles_utils::inconsistent_candles;
     use chrono::Duration;
     use ifmt::iprintln;
 

@@ -1,9 +1,4 @@
-use super::{
-    trade_context_provider::TradeContextProvider,
-    trader_register::{Trade, TraderRegister},
-    trend::Trend,
-    trend_provider::TrendProvider,
-};
+use super::{trade_context_provider::TradeContextProvider, trader_register::Trade, trend::Trend, trend_provider::TrendProvider};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 

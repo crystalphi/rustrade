@@ -9,7 +9,7 @@ use crate::{
     config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes},
     exchange::Exchange,
     repository::Repository,
-    utils::inconsistent_candles,
+    candles_utils::inconsistent_candles,
 };
 
 pub struct Checker<'a> {

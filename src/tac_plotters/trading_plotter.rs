@@ -6,7 +6,6 @@ use crate::{
 use chrono::{DateTime, Utc};
 use plotters::{
     coord::types::RangedCoordf32,
-    prelude::Polygon,
     prelude::{Cartesian2d, ChartContext, Circle, EmptyElement, PointSeries, RangedDateTime},
     style::RGBColor,
     style::ShapeStyle,
@@ -16,11 +15,11 @@ use rust_decimal::prelude::ToPrimitive;
 use rust_decimal_macros::dec;
 
 pub struct TradingPlotter<'a> {
-    trades: &'a Vec<Trade>,
+    trades: &'a [Trade],
 }
 
 impl<'a> TradingPlotter<'a> {
-    pub fn new(trades: &'a Vec<Trade>) -> Self {
+    pub fn new(trades: &'a [Trade]) -> Self {
         TradingPlotter { trades }
     }
 }

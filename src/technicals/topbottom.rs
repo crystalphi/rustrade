@@ -153,7 +153,7 @@ fn min_price<'a>(previous: &'a TopBottom, current: &'a TopBottom) -> &'a TopBott
 
 #[cfg(test)]
 pub mod tests {
-    use crate::{application::candles_provider::CandlesProviderVec, model::candle::Candle, utils::str_to_datetime};
+    use crate::{application::candles_provider::CandlesProviderVec, model::candle::Candle, candles_utils::str_to_datetime};
 
     use super::*;
     use ifmt::iprintln;

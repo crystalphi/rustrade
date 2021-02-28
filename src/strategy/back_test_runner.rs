@@ -10,11 +10,10 @@ use crate::{
     technicals::ind_provider::IndicatorProvider,
 };
 use ifmt::iformat;
-use lockfree_object_pool::{LinearObjectPool, MutexObjectPool, SpinLockObjectPool};
+use lockfree_object_pool::LinearObjectPool;
 use log::info;
-use object_pool::Pool;
 use rayon::prelude::*;
-use std::{sync::Arc, thread, time::Instant};
+use std::time::Instant;
 
 #[derive(Clone)]
 pub struct TraderFactory {
@@ -86,14 +85,13 @@ pub fn run_trader_back_test(app: &mut Application) -> anyhow::Result<()> {
     });
 
     // TODO generating position from trades
-    
+
     //let trades = trader.trades();
-    // 
+    //
 
     let trading_plotter = TradingPlotter::new(&trades);
 
-    let mut plotters = Vec::new();
-    plotters.push(Box::new(trading_plotter) as Box<dyn PlotterIndicatorContext>);
+    let plotters = vec![Box::new(trading_plotter) as Box<dyn PlotterIndicatorContext>];
 
     plot_selection(app.selection.clone(), app.candles_provider.clone_provider(), plotters)?;
 

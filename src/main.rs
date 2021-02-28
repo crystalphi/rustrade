@@ -4,6 +4,7 @@
 pub mod analyzers;
 pub mod application;
 pub mod candles_range;
+mod candles_utils;
 pub mod checker;
 mod config;
 mod exchange;
@@ -12,8 +13,9 @@ mod repository;
 mod strategy;
 mod tac_plotters;
 mod technicals;
-mod utils;
+pub mod utils;
 use application::{app::Application, streamer::Streamer};
+use candles_utils::str_to_datetime;
 use checker::Checker;
 use config::{candles_selection::CandlesSelection, selection::Selection, symbol_minutes::SymbolMinutes};
 use exchange::Exchange;
@@ -22,7 +24,6 @@ use repository::Repository;
 use std::collections::HashMap;
 use structopt::StructOpt;
 use technicals::{ema_tac::EmaTac, macd::macd_tac::MacdTac, technical::TechnicalDefinition};
-use utils::str_to_datetime;
 
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Commands")]
@@ -87,7 +88,7 @@ async fn main() -> anyhow::Result<()> {
 
     let level = if opt.debug { LevelFilter::Debug } else { LevelFilter::Info };
 
-    ri_lib_log_utils::setup_log(level, module_path!());
+    utils::log_utils::setup_log(level, module_path!());
 
     dotenv::dotenv()?;
     let exchange: Exchange = Exchange::new()?;

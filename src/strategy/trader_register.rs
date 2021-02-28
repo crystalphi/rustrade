@@ -1,7 +1,7 @@
 use super::trend::{Operation, Trend};
 use chrono::{DateTime, Utc};
 use colored::Colorize;
-use log::{debug, info};
+use log::debug;
 use rust_decimal::{Decimal, RoundingStrategy};
 use rust_decimal_macros::dec;
 
