@@ -1,6 +1,4 @@
-//#![feature(fold_first)]
 #![feature(nll)]
-#![feature(iterator_fold_self)]
 #![feature(associated_type_bounds)]
 
 pub mod analyzers;
