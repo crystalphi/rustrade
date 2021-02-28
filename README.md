@@ -18,7 +18,7 @@
 - [ ] GUI
 
 ### Sample generated graph
-![plotted image](out/stock.png)
+![plotted image](out/stock.png?sanitize=true&raw=true)
 
 ### Prerequisites
 
