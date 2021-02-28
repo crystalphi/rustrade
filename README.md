@@ -2,7 +2,7 @@
 
 ### Objectives:
 * Synchronize candles from exchange into local database to provide fast back test with custom trade rules.
-* Automatize live trade operation.
+* Automatize live trade operations.
 * Tooling to verify operations from plotted graph images.
 
 ### Current state
@@ -15,6 +15,10 @@
 - [ ] Plot sma indicator
 - [ ] Bot trade runner
 - [ ] Register position, operation, profits and others
+- [ ] GUI
+
+### Sample generated graph
+![plotted image](out/stock.png)
 
 ### Prerequisites
 
