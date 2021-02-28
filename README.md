@@ -21,9 +21,9 @@
 1) Rust 1.51 or greater
 
 2) Environment variables (or .env file in current directory):
-`API_KEY` Binance API key
-`SECRET_KEY` Binance API secret
-`DATABASE_URL` Postgres database url
+  `API_KEY` Binance API key
+  `SECRET_KEY` Binance API secret
+  `DATABASE_URL` Postgres database URL
 
 3) Dependencies (due plot library)
 ```
@@ -49,7 +49,7 @@ sqlx migrate run
 ```
 
 ### Running
-Example plot command, that generates image in `out` directory.
+Example plot command, that generates image in `out/` directory.
 ```
 cargo run --release -- --debug -y BTCUSDT -m 15 -s "2020-12-21 00:00:00" -e "2020-12-25 23:00:00" plot
 ```
@@ -59,4 +59,4 @@ Parameters:
 -s start date time
 -e end date time
 
-Other command samples in `command` directory.
+Other commands samples in `command/` directory.
