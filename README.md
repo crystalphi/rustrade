@@ -26,6 +26,7 @@
 `DATABASE_URL` Postgres database url
 
 3) Dependencies (due plot library)
+```
 sudo apt install git curl autoconf libx11-dev libfreetype6-dev libgl1-mesa-dri \
     libglib2.0-dev xorg-dev gperf g++ build-essential cmake libssl-dev \
     liblzma-dev libxmu6 libxmu-dev \
@@ -33,6 +34,7 @@ sudo apt install git curl autoconf libx11-dev libfreetype6-dev libgl1-mesa-dri \
     libgles2-mesa-dev libegl1-mesa-dev libdbus-1-dev libharfbuzz-dev ccache \
     clang libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
     libgstreamer-plugins-bad1.0-dev autoconf2.13 llvm-dev
+```
 
 3) SQLx
 ```
@@ -45,3 +47,16 @@ Steps to create Postgres database:
 sqlx database create
 sqlx migrate run
 ```
+
+### Running
+Example plot command, that generates image in `out` directory.
+```
+cargo run --release -- --debug -y BTCUSDT -m 15 -s "2020-12-21 00:00:00" -e "2020-12-25 23:00:00" plot
+```
+Parameters:
+-y symbol
+-m minutes candle time
+-s start date time
+-e end date time
+
+Other command samples in `command` directory.
