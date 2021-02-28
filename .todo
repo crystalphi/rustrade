@@ -20,7 +20,7 @@
 ✔ min x max from top inds @done(20-12-24 17:24)
 ✔ Heikin Aishi @done(20-12-25 19:01)
 ✔ EmaPlotter should be LinePlotter(indicator, color) @done(20-12-26 15:52)
-☐ When populates candle into empty database occurs Duplicate Key error
+☐ When populates candle into empty database occurs Duplicate Key Error
 ☐ Indicator should have a CandleProvider instead Candles parameter, and CandleSelection
 ☐ Create migration for sqlx
 ☐ Indicator process only last period candles, but on plotting need process all
