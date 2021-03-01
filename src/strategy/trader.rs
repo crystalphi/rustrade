@@ -12,7 +12,6 @@ pub struct Trader {
 impl<'a> Trader {
     pub fn new(trade_context_provider: TradeContextProvider, trend_provider: Box<dyn TrendProvider + Send + Sync>) -> Self {
         Self {
-            //trader_register,
             trade_context_provider,
             trend_provider,
             previous_trend: None,
@@ -20,7 +19,7 @@ impl<'a> Trader {
         }
     }
 
-    pub fn check(&'a mut self, /* _candles: &[Candle], */ now: DateTime<Utc>, price: Decimal) -> anyhow::Result<()> {
+    pub fn check(&'a mut self, now: DateTime<Utc>, price: Decimal) -> anyhow::Result<()> {
         let trade_context_provider = &mut self.trade_context_provider;
         trade_context_provider.set_now(now);
 
@@ -32,9 +31,7 @@ impl<'a> Trader {
 
         if &trend != previous_trend {
             let trade = Trade::new(trend.to_operation(), now, price);
-
             self.trades.push(trade);
-            //self.trader_register.register(trade);
         }
         self.previous_trend = Some(trend);
         Ok(())

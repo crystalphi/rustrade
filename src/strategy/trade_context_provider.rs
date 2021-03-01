@@ -28,15 +28,7 @@ impl TradeContextProvider {
 
     pub fn set_now(&mut self, now: DateTime<Utc>) {
         self.now = now;
-
-        // let candles_selection = CandlesSelection::last_n(&self.symbol, &minutes, 200, self.now);
-        // let candles_provider_selection = CandlesProviderSelection::new(self.candles_provider.clone(), candles_selection);
-        // let candles_provider = Box::new(candles_provider_selection) as Box<dyn CandlesProvider>;
-
-        // self.candles =
     }
-
-    pub fn set_candles() {}
 
     pub fn now(&self) -> DateTime<Utc> {
         self.now

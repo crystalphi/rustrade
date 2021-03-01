@@ -1,9 +1,4 @@
 ## WIP: Experimental bot trader for crypto currency written in Rust
-Main libs used:
-* [Binance API](https://docs.rs/binance/0.11.3/binance/)
-* [TA (Technical Analysis)](https://docs.rs/ta/0.4.0/ta/)
-* [SQLx](https://docs.rs/sqlx/0.5.1/sqlx/)
-* [Plotters](https://docs.rs/plotters/0.3.0/plotters/)
 
 ### Objectives
 * Synchronize candles from exchange into local database to provide fast back test with custom trade rules
@@ -25,11 +20,17 @@ Main libs used:
 ### Generated sample chart
 ![plotted image](out/stock.png)
 
+### Main libs used
+* [Binance API](https://docs.rs/binance/0.11.3/binance/)
+* [TA (Technical Analysis)](https://docs.rs/ta/0.4.0/ta/)
+* [SQLx](https://docs.rs/sqlx/0.5.1/sqlx/)
+* [Plotters](https://docs.rs/plotters/0.3.0/plotters/)
+
 ### Prerequisites
 
 1) Rust 1.51 or greater
 
-2) Environment variables (or .env file in current directory):
+2) Environment variables (or .env file in current directory):  
 `API_KEY` Binance API key  
 `SECRET_KEY` Binance API secret  
 `DATABASE_URL` Postgres database URL  

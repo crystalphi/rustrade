@@ -1,8 +1,8 @@
 use crate::{config::symbol_minutes::SymbolMinutes, model::candle::Candle};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use chrono::{DateTime, Duration, Utc};
 use ifmt::iformat;
-use log::info;
+use log::{error, info};
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
     Decimal,
@@ -132,9 +132,13 @@ impl Repository {
                 candle_id
             }
         });
-        for candle in candles.iter() {
-            self.add_candle(candle)?;
+
+        let candles_errors = candles.iter().map(|c| (c, self.add_candle(c))).filter(|cr| cr.1.is_err()).collect::<Vec<_>>();
+        if !candles_errors.is_empty() {
+            error!("{}", iformat!("Candles add error: {candles_errors.len()}"));
+            bail!("Candles add error");
         }
+
         Ok(())
     }
 
@@ -167,7 +171,7 @@ impl Repository {
             candle.volume
         )
         .fetch_one(&self.pool);
-        let rec = async_std::task::block_on(future).unwrap();
+        let rec = async_std::task::block_on(future)?;
 
         Ok(rec.id)
     }

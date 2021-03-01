@@ -1,15 +1,16 @@
 use std::time::Instant;
 
+use anyhow::bail;
 use chrono::{Duration, Utc};
 use ifmt::iformat;
-use log::info;
+use log::{error, info};
 use rust_decimal_macros::dec;
 
 use crate::{
+    candles_utils::inconsistent_candles,
     config::{candles_selection::CandlesSelection, symbol_minutes::SymbolMinutes},
     exchange::Exchange,
     repository::Repository,
-    candles_utils::inconsistent_candles,
 };
 
 pub struct Checker<'a> {
@@ -56,10 +57,17 @@ impl<'a> Checker<'a> {
                 }
             });
 
-            // Insert candles on repository
-            candles.iter().for_each(|c| {
-                self.repo.add_candle(c).unwrap();
-            });
+            // ### This is a cool example to demonstrate error handling, where error is a type, it's possible capture, filter and transform (adding some semi-context with tuples)
+            // Insert candles on repository with `add_candle` and filter by errors
+            let candles_errors = candles
+                .iter()
+                .map(|c| (c, self.repo.add_candle(c)))
+                .filter(|cr| cr.1.is_err())
+                .collect::<Vec<_>>();
+            if !candles_errors.is_empty() {
+                error!("{}", iformat!("Candles add error: {candles_errors.len()}"));
+                bail!("Candles add error");
+            }
 
             info!("{}", iformat!("Imported candles: {candles.len()}"));
             if candles.is_empty() {
