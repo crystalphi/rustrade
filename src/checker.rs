@@ -61,7 +61,7 @@ impl<'a> Checker<'a> {
             // Insert candles on repository with `add_candle` and filter by errors
             let candles_errors = candles
                 .iter()
-                .map(|c| (c, self.repo.add_candle(c)))
+                .map(|c| (c, self.repo.insert_candle(c)))
                 .filter(|cr| cr.1.is_err())
                 .collect::<Vec<_>>();
             if !candles_errors.is_empty() {

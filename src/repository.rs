@@ -123,7 +123,7 @@ impl Repository {
         async_std::task::block_on(future).ok()
     }
 
-    pub fn add_candles(&self, candles: &mut [Candle]) -> anyhow::Result<()> {
+    pub fn insert_candles(&self, candles: &mut [Candle]) -> anyhow::Result<()> {
         let mut candle_id = self.last_id();
         let one = dec!(1);
         candles.iter_mut().for_each(|c| {
@@ -133,16 +133,22 @@ impl Repository {
             }
         });
 
-        let candles_errors = candles.iter().map(|c| (c, self.add_candle(c))).filter(|cr| cr.1.is_err()).collect::<Vec<_>>();
+        let candles_errors = candles
+            .iter()
+            .map(|c| (c, self.insert_candle(c)))
+            .filter(|cr| cr.1.is_err())
+            .collect::<Vec<_>>();
         if !candles_errors.is_empty() {
+            let c = candles_errors.get(0).unwrap().0;
             error!("{}", iformat!("Candles add error: {candles_errors.len()}"));
+            error!("{}", iformat!("First candle: {c}"));
             bail!("Candles add error");
         }
 
         Ok(())
     }
 
-    pub fn add_candle(&self, candle: &Candle) -> anyhow::Result<Decimal> {
+    pub fn insert_candle(&self, candle: &Candle) -> anyhow::Result<Decimal> {
         let future = sqlx::query!(
             r#"
                 INSERT INTO candle ( 
@@ -253,4 +259,7 @@ pub mod tests {
             iprintln!("{symbol_minutes:?} {count}  {range.0:?} - {range.1:?}");
         }
     }
+
+    #[test]
+    fn add_candles_test() {}
 }

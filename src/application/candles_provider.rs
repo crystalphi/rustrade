@@ -18,7 +18,6 @@ use std::{
 
 pub trait CandlesProvider {
     fn candles(&mut self) -> anyhow::Result<Vec<Candle>>;
-
     fn clone_provider(&self) -> Box<dyn CandlesProvider>;
 }
 
@@ -59,51 +58,55 @@ impl CandlesProviderBufferSingleton {
         let minutes = &candles_selection.symbol_minutes.minutes;
         let symbol_minutes = &candles_selection.symbol_minutes;
 
-        // Get candles from buffer
-        debug!("Retrieving candles buffer {:?} {:?}...", start_time, end_time);
-        let mut candles_buf = self.buffer.entry(symbol_minutes.clone()).or_default();
-        debug!("Candles buffer count: {}", candles_buf.len());
+        let candles_buf = loop {
+            // Get candles from buffer
+            debug!("Retrieving candles buffer {:?} {:?}...", start_time, end_time);
+            let mut candles_buf = self.buffer.entry(symbol_minutes.clone()).or_default();
+            debug!("Candles buffer count: {}", candles_buf.len());
 
-        debug!("Retrieving ranges missing...");
-        let ranges_missing = candles_to_ranges_missing(
-            &OpenClose::from_date(start_time, minutes),
-            &OpenClose::from_date(end_time, minutes),
-            &candles_selection.symbol_minutes.minutes,
-            candles_buf.iter().collect::<Vec<_>>().as_slice(),
-        )?;
-        debug!("Buffer ranges missing count: {}", ranges_missing.len());
+            debug!("Retrieving ranges missing from buffer...");
+            let ranges_missing_from_buffer = candles_to_ranges_missing(
+                &OpenClose::from_date(start_time, minutes),
+                &OpenClose::from_date(end_time, minutes),
+                &candles_selection.symbol_minutes.minutes,
+                candles_buf.iter().collect::<Vec<_>>().as_slice(),
+            )?;
+            debug!("Buffer ranges missing count: {}", ranges_missing_from_buffer.len());
 
-        for range_missing in ranges_missing.iter() {
-            let (start_time, end_time) = range_missing;
+            if ranges_missing_from_buffer.is_empty() {
+                break candles_buf;
+            }
 
-            // Get candles from repository
-            debug!("Retrieving candles repository {:?} {:?}...", start_time, end_time);
-            let mut candles_repo = self
-                .repository
-                .candles_by_time(&candles_selection.symbol_minutes, &start_time.open(minutes), &end_time.open(minutes))
-                .unwrap_or_default();
-            debug!("Candles repository count: {}", candles_repo.len());
+            for range_missing_from_buffer in ranges_missing_from_buffer.iter() {
+                let (start_time, end_time) = range_missing_from_buffer;
 
-            candles_to_buf(candles_selection.heikin_ashi, &mut candles_repo, &mut candles_buf);
+                // Get candles from repository
+                debug!("Retrieving candles repository {:?} {:?}...", start_time, end_time);
+                let mut candles_repo = self
+                    .repository
+                    .candles_by_time(&candles_selection.symbol_minutes, &start_time.open(minutes), &end_time.open(minutes))
+                    .unwrap_or_default();
+                debug!("Candles repository count: {}", candles_repo.len());
 
-            loop {
+                candles_to_buf(candles_selection.heikin_ashi, &mut candles_repo, &mut candles_buf);
+
                 // Get ranges missing
-                debug!("Retrieving ranges missing...");
-                let ranges_missing = candles_to_ranges_missing(
+                debug!("Retrieving ranges missing from repository {:?} {:?}...", start_time, end_time);
+                let ranges_missing_from_exchange = candles_to_ranges_missing(
                     &start_time,
                     &end_time,
                     &candles_selection.symbol_minutes.minutes,
                     candles_repo.iter().collect::<Vec<_>>().as_slice(),
                 )?;
-                debug!("Repository ranges missing count: {}", ranges_missing.len());
-                if ranges_missing.is_empty() {
+                debug!("Repository ranges missing count: {}", ranges_missing_from_exchange.len());
+                if ranges_missing_from_exchange.is_empty() {
                     break;
                 }
 
-                for range_missing in ranges_missing.iter() {
-                    let (start_time, end_time) = range_missing;
+                for range_missing_from_exchange in ranges_missing_from_exchange.iter() {
+                    let (start_time, end_time) = range_missing_from_exchange;
 
-                    debug!("Retrieving candles exchange {:?} {:?}...", start_time, end_time);
+                    debug!("Retrieving candles from exchange {:?} {:?}...", start_time, end_time);
                     let mut candles_exch = self.exchange.candles(
                         &candles_selection.symbol_minutes,
                         &Some(start_time.open(minutes)),
@@ -112,13 +115,13 @@ impl CandlesProviderBufferSingleton {
                     debug!("Candles exchange count: {}", candles_exch.len());
 
                     // Save news candles on repository
-                    self.repository.add_candles(&mut candles_exch)?;
+                    self.repository.insert_candles(&mut candles_exch)?;
 
                     // Insert candles on buffer
                     candles_to_buf(candles_selection.heikin_ashi, &mut candles_exch, &mut candles_buf);
                 }
             }
-        }
+        };
 
         let candles = candles_buf
             .par_iter()
@@ -128,7 +131,6 @@ impl CandlesProviderBufferSingleton {
 
         debug!("{}", iformat!("Finished candles retrieve count: {candles.len()} elapsed: {start.elapsed():?}"));
 
-        // candles_buf.iter().collect::<Vec<_>>()
         Ok(candles)
     }
 }
@@ -257,5 +259,64 @@ where
 
     fn clone_provider(&self) -> Box<dyn CandlesProvider> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    use crate::candles_utils::str_to_datetime;
+    use crate::utils;
+    use anyhow::Result;
+    use log::LevelFilter;
+
+    #[test]
+    fn candles_provider_buffer_singleton_test() -> Result<()> {
+        utils::log_utils::setup_log(LevelFilter::Debug, module_path!());
+
+        dotenv::dotenv()?;
+        let exchange: Exchange = Exchange::new()?;
+        let repository: Repository = Repository::new()?;
+
+        repository.delete_all_candles()?;
+        let mut candles_provider_buffer_singleton = CandlesProviderBufferSingleton::new(repository, exchange);
+
+        {
+            let candles_selection = CandlesSelection::new(
+                "BTCUSDT",
+                &15u32,
+                str_to_datetime("2020-11-11 10:00:00"),
+                str_to_datetime("2020-11-11 10:30:00"),
+            );
+            let candles = candles_provider_buffer_singleton.candles(candles_selection);
+            assert!(candles.is_ok());
+            assert_eq!(candles.unwrap().len(), 3);
+        }
+
+        {
+            let candles_selection = CandlesSelection::new(
+                "BTCUSDT",
+                &15u32,
+                str_to_datetime("2020-11-11 11:00:00"),
+                str_to_datetime("2020-11-11 11:30:00"),
+            );
+            let candles = candles_provider_buffer_singleton.candles(candles_selection);
+            assert!(candles.is_ok());
+            assert_eq!(candles.unwrap().len(), 3);
+        }
+
+        {
+            let candles_selection = CandlesSelection::new(
+                "BTCUSDT",
+                &15u32,
+                str_to_datetime("2020-11-11 10:00:00"),
+                str_to_datetime("2020-11-11 11:30:00"),
+            );
+            let candles = candles_provider_buffer_singleton.candles(candles_selection);
+            assert!(candles.is_ok());
+            assert_eq!(candles.unwrap().len(), 7);
+        }
+
+        Ok(())
     }
 }
