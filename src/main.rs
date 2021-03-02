@@ -34,6 +34,8 @@ enum Command {
     Sync {},
     /// Fix records
     Fix {},
+    /// Delete all candles
+    DeleteAll,
     /// List  
     List {},
     /// Import from excange
@@ -111,6 +113,10 @@ async fn main() -> anyhow::Result<()> {
         }
         Command::Fix {} => {
             checker.delete_inconsist();
+        }
+        Command::DeleteAll {} => {
+            info!("Deleting all candles...");
+            repo.delete_all_candles()?;
         }
         Command::List {} => {
             repo.list_candles(&opt.symbol, &opt.minutes, &10);

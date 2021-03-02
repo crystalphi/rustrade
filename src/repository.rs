@@ -176,6 +176,12 @@ impl Repository {
         Ok(rec.id)
     }
 
+    pub fn delete_all_candles(&self) -> anyhow::Result<()> {
+        let future = sqlx::query!("DELETE FROM candle").execute(&self.pool);
+        async_std::task::block_on(future)?;
+        Ok(())
+    }
+
     pub fn delete_candle(&self, id: &Decimal) {
         let future = sqlx::query!("DELETE FROM candle WHERE id = $1", id).execute(&self.pool);
         async_std::task::block_on(future).unwrap();
